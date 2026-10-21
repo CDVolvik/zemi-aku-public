@@ -1,0 +1,334 @@
+{
+  "name": "Zemi-Aku TestFlight",
+  "nodes": [
+    {
+      "id": "64e8de8a-3aa7-42fd-ae48-3ebf67a126a3",
+      "name": "TestFlight webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "zemi-aku-testflight-REPLACE_WITH_RANDOM_PATH",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Zemi-Aku TestFlight Header Auth"
+        }
+      }
+    },
+    {
+      "id": "ded90b63-1e79-4bc3-a18b-8f60d13127da",
+      "name": "Validate request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const b=$json.body||{};\nconst clean=v=>typeof v==='string'?v.trim():'';\nconst first=clean(b.firstName),last=clean(b.lastName),email=clean(b.email).toLowerCase();\nif(!first||first.length>60||!last||last.length>60||email.length>254||!/^[^\\s@<>\"(),;:]+@[^\\s@<>\"(),;:]+\\.[a-z]{2,}$/i.test(email)||!/^[-a-zA-Z0-9]{16,80}$/.test(b.id||'')||!Number.isFinite(Date.parse(b.at)))return [{json:{valid:false}}];\nreturn [{json:{request_id:b.id,requested_at:b.at,first_name:first,last_name:last,email,source:'zemi-aku testflight'}}];"
+      }
+    },
+    {
+      "id": "5ffdf51c-f3f7-4531-8d33-ddeb8ac9fa47",
+      "name": "Store request",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        480,
+        0
+      ],
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REPLACE_WITH_SHEET_ID"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Requests"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "request_id": "={{ $json.request_id }}",
+            "requested_at": "={{ $json.requested_at }}",
+            "first_name": "={{ $json.first_name }}",
+            "last_name": "={{ $json.last_name }}",
+            "email": "={{ $json.email }}",
+            "source": "={{ $json.source }}"
+          },
+          "matchingColumns": [
+            "request_id"
+          ],
+          "schema": [
+            {
+              "id": "request_id",
+              "displayName": "request_id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "requested_at",
+              "displayName": "requested_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "first_name",
+              "displayName": "first_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "last_name",
+              "displayName": "last_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "source",
+              "displayName": "source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "cellFormat": "RAW",
+          "handlingExtraData": "ignoreIt"
+        }
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Google Sheets write"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "1721e700-6ac1-42bc-9595-eb4c77d3374f",
+      "name": "Confirm durable storage",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        720,
+        0
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\"ok\":true}",
+        "options": {
+          "responseCode": 200
+        }
+      }
+    },
+    {
+      "id": "2a931c0d-d6ca-46e3-b0c1-e8568c7e5d7d",
+      "name": "Email Carlos",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        960,
+        0
+      ],
+      "parameters": {
+        "fromEmail": "Zemi-Aku <ops@example.com>",
+        "toEmail": "you@example.com",
+        "subject": "Zemi-Aku — TestFlight request",
+        "emailFormat": "text",
+        "text": "={{ \"New Zemi-Aku TestFlight request\\n\\n\" + $(\"Validate request\").item.json.first_name + \" \" + $(\"Validate request\").item.json.last_name + \"\\n\" + $(\"Validate request\").item.json.email + \"\\nRequested: \" + $(\"Validate request\").item.json.requested_at + \"\\n\\nhttps://docs.google.com/spreadsheets/d/REPLACE_WITH_SHEET_ID/edit\" }}",
+        "options": {}
+      },
+      "credentials": {
+        "smtp": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "SMTP sender"
+        }
+      }
+    },
+    {
+      "id": "d232d158-c809-45af-8ade-26f95f36e168",
+      "name": "Valid request?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        360,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "47900b85-a6b7-45a6-928e-b8a030850a84",
+              "leftValue": "={{ $json.valid === false }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "d2f80874-494e-4e9b-b576-09d745d2c475",
+      "name": "Reject invalid request",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        600,
+        240
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\"ok\":false,\"error\":\"Invalid request\"}",
+        "options": {
+          "responseCode": 400
+        }
+      }
+    },
+    {
+      "id": "83a5e5e9-6367-4d53-bd68-23de4e2e93a9",
+      "name": "Storage failed",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        720,
+        -240
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\"ok\":false,\"error\":\"Storage temporarily unavailable\"}",
+        "options": {
+          "responseCode": 503
+        }
+      }
+    }
+  ],
+  "connections": {
+    "TestFlight webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate request": {
+      "main": [
+        [
+          {
+            "node": "Valid request?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store request": {
+      "main": [
+        [
+          {
+            "node": "Confirm durable storage",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Storage failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Confirm durable storage": {
+      "main": [
+        [
+          {
+            "node": "Email Carlos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid request?": {
+      "main": [
+        [
+          {
+            "node": "Store request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reject invalid request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "none",
+    "saveDataSuccessExecution": "none",
+    "saveManualExecutions": false,
+    "executionTimeout": 30
+  }
+}

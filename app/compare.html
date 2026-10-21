@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zemi-Aku — with and without Qloo</title>
+<meta name="description" content="Six questions about Puerto Rico, asked twice of the same model: once with Qloo's tools, once without. What changed, and where Qloo added nothing.">
+<link rel="icon" type="image/png" sizes="32x32" href="/app/assets/favicon-32.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f8f6f4; --surface: #f8f6f4; --surface-alt: #f2f0ee; --ink: #28323c; --ink-2: #505a64; --muted: #505a64;
+    --rule: #28323c; --hair: rgba(40, 50, 60, .14); --accent: #5a5aa8; --accent-soft: #8c8cc8;
+    --serif: "Inter", system-ui, sans-serif; --mono: "Fira Code", ui-monospace, Consolas, monospace; --wrap: 1240px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 17px/1.5 var(--serif); }
+  header, main { max-width: var(--wrap); margin: 0 auto; padding: 0 20px; }
+  header { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding-top: 18px; padding-bottom: 12px; border-bottom: 1px solid var(--rule); font: 12.5px/1.4 var(--mono); }
+  header a { color: inherit; }
+  header nav a { margin-left: 14px; }
+  h1 { font: 500 42px/1.08 var(--serif); letter-spacing: -.01em; margin: 28px 0 10px; max-width: 18em; }
+  .dek { font-size: 19px; color: var(--ink-2); max-width: 44em; margin: 0 0 8px; }
+  .meta { font: 12.5px/1.5 var(--mono); color: var(--muted); margin: 0 0 28px; }
+  .meta code { font: inherit; color: var(--ink); }
+  article { border-top: 1px solid var(--rule); padding: 22px 0 26px; }
+  article h2 { font: 500 26px/1.2 var(--serif); margin: 0 0 4px; }
+  article .q { font: 12px/1.5 var(--mono); color: var(--muted); margin: 0 0 14px; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media (max-width: 760px) { .cols { grid-template-columns: 1fr; } }
+  .col h3 { font: 500 12px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; padding-bottom: 6px; border-bottom: 1px solid var(--hair); }
+  .col .with h3 { color: var(--accent); }
+  .answer { margin: 0 0 10px; }
+  .answer b { font-weight: 600; color: var(--accent); }
+  .trace { margin: 0; padding: 0; list-style: none; font: 11.5px/1.5 var(--mono); color: var(--muted); }
+  .trace li { overflow-wrap: anywhere; }
+  .trace code { font: inherit; color: var(--ink); }
+  .verdict { margin: 16px 0 0; font: 13px/1.5 var(--mono); padding: 8px 12px; border-left: 3px solid var(--accent); background: var(--surface-alt); }
+  .verdict.nothing { border-left-color: var(--accent-soft); }
+  footer { max-width: var(--wrap); margin: 30px auto 40px; padding: 14px 20px 0; border-top: 1px solid var(--rule); font: 12.5px/1.5 var(--mono); color: var(--muted); }
+  footer a { color: inherit; }
+</style>
+</head>
+<body>
+<header>
+  <span>Zemi-Aku</span>
+  <nav aria-label="Links"><a href="/">Front page</a><a href="/app">Live map</a><a href="https://github.com/CDVolvik/zemi-aku-public">Code</a></nav>
+</header>
+<main>
+  <h1>With and without Qloo.</h1>
+  <p class="dek">Six questions, each asked twice of the same model with the same prompt and settings. The first run has Zemi-Aku's Qloo tools. The second keeps only the map, the weather, Wikidata landmarks and Wikipedia history. Places from Qloo's catalog are marked in the answers; the line under each pair says what Qloo changed, or that it added nothing.</p>
+  <p class="meta" id="meta">Loading the saved runs…</p>
+  <div id="runs"></div>
+</main>
+<footer>
+  <span>The runs are saved in <a href="/data/compare-qloo.json">compare-qloo.json</a> and made by <code>scripts/compare-qloo.mjs</code> against a local server; the public site has no "without Qloo" switch. Catalog places are matched by name against what the Qloo run put on the map; a place the second run names from general knowledge is not verified.</span>
+</footer>
+<script>
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+// Per character, so indexes into the shown text survive the accent strip ("é" stays one unit).
+const fold = (v) => String(v ?? "").split("").map((ch) => ch.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase()[0] || ch).join("");
+// Bold the catalog places the answer names; the match is accent- and case-insensitive on the shown text.
+function mark(speech, names) {
+  let html = esc(speech);
+  for (const name of [...names].sort((a, b) => b.length - a.length)) {
+    const plain = fold(name);
+    let i = 0, out = "", lower = fold(html);
+    while (true) {
+      const at = lower.indexOf(plain, i);
+      if (at < 0) { out += html.slice(i); break; }
+      out += html.slice(i, at) + "<b>" + html.slice(at, at + name.length) + "</b>";
+      i = at + name.length;
+    }
+    html = out;
+  }
+  return html;
+}
+const trace = (calls) => `<ul class="trace">${(calls || []).map((c) => {
+  const args = Object.values(c.args || {}).map(esc).join(", ");
+  const tail = c.ok ? [c.source, Number.isInteger(c.count) ? `${c.count} places` : "", c.measured ? `measured ${c.measured}` : ""].filter(Boolean).join(" · ") || "done" : `refused: ${esc(c.error || "")}`;
+  return `<li><code>${esc(c.tool)}</code> ${args} → ${tail}</li>`;
+}).join("")}</ul>`;
+const utc = (iso) => new Date(iso).toISOString().slice(0, 16).replace("T", " ") + " UTC";
+fetch("/data/compare-qloo.json").then((r) => r.json()).then((file) => {
+  document.getElementById("meta").innerHTML = `Model <code>${esc(file.model)}</code> via OpenRouter · same system prompt, ${file.settings.maxTokens} max tokens, reasoning ${esc(file.settings.reasoningEffort)}, up to ${file.settings.rounds} rounds, no history, no open town · without-Qloo tools: ${file.settings.withoutTools.map((t) => `<code>${esc(t)}</code>`).join(", ")} · run ${utc(file.ranAt)}`;
+  document.getElementById("runs").innerHTML = file.prompts.map((row) => {
+    const c = row.compare;
+    const verdict = c.qlooAddedNothing
+      ? `Qloo added nothing here${c.named.with.length ? ` (both runs name ${c.named.with.join(", ")})` : c.catalog ? ` (Qloo returned ${c.catalog} places; the answer named none by name)` : " (no catalog place came back)"}`
+      : `Qloo changed: ${c.onlyWith.join(", ")}${c.onlyWithout.length ? ` · named only without Qloo: ${c.onlyWithout.join(", ")}` : ""}`;
+    return `<article id="${esc(row.id)}">
+      <h2>${esc(row.question)}</h2>
+      <p class="q">${esc(row.lang)} · ${c.tools.with} tool call${c.tools.with === 1 ? "" : "s"} with Qloo, ${c.tools.without} without · ${c.catalog} catalog place${c.catalog === 1 ? "" : "s"} on the map</p>
+      <div class="cols">
+        <div class="col with"><h3>With Qloo</h3><p class="answer">${mark(row.with.speech, c.named.with)}</p>${trace(row.with.evidence.calls)}</div>
+        <div class="col"><h3>Without Qloo</h3><p class="answer">${mark(row.without.speech, c.named.without)}</p>${trace(row.without.evidence.calls)}</div>
+      </div>
+      <p class="verdict${c.qlooAddedNothing ? " nothing" : ""}">${esc(verdict)}</p>
+    </article>`;
+  }).join("");
+}).catch(() => { document.getElementById("meta").textContent = "The saved runs could not be loaded."; });
+</script>
+</body>
+</html>

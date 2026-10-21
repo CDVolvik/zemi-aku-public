@@ -1,0 +1,4220 @@
+{
+  "release": "2026-09-23.1",
+  "min_confidence": 0.7,
+  "source": "Overture Maps places (Meta, Microsoft, Foursquare, AllThePlaces). CDLA-Permissive-2.0, Apache-2.0, CC0.",
+  "total": 60180,
+  "towns": [
+    {
+      "town": "San Juan",
+      "total": 9921,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 1080
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 508
+        },
+        {
+          "category": "fashion_and_apparel_store",
+          "count": 438
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 335
+        },
+        {
+          "category": "historic_site",
+          "count": 310
+        },
+        {
+          "category": "bar",
+          "count": 292
+        },
+        {
+          "category": "diagnostics_imaging_or_lab_service",
+          "count": 261
+        },
+        {
+          "category": "casual_eatery",
+          "count": 220
+        },
+        {
+          "category": "automotive_service",
+          "count": 210
+        },
+        {
+          "category": "hardware_home_and_garden_store",
+          "count": 186
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 175
+        },
+        {
+          "category": "financial_service",
+          "count": 172
+        }
+      ]
+    },
+    {
+      "town": "Bayamón",
+      "total": 3569,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 308
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 251
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 183
+        },
+        {
+          "category": "automotive_service",
+          "count": 170
+        },
+        {
+          "category": "fashion_and_apparel_store",
+          "count": 137
+        },
+        {
+          "category": "diagnostics_imaging_or_lab_service",
+          "count": 126
+        },
+        {
+          "category": "casual_eatery",
+          "count": 108
+        },
+        {
+          "category": "fast_food_restaurant",
+          "count": 81
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 75
+        },
+        {
+          "category": "hardware_home_and_garden_store",
+          "count": 73
+        },
+        {
+          "category": "gas_station",
+          "count": 71
+        },
+        {
+          "category": "bar",
+          "count": 68
+        }
+      ]
+    },
+    {
+      "town": "Ponce",
+      "total": 3034,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 277
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 167
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 133
+        },
+        {
+          "category": "automotive_service",
+          "count": 109
+        },
+        {
+          "category": "diagnostics_imaging_or_lab_service",
+          "count": 108
+        },
+        {
+          "category": "fashion_and_apparel_store",
+          "count": 101
+        },
+        {
+          "category": "bar",
+          "count": 93
+        },
+        {
+          "category": "casual_eatery",
+          "count": 87
+        },
+        {
+          "category": "lodging",
+          "count": 70
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 67
+        },
+        {
+          "category": "historic_site",
+          "count": 67
+        },
+        {
+          "category": "specialized_health_care",
+          "count": 65
+        }
+      ]
+    },
+    {
+      "town": "Caguas",
+      "total": 2719,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 271
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 169
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 116
+        },
+        {
+          "category": "automotive_service",
+          "count": 115
+        },
+        {
+          "category": "fashion_and_apparel_store",
+          "count": 111
+        },
+        {
+          "category": "casual_eatery",
+          "count": 84
+        },
+        {
+          "category": "diagnostics_imaging_or_lab_service",
+          "count": 77
+        },
+        {
+          "category": "auto_dealer",
+          "count": 72
+        },
+        {
+          "category": "bar",
+          "count": 66
+        },
+        {
+          "category": "fast_food_restaurant",
+          "count": 61
+        },
+        {
+          "category": "hardware_home_and_garden_store",
+          "count": 59
+        },
+        {
+          "category": "gas_station",
+          "count": 55
+        }
+      ]
+    },
+    {
+      "town": "Carolina",
+      "total": 2521,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 239
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 142
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 124
+        },
+        {
+          "category": "historic_site",
+          "count": 102
+        },
+        {
+          "category": "fashion_and_apparel_store",
+          "count": 82
+        },
+        {
+          "category": "automotive_service",
+          "count": 79
+        },
+        {
+          "category": "beach",
+          "count": 73
+        },
+        {
+          "category": "diagnostics_imaging_or_lab_service",
+          "count": 56
+        },
+        {
+          "category": "fast_food_restaurant",
+          "count": 54
+        },
+        {
+          "category": "casual_eatery",
+          "count": 53
+        },
+        {
+          "category": "gas_station",
+          "count": 51
+        },
+        {
+          "category": "lodging",
+          "count": 49
+        }
+      ]
+    },
+    {
+      "town": "Guaynabo",
+      "total": 1847,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 192
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 81
+        },
+        {
+          "category": "historic_site",
+          "count": 79
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 77
+        },
+        {
+          "category": "fashion_and_apparel_store",
+          "count": 63
+        },
+        {
+          "category": "financial_service",
+          "count": 47
+        },
+        {
+          "category": "dental_clinic",
+          "count": 47
+        },
+        {
+          "category": "casual_eatery",
+          "count": 46
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 45
+        },
+        {
+          "category": "diagnostics_imaging_or_lab_service",
+          "count": 44
+        },
+        {
+          "category": "bar",
+          "count": 42
+        },
+        {
+          "category": "lodging",
+          "count": 37
+        }
+      ]
+    },
+    {
+      "town": "Mayagüez",
+      "total": 1838,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 148
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 79
+        },
+        {
+          "category": "fashion_and_apparel_store",
+          "count": 76
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 75
+        },
+        {
+          "category": "diagnostics_imaging_or_lab_service",
+          "count": 67
+        },
+        {
+          "category": "bar",
+          "count": 54
+        },
+        {
+          "category": "casual_eatery",
+          "count": 53
+        },
+        {
+          "category": "automotive_service",
+          "count": 50
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 43
+        },
+        {
+          "category": "specialized_health_care",
+          "count": 43
+        },
+        {
+          "category": "historic_site",
+          "count": 43
+        },
+        {
+          "category": "hardware_home_and_garden_store",
+          "count": 38
+        }
+      ]
+    },
+    {
+      "town": "Aguadilla",
+      "total": 1571,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 186
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 78
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 70
+        },
+        {
+          "category": "casual_eatery",
+          "count": 62
+        },
+        {
+          "category": "diagnostics_imaging_or_lab_service",
+          "count": 46
+        },
+        {
+          "category": "automotive_service",
+          "count": 45
+        },
+        {
+          "category": "bar",
+          "count": 43
+        },
+        {
+          "category": "lodging",
+          "count": 43
+        },
+        {
+          "category": "fashion_and_apparel_store",
+          "count": 37
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 36
+        },
+        {
+          "category": "gas_station",
+          "count": 35
+        },
+        {
+          "category": "hotel",
+          "count": 34
+        }
+      ]
+    },
+    {
+      "town": "Arecibo",
+      "total": 1570,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 175
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 111
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 72
+        },
+        {
+          "category": "casual_eatery",
+          "count": 57
+        },
+        {
+          "category": "diagnostics_imaging_or_lab_service",
+          "count": 46
+        },
+        {
+          "category": "bar",
+          "count": 44
+        },
+        {
+          "category": "automotive_service",
+          "count": 41
+        },
+        {
+          "category": "lodging",
+          "count": 37
+        },
+        {
+          "category": "hardware_home_and_garden_store",
+          "count": 33
+        },
+        {
+          "category": "historic_site",
+          "count": 33
+        },
+        {
+          "category": "pharmacy_and_drug_store",
+          "count": 32
+        },
+        {
+          "category": "other",
+          "count": 31
+        }
+      ]
+    },
+    {
+      "town": "Cabo Rojo",
+      "total": 1105,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 173
+        },
+        {
+          "category": "beach",
+          "count": 73
+        },
+        {
+          "category": "hotel",
+          "count": 73
+        },
+        {
+          "category": "lodging",
+          "count": 50
+        },
+        {
+          "category": "historic_site",
+          "count": 42
+        },
+        {
+          "category": "bar",
+          "count": 39
+        },
+        {
+          "category": "private_lodging",
+          "count": 37
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 34
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 32
+        },
+        {
+          "category": "automotive_service",
+          "count": 26
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 25
+        },
+        {
+          "category": "casual_eatery",
+          "count": 21
+        }
+      ]
+    },
+    {
+      "town": "Humacao",
+      "total": 1085,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 116
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 73
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 41
+        },
+        {
+          "category": "diagnostics_imaging_or_lab_service",
+          "count": 35
+        },
+        {
+          "category": "fashion_and_apparel_store",
+          "count": 30
+        },
+        {
+          "category": "casual_eatery",
+          "count": 26
+        },
+        {
+          "category": "automotive_service",
+          "count": 26
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 24
+        },
+        {
+          "category": "bar",
+          "count": 23
+        },
+        {
+          "category": "hotel",
+          "count": 22
+        },
+        {
+          "category": "historic_site",
+          "count": 21
+        },
+        {
+          "category": "lodging",
+          "count": 21
+        }
+      ]
+    },
+    {
+      "town": "Toa Baja",
+      "total": 1055,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 110
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 82
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 74
+        },
+        {
+          "category": "automotive_service",
+          "count": 54
+        },
+        {
+          "category": "bar",
+          "count": 39
+        },
+        {
+          "category": "casual_eatery",
+          "count": 29
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 27
+        },
+        {
+          "category": "hardware_home_and_garden_store",
+          "count": 26
+        },
+        {
+          "category": "fast_food_restaurant",
+          "count": 23
+        },
+        {
+          "category": "auto_dealer",
+          "count": 23
+        },
+        {
+          "category": "gas_station",
+          "count": 21
+        },
+        {
+          "category": "other",
+          "count": 20
+        }
+      ]
+    },
+    {
+      "town": "Aguada",
+      "total": 901,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 138
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 55
+        },
+        {
+          "category": "bar",
+          "count": 47
+        },
+        {
+          "category": "casual_eatery",
+          "count": 40
+        },
+        {
+          "category": "fashion_and_apparel_store",
+          "count": 38
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 35
+        },
+        {
+          "category": "automotive_service",
+          "count": 32
+        },
+        {
+          "category": "hotel",
+          "count": 27
+        },
+        {
+          "category": "diagnostics_imaging_or_lab_service",
+          "count": 24
+        },
+        {
+          "category": "historic_site",
+          "count": 22
+        },
+        {
+          "category": "beach",
+          "count": 20
+        },
+        {
+          "category": "pharmacy_and_drug_store",
+          "count": 17
+        }
+      ]
+    },
+    {
+      "town": "Isabela",
+      "total": 892,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 106
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 51
+        },
+        {
+          "category": "bar",
+          "count": 46
+        },
+        {
+          "category": "beach",
+          "count": 46
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 36
+        },
+        {
+          "category": "casual_eatery",
+          "count": 32
+        },
+        {
+          "category": "hotel",
+          "count": 29
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 26
+        },
+        {
+          "category": "automotive_service",
+          "count": 26
+        },
+        {
+          "category": "fashion_and_apparel_store",
+          "count": 25
+        },
+        {
+          "category": "diagnostics_imaging_or_lab_service",
+          "count": 23
+        },
+        {
+          "category": "lodging",
+          "count": 19
+        }
+      ]
+    },
+    {
+      "town": "Manatí",
+      "total": 867,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 63
+        },
+        {
+          "category": "diagnostics_imaging_or_lab_service",
+          "count": 53
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 52
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 33
+        },
+        {
+          "category": "hospital",
+          "count": 27
+        },
+        {
+          "category": "bar",
+          "count": 22
+        },
+        {
+          "category": "beach",
+          "count": 22
+        },
+        {
+          "category": "historic_site",
+          "count": 21
+        },
+        {
+          "category": "automotive_service",
+          "count": 21
+        },
+        {
+          "category": "casual_eatery",
+          "count": 20
+        },
+        {
+          "category": "gas_station",
+          "count": 18
+        },
+        {
+          "category": "lodging",
+          "count": 17
+        }
+      ]
+    },
+    {
+      "town": "Fajardo",
+      "total": 859,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 106
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 58
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 34
+        },
+        {
+          "category": "beach",
+          "count": 30
+        },
+        {
+          "category": "casual_eatery",
+          "count": 30
+        },
+        {
+          "category": "bar",
+          "count": 23
+        },
+        {
+          "category": "historic_site",
+          "count": 23
+        },
+        {
+          "category": "travel_service",
+          "count": 21
+        },
+        {
+          "category": "fashion_and_apparel_store",
+          "count": 21
+        },
+        {
+          "category": "automotive_service",
+          "count": 19
+        },
+        {
+          "category": "vehicle_parts_store",
+          "count": 17
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 17
+        }
+      ]
+    },
+    {
+      "town": "Vega Baja",
+      "total": 839,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 105
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 57
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 47
+        },
+        {
+          "category": "automotive_service",
+          "count": 30
+        },
+        {
+          "category": "beach",
+          "count": 27
+        },
+        {
+          "category": "diagnostics_imaging_or_lab_service",
+          "count": 26
+        },
+        {
+          "category": "bar",
+          "count": 23
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 21
+        },
+        {
+          "category": "fashion_and_apparel_store",
+          "count": 19
+        },
+        {
+          "category": "casual_eatery",
+          "count": 19
+        },
+        {
+          "category": "auto_dealer",
+          "count": 19
+        },
+        {
+          "category": "lodging",
+          "count": 17
+        }
+      ]
+    },
+    {
+      "town": "Hatillo",
+      "total": 812,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 103
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 57
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 39
+        },
+        {
+          "category": "casual_eatery",
+          "count": 31
+        },
+        {
+          "category": "automotive_service",
+          "count": 31
+        },
+        {
+          "category": "fashion_and_apparel_store",
+          "count": 30
+        },
+        {
+          "category": "fast_food_restaurant",
+          "count": 23
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 18
+        },
+        {
+          "category": "gas_station",
+          "count": 17
+        },
+        {
+          "category": "bar",
+          "count": 17
+        },
+        {
+          "category": "diagnostics_imaging_or_lab_service",
+          "count": 16
+        },
+        {
+          "category": "hardware_home_and_garden_store",
+          "count": 16
+        }
+      ]
+    },
+    {
+      "town": "Cayey",
+      "total": 758,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 97
+        },
+        {
+          "category": "bar",
+          "count": 36
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 34
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 33
+        },
+        {
+          "category": "casual_eatery",
+          "count": 31
+        },
+        {
+          "category": "historic_site",
+          "count": 25
+        },
+        {
+          "category": "fashion_and_apparel_store",
+          "count": 23
+        },
+        {
+          "category": "automotive_service",
+          "count": 22
+        },
+        {
+          "category": "lodging",
+          "count": 18
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 17
+        },
+        {
+          "category": "fast_food_restaurant",
+          "count": 17
+        },
+        {
+          "category": "place_of_learning",
+          "count": 17
+        }
+      ]
+    },
+    {
+      "town": "San Sebastián",
+      "total": 721,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 59
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 43
+        },
+        {
+          "category": "bar",
+          "count": 37
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 30
+        },
+        {
+          "category": "hardware_home_and_garden_store",
+          "count": 29
+        },
+        {
+          "category": "automotive_service",
+          "count": 24
+        },
+        {
+          "category": "casual_eatery",
+          "count": 23
+        },
+        {
+          "category": "fashion_and_apparel_store",
+          "count": 20
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 19
+        },
+        {
+          "category": "pharmacy_and_drug_store",
+          "count": 19
+        },
+        {
+          "category": "historic_site",
+          "count": 15
+        },
+        {
+          "category": "diagnostics_imaging_or_lab_service",
+          "count": 15
+        }
+      ]
+    },
+    {
+      "town": "Guayama",
+      "total": 715,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 72
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 37
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 35
+        },
+        {
+          "category": "bar",
+          "count": 33
+        },
+        {
+          "category": "fashion_and_apparel_store",
+          "count": 28
+        },
+        {
+          "category": "automotive_service",
+          "count": 27
+        },
+        {
+          "category": "lodging",
+          "count": 25
+        },
+        {
+          "category": "casual_eatery",
+          "count": 19
+        },
+        {
+          "category": "hardware_home_and_garden_store",
+          "count": 19
+        },
+        {
+          "category": "gas_station",
+          "count": 16
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 15
+        },
+        {
+          "category": "fast_food_restaurant",
+          "count": 13
+        }
+      ]
+    },
+    {
+      "town": "Río Grande",
+      "total": 714,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 80
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 52
+        },
+        {
+          "category": "beach",
+          "count": 31
+        },
+        {
+          "category": "historic_site",
+          "count": 30
+        },
+        {
+          "category": "hotel",
+          "count": 29
+        },
+        {
+          "category": "bar",
+          "count": 22
+        },
+        {
+          "category": "national_park",
+          "count": 22
+        },
+        {
+          "category": "lodging",
+          "count": 19
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 19
+        },
+        {
+          "category": "casual_eatery",
+          "count": 18
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 15
+        },
+        {
+          "category": "automotive_service",
+          "count": 15
+        }
+      ]
+    },
+    {
+      "town": "Dorado",
+      "total": 705,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 99
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 51
+        },
+        {
+          "category": "beach",
+          "count": 32
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 29
+        },
+        {
+          "category": "bar",
+          "count": 24
+        },
+        {
+          "category": "automotive_service",
+          "count": 19
+        },
+        {
+          "category": "hotel",
+          "count": 19
+        },
+        {
+          "category": "lodging",
+          "count": 17
+        },
+        {
+          "category": "casual_eatery",
+          "count": 16
+        },
+        {
+          "category": "diagnostics_imaging_or_lab_service",
+          "count": 16
+        },
+        {
+          "category": "fast_food_restaurant",
+          "count": 15
+        },
+        {
+          "category": "hardware_home_and_garden_store",
+          "count": 14
+        }
+      ]
+    },
+    {
+      "town": "Yauco",
+      "total": 631,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 55
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 34
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 28
+        },
+        {
+          "category": "casual_eatery",
+          "count": 28
+        },
+        {
+          "category": "bar",
+          "count": 24
+        },
+        {
+          "category": "automotive_service",
+          "count": 23
+        },
+        {
+          "category": "fashion_and_apparel_store",
+          "count": 22
+        },
+        {
+          "category": "historic_site",
+          "count": 19
+        },
+        {
+          "category": "diagnostics_imaging_or_lab_service",
+          "count": 19
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 16
+        },
+        {
+          "category": "fast_food_restaurant",
+          "count": 16
+        },
+        {
+          "category": "pharmacy_and_drug_store",
+          "count": 15
+        }
+      ]
+    },
+    {
+      "town": "Juana Díaz",
+      "total": 607,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 76
+        },
+        {
+          "category": "bar",
+          "count": 34
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 32
+        },
+        {
+          "category": "automotive_service",
+          "count": 31
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 28
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 23
+        },
+        {
+          "category": "lodging",
+          "count": 22
+        },
+        {
+          "category": "casual_eatery",
+          "count": 20
+        },
+        {
+          "category": "historic_site",
+          "count": 16
+        },
+        {
+          "category": "pharmacy_and_drug_store",
+          "count": 13
+        },
+        {
+          "category": "fashion_and_apparel_store",
+          "count": 12
+        },
+        {
+          "category": "hardware_home_and_garden_store",
+          "count": 11
+        }
+      ]
+    },
+    {
+      "town": "Trujillo Alto",
+      "total": 601,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 62
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 62
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 30
+        },
+        {
+          "category": "historic_site",
+          "count": 27
+        },
+        {
+          "category": "automotive_service",
+          "count": 25
+        },
+        {
+          "category": "lodging",
+          "count": 21
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 20
+        },
+        {
+          "category": "bar",
+          "count": 19
+        },
+        {
+          "category": "diagnostics_imaging_or_lab_service",
+          "count": 17
+        },
+        {
+          "category": "casual_eatery",
+          "count": 16
+        },
+        {
+          "category": "religious_organization",
+          "count": 12
+        },
+        {
+          "category": "place_of_learning",
+          "count": 11
+        }
+      ]
+    },
+    {
+      "town": "San Germán",
+      "total": 591,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 49
+        },
+        {
+          "category": "historic_site",
+          "count": 31
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 29
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 29
+        },
+        {
+          "category": "bar",
+          "count": 23
+        },
+        {
+          "category": "diagnostics_imaging_or_lab_service",
+          "count": 22
+        },
+        {
+          "category": "casual_eatery",
+          "count": 19
+        },
+        {
+          "category": "specialized_health_care",
+          "count": 18
+        },
+        {
+          "category": "automotive_service",
+          "count": 16
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 15
+        },
+        {
+          "category": "fashion_and_apparel_store",
+          "count": 13
+        },
+        {
+          "category": "lodging",
+          "count": 12
+        }
+      ]
+    },
+    {
+      "town": "Cidra",
+      "total": 573,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 77
+        },
+        {
+          "category": "bar",
+          "count": 33
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 31
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 29
+        },
+        {
+          "category": "automotive_service",
+          "count": 22
+        },
+        {
+          "category": "lodging",
+          "count": 16
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 16
+        },
+        {
+          "category": "auto_dealer",
+          "count": 15
+        },
+        {
+          "category": "diagnostics_imaging_or_lab_service",
+          "count": 14
+        },
+        {
+          "category": "vehicle_parts_store",
+          "count": 14
+        },
+        {
+          "category": "casual_eatery",
+          "count": 14
+        },
+        {
+          "category": "hardware_home_and_garden_store",
+          "count": 13
+        }
+      ]
+    },
+    {
+      "town": "Moca",
+      "total": 536,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 60
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 38
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 33
+        },
+        {
+          "category": "casual_eatery",
+          "count": 28
+        },
+        {
+          "category": "bar",
+          "count": 21
+        },
+        {
+          "category": "diagnostics_imaging_or_lab_service",
+          "count": 19
+        },
+        {
+          "category": "pharmacy_and_drug_store",
+          "count": 17
+        },
+        {
+          "category": "automotive_service",
+          "count": 15
+        },
+        {
+          "category": "hardware_home_and_garden_store",
+          "count": 13
+        },
+        {
+          "category": "historic_site",
+          "count": 11
+        },
+        {
+          "category": "fashion_and_apparel_store",
+          "count": 11
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 11
+        }
+      ]
+    },
+    {
+      "town": "Rincón",
+      "total": 529,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 80
+        },
+        {
+          "category": "hotel",
+          "count": 48
+        },
+        {
+          "category": "beach",
+          "count": 42
+        },
+        {
+          "category": "bar",
+          "count": 34
+        },
+        {
+          "category": "historic_site",
+          "count": 34
+        },
+        {
+          "category": "casual_eatery",
+          "count": 24
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 13
+        },
+        {
+          "category": "private_lodging",
+          "count": 13
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 13
+        },
+        {
+          "category": "coffee_shop",
+          "count": 12
+        },
+        {
+          "category": "sport_or_fitness_facility",
+          "count": 11
+        },
+        {
+          "category": "lodging",
+          "count": 11
+        }
+      ]
+    },
+    {
+      "town": "Barceloneta",
+      "total": 519,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 66
+        },
+        {
+          "category": "fashion_and_apparel_store",
+          "count": 49
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 29
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 26
+        },
+        {
+          "category": "casual_eatery",
+          "count": 23
+        },
+        {
+          "category": "bar",
+          "count": 18
+        },
+        {
+          "category": "fast_food_restaurant",
+          "count": 14
+        },
+        {
+          "category": "beach",
+          "count": 12
+        },
+        {
+          "category": "park",
+          "count": 11
+        },
+        {
+          "category": "other",
+          "count": 11
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 11
+        },
+        {
+          "category": "religious_organization",
+          "count": 11
+        }
+      ]
+    },
+    {
+      "town": "Vega Alta",
+      "total": 496,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 51
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 39
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 29
+        },
+        {
+          "category": "lodging",
+          "count": 17
+        },
+        {
+          "category": "bar",
+          "count": 16
+        },
+        {
+          "category": "beach",
+          "count": 16
+        },
+        {
+          "category": "historic_site",
+          "count": 15
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 14
+        },
+        {
+          "category": "diagnostics_imaging_or_lab_service",
+          "count": 14
+        },
+        {
+          "category": "fast_food_restaurant",
+          "count": 13
+        },
+        {
+          "category": "dental_clinic",
+          "count": 11
+        },
+        {
+          "category": "automotive_service",
+          "count": 11
+        }
+      ]
+    },
+    {
+      "town": "Canóvanas",
+      "total": 492,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 62
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 41
+        },
+        {
+          "category": "fashion_and_apparel_store",
+          "count": 38
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 24
+        },
+        {
+          "category": "fast_food_restaurant",
+          "count": 16
+        },
+        {
+          "category": "casual_eatery",
+          "count": 16
+        },
+        {
+          "category": "automotive_service",
+          "count": 15
+        },
+        {
+          "category": "historic_site",
+          "count": 13
+        },
+        {
+          "category": "diagnostics_imaging_or_lab_service",
+          "count": 13
+        },
+        {
+          "category": "gas_station",
+          "count": 11
+        },
+        {
+          "category": "hardware_home_and_garden_store",
+          "count": 11
+        },
+        {
+          "category": "electronics_store",
+          "count": 10
+        }
+      ]
+    },
+    {
+      "town": "Toa Alta",
+      "total": 488,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 61
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 35
+        },
+        {
+          "category": "bar",
+          "count": 30
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 27
+        },
+        {
+          "category": "historic_site",
+          "count": 19
+        },
+        {
+          "category": "lodging",
+          "count": 19
+        },
+        {
+          "category": "diagnostics_imaging_or_lab_service",
+          "count": 15
+        },
+        {
+          "category": "casual_eatery",
+          "count": 14
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 14
+        },
+        {
+          "category": "automotive_service",
+          "count": 13
+        },
+        {
+          "category": "gas_station",
+          "count": 12
+        },
+        {
+          "category": "pharmacy_and_drug_store",
+          "count": 11
+        }
+      ]
+    },
+    {
+      "town": "Coamo",
+      "total": 484,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 60
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 33
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 26
+        },
+        {
+          "category": "bar",
+          "count": 20
+        },
+        {
+          "category": "casual_eatery",
+          "count": 17
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 16
+        },
+        {
+          "category": "lodging",
+          "count": 14
+        },
+        {
+          "category": "historic_site",
+          "count": 13
+        },
+        {
+          "category": "fashion_and_apparel_store",
+          "count": 13
+        },
+        {
+          "category": "elementary_school",
+          "count": 12
+        },
+        {
+          "category": "hardware_home_and_garden_store",
+          "count": 12
+        },
+        {
+          "category": "automotive_service",
+          "count": 11
+        }
+      ]
+    },
+    {
+      "town": "Camuy",
+      "total": 469,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 53
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 31
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 27
+        },
+        {
+          "category": "casual_eatery",
+          "count": 18
+        },
+        {
+          "category": "automotive_service",
+          "count": 16
+        },
+        {
+          "category": "bar",
+          "count": 14
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 14
+        },
+        {
+          "category": "historic_site",
+          "count": 12
+        },
+        {
+          "category": "gas_station",
+          "count": 12
+        },
+        {
+          "category": "diagnostics_imaging_or_lab_service",
+          "count": 11
+        },
+        {
+          "category": "place_of_learning",
+          "count": 10
+        },
+        {
+          "category": "fast_food_restaurant",
+          "count": 10
+        }
+      ]
+    },
+    {
+      "town": "Gurabo",
+      "total": 466,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 49
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 36
+        },
+        {
+          "category": "lodging",
+          "count": 21
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 21
+        },
+        {
+          "category": "historic_site",
+          "count": 21
+        },
+        {
+          "category": "bar",
+          "count": 18
+        },
+        {
+          "category": "automotive_service",
+          "count": 15
+        },
+        {
+          "category": "park",
+          "count": 13
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 11
+        },
+        {
+          "category": "diagnostics_imaging_or_lab_service",
+          "count": 11
+        },
+        {
+          "category": "casual_eatery",
+          "count": 10
+        },
+        {
+          "category": "religious_organization",
+          "count": 9
+        }
+      ]
+    },
+    {
+      "town": "Salinas",
+      "total": 460,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 59
+        },
+        {
+          "category": "bar",
+          "count": 26
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 26
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 24
+        },
+        {
+          "category": "lodging",
+          "count": 18
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 16
+        },
+        {
+          "category": "beach",
+          "count": 14
+        },
+        {
+          "category": "historic_site",
+          "count": 13
+        },
+        {
+          "category": "automotive_service",
+          "count": 13
+        },
+        {
+          "category": "pharmacy_and_drug_store",
+          "count": 11
+        },
+        {
+          "category": "casual_eatery",
+          "count": 10
+        },
+        {
+          "category": "fast_food_restaurant",
+          "count": 10
+        }
+      ]
+    },
+    {
+      "town": "Aibonito",
+      "total": 454,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 42
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 25
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 25
+        },
+        {
+          "category": "bar",
+          "count": 24
+        },
+        {
+          "category": "fashion_and_apparel_store",
+          "count": 20
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 18
+        },
+        {
+          "category": "diagnostics_imaging_or_lab_service",
+          "count": 18
+        },
+        {
+          "category": "historic_site",
+          "count": 15
+        },
+        {
+          "category": "hardware_home_and_garden_store",
+          "count": 14
+        },
+        {
+          "category": "casual_eatery",
+          "count": 14
+        },
+        {
+          "category": "lodging",
+          "count": 12
+        },
+        {
+          "category": "religious_organization",
+          "count": 9
+        }
+      ]
+    },
+    {
+      "town": "Añasco",
+      "total": 442,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 69
+        },
+        {
+          "category": "bar",
+          "count": 25
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 23
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 20
+        },
+        {
+          "category": "casual_eatery",
+          "count": 18
+        },
+        {
+          "category": "automotive_service",
+          "count": 18
+        },
+        {
+          "category": "historic_site",
+          "count": 17
+        },
+        {
+          "category": "diagnostics_imaging_or_lab_service",
+          "count": 13
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 12
+        },
+        {
+          "category": "fast_food_restaurant",
+          "count": 11
+        },
+        {
+          "category": "pharmacy_and_drug_store",
+          "count": 11
+        },
+        {
+          "category": "lodging",
+          "count": 10
+        }
+      ]
+    },
+    {
+      "town": "Barranquitas",
+      "total": 435,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 70
+        },
+        {
+          "category": "bar",
+          "count": 31
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 21
+        },
+        {
+          "category": "casual_eatery",
+          "count": 18
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 17
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 17
+        },
+        {
+          "category": "automotive_service",
+          "count": 15
+        },
+        {
+          "category": "hardware_home_and_garden_store",
+          "count": 12
+        },
+        {
+          "category": "historic_site",
+          "count": 10
+        },
+        {
+          "category": "lodging",
+          "count": 10
+        },
+        {
+          "category": "auto_dealer",
+          "count": 9
+        },
+        {
+          "category": "pharmacy_and_drug_store",
+          "count": 9
+        }
+      ]
+    },
+    {
+      "town": "Lajas",
+      "total": 422,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 56
+        },
+        {
+          "category": "bar",
+          "count": 23
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 22
+        },
+        {
+          "category": "hotel",
+          "count": 20
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 15
+        },
+        {
+          "category": "lodging",
+          "count": 15
+        },
+        {
+          "category": "historic_site",
+          "count": 15
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 15
+        },
+        {
+          "category": "gas_station",
+          "count": 14
+        },
+        {
+          "category": "other",
+          "count": 12
+        },
+        {
+          "category": "casual_eatery",
+          "count": 11
+        },
+        {
+          "category": "automotive_service",
+          "count": 9
+        }
+      ]
+    },
+    {
+      "town": "Naranjito",
+      "total": 418,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 65
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 28
+        },
+        {
+          "category": "bar",
+          "count": 20
+        },
+        {
+          "category": "automotive_service",
+          "count": 17
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 16
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 14
+        },
+        {
+          "category": "casual_eatery",
+          "count": 13
+        },
+        {
+          "category": "lodging",
+          "count": 11
+        },
+        {
+          "category": "other",
+          "count": 11
+        },
+        {
+          "category": "hardware_home_and_garden_store",
+          "count": 11
+        },
+        {
+          "category": "elementary_school",
+          "count": 10
+        },
+        {
+          "category": "gym",
+          "count": 9
+        }
+      ]
+    },
+    {
+      "town": "Las Piedras",
+      "total": 411,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 40
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 37
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 22
+        },
+        {
+          "category": "automotive_service",
+          "count": 20
+        },
+        {
+          "category": "bar",
+          "count": 19
+        },
+        {
+          "category": "casual_eatery",
+          "count": 13
+        },
+        {
+          "category": "religious_organization",
+          "count": 12
+        },
+        {
+          "category": "gas_station",
+          "count": 11
+        },
+        {
+          "category": "historic_site",
+          "count": 11
+        },
+        {
+          "category": "place_of_learning",
+          "count": 11
+        },
+        {
+          "category": "fashion_and_apparel_store",
+          "count": 9
+        },
+        {
+          "category": "pharmacy_and_drug_store",
+          "count": 9
+        }
+      ]
+    },
+    {
+      "town": "Juncos",
+      "total": 402,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 50
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 31
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 25
+        },
+        {
+          "category": "automotive_service",
+          "count": 17
+        },
+        {
+          "category": "bar",
+          "count": 11
+        },
+        {
+          "category": "casual_eatery",
+          "count": 10
+        },
+        {
+          "category": "dental_clinic",
+          "count": 10
+        },
+        {
+          "category": "elementary_school",
+          "count": 9
+        },
+        {
+          "category": "pharmacy_and_drug_store",
+          "count": 9
+        },
+        {
+          "category": "religious_organization",
+          "count": 8
+        },
+        {
+          "category": "lodging",
+          "count": 8
+        },
+        {
+          "category": "fast_food_restaurant",
+          "count": 8
+        }
+      ]
+    },
+    {
+      "town": "Corozal",
+      "total": 396,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 80
+        },
+        {
+          "category": "bar",
+          "count": 25
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 24
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 22
+        },
+        {
+          "category": "diagnostics_imaging_or_lab_service",
+          "count": 15
+        },
+        {
+          "category": "gas_station",
+          "count": 14
+        },
+        {
+          "category": "historic_site",
+          "count": 11
+        },
+        {
+          "category": "fashion_and_apparel_store",
+          "count": 10
+        },
+        {
+          "category": "casual_eatery",
+          "count": 10
+        },
+        {
+          "category": "lodging",
+          "count": 8
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 7
+        },
+        {
+          "category": "automotive_service",
+          "count": 7
+        }
+      ]
+    },
+    {
+      "town": "Luquillo",
+      "total": 388,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 65
+        },
+        {
+          "category": "beach",
+          "count": 32
+        },
+        {
+          "category": "hotel",
+          "count": 20
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 18
+        },
+        {
+          "category": "lodging",
+          "count": 18
+        },
+        {
+          "category": "historic_site",
+          "count": 13
+        },
+        {
+          "category": "bar",
+          "count": 12
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 11
+        },
+        {
+          "category": "other",
+          "count": 10
+        },
+        {
+          "category": "automotive_service",
+          "count": 9
+        },
+        {
+          "category": "religious_organization",
+          "count": 8
+        },
+        {
+          "category": "fast_food_restaurant",
+          "count": 8
+        }
+      ]
+    },
+    {
+      "town": "Quebradillas",
+      "total": 370,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 36
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 29
+        },
+        {
+          "category": "bar",
+          "count": 23
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 18
+        },
+        {
+          "category": "pharmacy_and_drug_store",
+          "count": 11
+        },
+        {
+          "category": "historic_site",
+          "count": 10
+        },
+        {
+          "category": "hardware_home_and_garden_store",
+          "count": 10
+        },
+        {
+          "category": "gas_station",
+          "count": 9
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 9
+        },
+        {
+          "category": "diagnostics_imaging_or_lab_service",
+          "count": 8
+        },
+        {
+          "category": "coffee_shop",
+          "count": 8
+        },
+        {
+          "category": "automotive_service",
+          "count": 8
+        }
+      ]
+    },
+    {
+      "town": "Utuado",
+      "total": 368,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 38
+        },
+        {
+          "category": "historic_site",
+          "count": 22
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 20
+        },
+        {
+          "category": "bar",
+          "count": 18
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 15
+        },
+        {
+          "category": "casual_eatery",
+          "count": 13
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 10
+        },
+        {
+          "category": "automotive_service",
+          "count": 10
+        },
+        {
+          "category": "coffee_shop",
+          "count": 10
+        },
+        {
+          "category": "lodging",
+          "count": 10
+        },
+        {
+          "category": "cafe",
+          "count": 9
+        },
+        {
+          "category": "fast_food_restaurant",
+          "count": 8
+        }
+      ]
+    },
+    {
+      "town": "San Lorenzo",
+      "total": 365,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 48
+        },
+        {
+          "category": "bar",
+          "count": 25
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 23
+        },
+        {
+          "category": "historic_site",
+          "count": 16
+        },
+        {
+          "category": "automotive_service",
+          "count": 12
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 10
+        },
+        {
+          "category": "fast_food_restaurant",
+          "count": 10
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 9
+        },
+        {
+          "category": "casual_eatery",
+          "count": 9
+        },
+        {
+          "category": "other",
+          "count": 9
+        },
+        {
+          "category": "hardware_home_and_garden_store",
+          "count": 9
+        },
+        {
+          "category": "pharmacy_and_drug_store",
+          "count": 9
+        }
+      ]
+    },
+    {
+      "town": "Cataño",
+      "total": 364,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 55
+        },
+        {
+          "category": "bar",
+          "count": 21
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 18
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 15
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 15
+        },
+        {
+          "category": "manufacturer",
+          "count": 10
+        },
+        {
+          "category": "lodging",
+          "count": 10
+        },
+        {
+          "category": "religious_organization",
+          "count": 9
+        },
+        {
+          "category": "government_office",
+          "count": 9
+        },
+        {
+          "category": "gas_station",
+          "count": 8
+        },
+        {
+          "category": "casual_eatery",
+          "count": 8
+        },
+        {
+          "category": "hardware_home_and_garden_store",
+          "count": 8
+        }
+      ]
+    },
+    {
+      "town": "Loíza",
+      "total": 347,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 78
+        },
+        {
+          "category": "beach",
+          "count": 34
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 22
+        },
+        {
+          "category": "bar",
+          "count": 20
+        },
+        {
+          "category": "historic_site",
+          "count": 12
+        },
+        {
+          "category": "hotel",
+          "count": 11
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 10
+        },
+        {
+          "category": "fast_food_restaurant",
+          "count": 9
+        },
+        {
+          "category": "automotive_service",
+          "count": 8
+        },
+        {
+          "category": "lodging",
+          "count": 7
+        },
+        {
+          "category": "gas_station",
+          "count": 6
+        },
+        {
+          "category": "other",
+          "count": 6
+        }
+      ]
+    },
+    {
+      "town": "Santa Isabel",
+      "total": 331,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 41
+        },
+        {
+          "category": "beach",
+          "count": 14
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 14
+        },
+        {
+          "category": "other",
+          "count": 13
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 12
+        },
+        {
+          "category": "lodging",
+          "count": 12
+        },
+        {
+          "category": "gas_station",
+          "count": 8
+        },
+        {
+          "category": "fast_food_restaurant",
+          "count": 8
+        },
+        {
+          "category": "fashion_and_apparel_store",
+          "count": 8
+        },
+        {
+          "category": "bar",
+          "count": 8
+        },
+        {
+          "category": "electronics_store",
+          "count": 8
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 7
+        }
+      ]
+    },
+    {
+      "town": "Lares",
+      "total": 323,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 42
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 25
+        },
+        {
+          "category": "casual_eatery",
+          "count": 16
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 16
+        },
+        {
+          "category": "bar",
+          "count": 14
+        },
+        {
+          "category": "gas_station",
+          "count": 12
+        },
+        {
+          "category": "historic_site",
+          "count": 10
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 10
+        },
+        {
+          "category": "coffee_shop",
+          "count": 10
+        },
+        {
+          "category": "diagnostics_imaging_or_lab_service",
+          "count": 9
+        },
+        {
+          "category": "automotive_service",
+          "count": 9
+        },
+        {
+          "category": "hardware_home_and_garden_store",
+          "count": 7
+        }
+      ]
+    },
+    {
+      "town": "Hormigueros",
+      "total": 314,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 31
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 29
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 15
+        },
+        {
+          "category": "automotive_service",
+          "count": 13
+        },
+        {
+          "category": "fashion_and_apparel_store",
+          "count": 13
+        },
+        {
+          "category": "casual_eatery",
+          "count": 11
+        },
+        {
+          "category": "auto_dealer",
+          "count": 10
+        },
+        {
+          "category": "bar",
+          "count": 8
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 8
+        },
+        {
+          "category": "diagnostics_imaging_or_lab_service",
+          "count": 7
+        },
+        {
+          "category": "government_office",
+          "count": 7
+        },
+        {
+          "category": "fast_food_restaurant",
+          "count": 6
+        }
+      ]
+    },
+    {
+      "town": "Yabucoa",
+      "total": 311,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 36
+        },
+        {
+          "category": "bar",
+          "count": 25
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 18
+        },
+        {
+          "category": "beach",
+          "count": 16
+        },
+        {
+          "category": "historic_site",
+          "count": 12
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 12
+        },
+        {
+          "category": "lodging",
+          "count": 10
+        },
+        {
+          "category": "diagnostics_imaging_or_lab_service",
+          "count": 10
+        },
+        {
+          "category": "other",
+          "count": 8
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 8
+        },
+        {
+          "category": "elementary_school",
+          "count": 7
+        },
+        {
+          "category": "park",
+          "count": 7
+        }
+      ]
+    },
+    {
+      "town": "Naguabo",
+      "total": 307,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 49
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 25
+        },
+        {
+          "category": "automotive_service",
+          "count": 14
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 14
+        },
+        {
+          "category": "beach",
+          "count": 12
+        },
+        {
+          "category": "historic_site",
+          "count": 11
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 10
+        },
+        {
+          "category": "bar",
+          "count": 10
+        },
+        {
+          "category": "casual_eatery",
+          "count": 10
+        },
+        {
+          "category": "hotel",
+          "count": 9
+        },
+        {
+          "category": "lodging",
+          "count": 9
+        },
+        {
+          "category": "hardware_home_and_garden_store",
+          "count": 8
+        }
+      ]
+    },
+    {
+      "town": "Sabana Grande",
+      "total": 301,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 26
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 15
+        },
+        {
+          "category": "casual_eatery",
+          "count": 15
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 12
+        },
+        {
+          "category": "automotive_service",
+          "count": 10
+        },
+        {
+          "category": "lodging",
+          "count": 10
+        },
+        {
+          "category": "historic_site",
+          "count": 9
+        },
+        {
+          "category": "place_of_learning",
+          "count": 9
+        },
+        {
+          "category": "pharmacy_and_drug_store",
+          "count": 8
+        },
+        {
+          "category": "park",
+          "count": 8
+        },
+        {
+          "category": "bar",
+          "count": 7
+        },
+        {
+          "category": "fast_food_restaurant",
+          "count": 7
+        }
+      ]
+    },
+    {
+      "town": "Vieques",
+      "total": 276,
+      "top": [
+        {
+          "category": "beach",
+          "count": 45
+        },
+        {
+          "category": "hotel",
+          "count": 36
+        },
+        {
+          "category": "restaurant",
+          "count": 35
+        },
+        {
+          "category": "lodging",
+          "count": 12
+        },
+        {
+          "category": "private_lodging",
+          "count": 12
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 8
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 6
+        },
+        {
+          "category": "fast_food_restaurant",
+          "count": 6
+        },
+        {
+          "category": "park",
+          "count": 6
+        },
+        {
+          "category": "art_gallery",
+          "count": 5
+        },
+        {
+          "category": "cafe",
+          "count": 5
+        },
+        {
+          "category": "hardware_home_and_garden_store",
+          "count": 5
+        }
+      ]
+    },
+    {
+      "town": "Morovis",
+      "total": 275,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 42
+        },
+        {
+          "category": "bar",
+          "count": 19
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 12
+        },
+        {
+          "category": "historic_site",
+          "count": 11
+        },
+        {
+          "category": "automotive_service",
+          "count": 11
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 11
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 10
+        },
+        {
+          "category": "casual_eatery",
+          "count": 10
+        },
+        {
+          "category": "gas_station",
+          "count": 9
+        },
+        {
+          "category": "fast_food_restaurant",
+          "count": 8
+        },
+        {
+          "category": "diagnostics_imaging_or_lab_service",
+          "count": 5
+        },
+        {
+          "category": "lodging",
+          "count": 5
+        }
+      ]
+    },
+    {
+      "town": "Villalba",
+      "total": 271,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 30
+        },
+        {
+          "category": "bar",
+          "count": 21
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 16
+        },
+        {
+          "category": "casual_eatery",
+          "count": 14
+        },
+        {
+          "category": "lodging",
+          "count": 12
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 9
+        },
+        {
+          "category": "historic_site",
+          "count": 7
+        },
+        {
+          "category": "coffee_shop",
+          "count": 7
+        },
+        {
+          "category": "park",
+          "count": 7
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 7
+        },
+        {
+          "category": "place_of_learning",
+          "count": 6
+        },
+        {
+          "category": "automotive_service",
+          "count": 6
+        }
+      ]
+    },
+    {
+      "town": "Orocovis",
+      "total": 270,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 47
+        },
+        {
+          "category": "bar",
+          "count": 21
+        },
+        {
+          "category": "casual_eatery",
+          "count": 14
+        },
+        {
+          "category": "historic_site",
+          "count": 10
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 9
+        },
+        {
+          "category": "automotive_service",
+          "count": 9
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 8
+        },
+        {
+          "category": "coffee_shop",
+          "count": 7
+        },
+        {
+          "category": "river",
+          "count": 7
+        },
+        {
+          "category": "place_of_learning",
+          "count": 6
+        },
+        {
+          "category": "gas_station",
+          "count": 6
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 6
+        }
+      ]
+    },
+    {
+      "town": "Guánica",
+      "total": 260,
+      "top": [
+        {
+          "category": "beach",
+          "count": 32
+        },
+        {
+          "category": "restaurant",
+          "count": 28
+        },
+        {
+          "category": "lodging",
+          "count": 16
+        },
+        {
+          "category": "bar",
+          "count": 13
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 11
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 10
+        },
+        {
+          "category": "historic_site",
+          "count": 9
+        },
+        {
+          "category": "hotel",
+          "count": 9
+        },
+        {
+          "category": "other",
+          "count": 7
+        },
+        {
+          "category": "park",
+          "count": 7
+        },
+        {
+          "category": "fast_food_restaurant",
+          "count": 7
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 6
+        }
+      ]
+    },
+    {
+      "town": "Peñuelas",
+      "total": 256,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 31
+        },
+        {
+          "category": "bar",
+          "count": 15
+        },
+        {
+          "category": "lodging",
+          "count": 12
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 11
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 10
+        },
+        {
+          "category": "gas_station",
+          "count": 10
+        },
+        {
+          "category": "other",
+          "count": 9
+        },
+        {
+          "category": "historic_site",
+          "count": 9
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 9
+        },
+        {
+          "category": "diagnostics_imaging_or_lab_service",
+          "count": 7
+        },
+        {
+          "category": "pharmacy_and_drug_store",
+          "count": 6
+        },
+        {
+          "category": "automotive_service",
+          "count": 5
+        }
+      ]
+    },
+    {
+      "town": "Adjuntas",
+      "total": 242,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 20
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 17
+        },
+        {
+          "category": "historic_site",
+          "count": 16
+        },
+        {
+          "category": "bar",
+          "count": 13
+        },
+        {
+          "category": "lodging",
+          "count": 10
+        },
+        {
+          "category": "hardware_home_and_garden_store",
+          "count": 10
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 10
+        },
+        {
+          "category": "coffee_shop",
+          "count": 8
+        },
+        {
+          "category": "diagnostics_imaging_or_lab_service",
+          "count": 8
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 8
+        },
+        {
+          "category": "cafe",
+          "count": 7
+        },
+        {
+          "category": "gas_station",
+          "count": 7
+        }
+      ]
+    },
+    {
+      "town": "Jayuya",
+      "total": 241,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 27
+        },
+        {
+          "category": "bar",
+          "count": 26
+        },
+        {
+          "category": "coffee_shop",
+          "count": 11
+        },
+        {
+          "category": "casual_eatery",
+          "count": 10
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 9
+        },
+        {
+          "category": "historic_site",
+          "count": 8
+        },
+        {
+          "category": "lodging",
+          "count": 8
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 8
+        },
+        {
+          "category": "cafe",
+          "count": 7
+        },
+        {
+          "category": "diagnostics_imaging_or_lab_service",
+          "count": 7
+        },
+        {
+          "category": "mountain",
+          "count": 6
+        },
+        {
+          "category": "museum",
+          "count": 5
+        }
+      ]
+    },
+    {
+      "town": "Ciales",
+      "total": 241,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 33
+        },
+        {
+          "category": "bar",
+          "count": 23
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 15
+        },
+        {
+          "category": "historic_site",
+          "count": 13
+        },
+        {
+          "category": "lodging",
+          "count": 8
+        },
+        {
+          "category": "other",
+          "count": 7
+        },
+        {
+          "category": "religious_organization",
+          "count": 7
+        },
+        {
+          "category": "fast_food_restaurant",
+          "count": 7
+        },
+        {
+          "category": "diagnostics_imaging_or_lab_service",
+          "count": 7
+        },
+        {
+          "category": "river",
+          "count": 6
+        },
+        {
+          "category": "hardware_home_and_garden_store",
+          "count": 6
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 5
+        }
+      ]
+    },
+    {
+      "town": "Aguas Buenas",
+      "total": 241,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 28
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 21
+        },
+        {
+          "category": "bar",
+          "count": 19
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 11
+        },
+        {
+          "category": "casual_eatery",
+          "count": 10
+        },
+        {
+          "category": "lodging",
+          "count": 9
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 9
+        },
+        {
+          "category": "other",
+          "count": 8
+        },
+        {
+          "category": "elementary_school",
+          "count": 8
+        },
+        {
+          "category": "religious_organization",
+          "count": 7
+        },
+        {
+          "category": "place_of_learning",
+          "count": 6
+        },
+        {
+          "category": "hardware_home_and_garden_store",
+          "count": 6
+        }
+      ]
+    },
+    {
+      "town": "Guayanilla",
+      "total": 224,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 40
+        },
+        {
+          "category": "bar",
+          "count": 18
+        },
+        {
+          "category": "casual_eatery",
+          "count": 13
+        },
+        {
+          "category": "lodging",
+          "count": 9
+        },
+        {
+          "category": "historic_site",
+          "count": 9
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 8
+        },
+        {
+          "category": "hardware_home_and_garden_store",
+          "count": 6
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 5
+        },
+        {
+          "category": "gas_station",
+          "count": 5
+        },
+        {
+          "category": "beach",
+          "count": 4
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 4
+        },
+        {
+          "category": "fast_food_restaurant",
+          "count": 4
+        }
+      ]
+    },
+    {
+      "town": "Patillas",
+      "total": 215,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 41
+        },
+        {
+          "category": "beach",
+          "count": 17
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 13
+        },
+        {
+          "category": "bar",
+          "count": 11
+        },
+        {
+          "category": "historic_site",
+          "count": 11
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 9
+        },
+        {
+          "category": "lodging",
+          "count": 7
+        },
+        {
+          "category": "hotel",
+          "count": 6
+        },
+        {
+          "category": "other",
+          "count": 6
+        },
+        {
+          "category": "automotive_service",
+          "count": 5
+        },
+        {
+          "category": "food_truck_stand",
+          "count": 5
+        },
+        {
+          "category": "pharmacy_and_drug_store",
+          "count": 5
+        }
+      ]
+    },
+    {
+      "town": "Comerío",
+      "total": 213,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 19
+        },
+        {
+          "category": "historic_site",
+          "count": 14
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 13
+        },
+        {
+          "category": "bar",
+          "count": 12
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 11
+        },
+        {
+          "category": "other",
+          "count": 8
+        },
+        {
+          "category": "automotive_service",
+          "count": 7
+        },
+        {
+          "category": "lodging",
+          "count": 6
+        },
+        {
+          "category": "gas_station",
+          "count": 6
+        },
+        {
+          "category": "religious_organization",
+          "count": 6
+        },
+        {
+          "category": "diagnostics_imaging_or_lab_service",
+          "count": 6
+        },
+        {
+          "category": "pharmacy_and_drug_store",
+          "count": 5
+        }
+      ]
+    },
+    {
+      "town": "Arroyo",
+      "total": 194,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 31
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 15
+        },
+        {
+          "category": "lodging",
+          "count": 9
+        },
+        {
+          "category": "beach",
+          "count": 9
+        },
+        {
+          "category": "automotive_service",
+          "count": 8
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 8
+        },
+        {
+          "category": "bar",
+          "count": 7
+        },
+        {
+          "category": "fast_food_restaurant",
+          "count": 6
+        },
+        {
+          "category": "place_of_learning",
+          "count": 6
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 6
+        },
+        {
+          "category": "gas_station",
+          "count": 5
+        },
+        {
+          "category": "historic_site",
+          "count": 5
+        }
+      ]
+    },
+    {
+      "town": "Ceiba",
+      "total": 189,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 21
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 16
+        },
+        {
+          "category": "historic_site",
+          "count": 11
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 10
+        },
+        {
+          "category": "beach",
+          "count": 6
+        },
+        {
+          "category": "gas_station",
+          "count": 6
+        },
+        {
+          "category": "lodging",
+          "count": 6
+        },
+        {
+          "category": "religious_organization",
+          "count": 6
+        },
+        {
+          "category": "automotive_service",
+          "count": 5
+        },
+        {
+          "category": "bar",
+          "count": 5
+        },
+        {
+          "category": "dental_clinic",
+          "count": 4
+        },
+        {
+          "category": "government_office",
+          "count": 4
+        }
+      ]
+    },
+    {
+      "town": "Maunabo",
+      "total": 141,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 23
+        },
+        {
+          "category": "bar",
+          "count": 11
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 11
+        },
+        {
+          "category": "historic_site",
+          "count": 10
+        },
+        {
+          "category": "beach",
+          "count": 7
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 6
+        },
+        {
+          "category": "hotel",
+          "count": 4
+        },
+        {
+          "category": "other",
+          "count": 3
+        },
+        {
+          "category": "diagnostics_imaging_or_lab_service",
+          "count": 3
+        },
+        {
+          "category": "family_service",
+          "count": 3
+        },
+        {
+          "category": "hardware_home_and_garden_store",
+          "count": 3
+        },
+        {
+          "category": "lodging",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "town": "Culebra",
+      "total": 138,
+      "top": [
+        {
+          "category": "beach",
+          "count": 33
+        },
+        {
+          "category": "hotel",
+          "count": 24
+        },
+        {
+          "category": "restaurant",
+          "count": 14
+        },
+        {
+          "category": "lodging",
+          "count": 5
+        },
+        {
+          "category": "private_lodging",
+          "count": 4
+        },
+        {
+          "category": "historic_site",
+          "count": 3
+        },
+        {
+          "category": "other",
+          "count": 3
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 3
+        },
+        {
+          "category": "airport",
+          "count": 3
+        },
+        {
+          "category": "coffee_shop",
+          "count": 3
+        },
+        {
+          "category": "rental_service",
+          "count": 3
+        },
+        {
+          "category": "bar",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "town": "Florida",
+      "total": 106,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 10
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 10
+        },
+        {
+          "category": "bar",
+          "count": 6
+        },
+        {
+          "category": "lodging",
+          "count": 4
+        },
+        {
+          "category": "automotive_service",
+          "count": 4
+        },
+        {
+          "category": "gas_station",
+          "count": 3
+        },
+        {
+          "category": "religious_organization",
+          "count": 3
+        },
+        {
+          "category": "casual_eatery",
+          "count": 3
+        },
+        {
+          "category": "food_and_beverage_store",
+          "count": 3
+        },
+        {
+          "category": "personal_or_beauty_service",
+          "count": 3
+        },
+        {
+          "category": "cafe",
+          "count": 3
+        },
+        {
+          "category": "hardware_home_and_garden_store",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "town": "Las Marías",
+      "total": 97,
+      "top": [
+        {
+          "category": "restaurant",
+          "count": 11
+        },
+        {
+          "category": "historic_site",
+          "count": 10
+        },
+        {
+          "category": "christian_place_of_worship",
+          "count": 6
+        },
+        {
+          "category": "casual_eatery",
+          "count": 4
+        },
+        {
+          "category": "bar",
+          "count": 4
+        },
+        {
+          "category": "cafe",
+          "count": 4
+        },
+        {
+          "category": "pharmacy_and_drug_store",
+          "count": 4
+        },
+        {
+          "category": "vehicle_parts_store",
+          "count": 3
+        },
+        {
+          "category": "elementary_school",
+          "count": 3
+        },
+        {
+          "category": "diagnostics_imaging_or_lab_service",
+          "count": 3
+        },
+        {
+          "category": "automotive_service",
+          "count": 3
+        },
+        {
+          "category": "religious_organization",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "town": "Maricao",
+      "total": 61,
+      "top": [
+        {
+          "category": "historic_site",
+          "count": 5
+        },
+        {
+          "category": "religious_organization",
+          "count": 5
+        },
+        {
+          "category": "river",
+          "count": 4
+        },
+        {
+          "category": "bar",
+          "count": 4
+        },
+        {
+          "category": "restaurant",
+          "count": 3
+        },
+        {
+          "category": "lodging",
+          "count": 2
+        },
+        {
+          "category": "hospital",
+          "count": 2
+        },
+        {
+          "category": "community_and_government",
+          "count": 2
+        },
+        {
+          "category": "coffee_shop",
+          "count": 2
+        },
+        {
+          "category": "casual_eatery",
+          "count": 2
+        },
+        {
+          "category": "monument",
+          "count": 2
+        },
+        {
+          "category": "arts_and_entertainment",
+          "count": 2
+        }
+      ]
+    }
+  ]
+}

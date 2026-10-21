@@ -1,0 +1,12 @@
+# Local run of the same image the hosted demo uses: docker compose up --build
+# Then open http://localhost:8080 (front page) and http://localhost:8080/app (live map).
+services:
+  zemi:
+    build: .
+    image: zemi-aku:local
+    env_file: .env
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./cache:/srv/zemi/cache
+    restart: unless-stopped

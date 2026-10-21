@@ -1,0 +1,481 @@
+{
+  "measured": "2026-10-06",
+  "api": "https://hackathon.api.qloo.com/v2/insights",
+  "query": "filter.type=urn:entity:place, filter.location.query={town}, Puerto Rico, take=5",
+  "grades": "RICH = at least 3 of 5 records mention the town. THIN = 1 or 2. None were empty.",
+  "tally": {
+    "RICH": 70,
+    "THIN": 8
+  },
+  "rows": [
+    {
+      "town": "Ciales",
+      "grade": "RICH",
+      "local": 5,
+      "returned": 5
+    },
+    {
+      "town": "Bayamón",
+      "grade": "RICH",
+      "local": 5,
+      "returned": 5
+    },
+    {
+      "town": "Florida",
+      "grade": "RICH",
+      "local": 3,
+      "returned": 5
+    },
+    {
+      "town": "Guaynabo",
+      "grade": "RICH",
+      "local": 3,
+      "returned": 5
+    },
+    {
+      "town": "Carolina",
+      "grade": "RICH",
+      "local": 5,
+      "returned": 5
+    },
+    {
+      "town": "Villalba",
+      "grade": "RICH",
+      "local": 5,
+      "returned": 5
+    },
+    {
+      "town": "Caguas",
+      "grade": "RICH",
+      "local": 4,
+      "returned": 5
+    },
+    {
+      "town": "Camuy",
+      "grade": "THIN",
+      "local": 2,
+      "returned": 5
+    },
+    {
+      "town": "Vega Alta",
+      "grade": "RICH",
+      "local": 5,
+      "returned": 5
+    },
+    {
+      "town": "Rincón",
+      "grade": "RICH",
+      "local": 5,
+      "returned": 5
+    },
+    {
+      "town": "Gurabo",
+      "grade": "THIN",
+      "local": 1,
+      "returned": 5
+    },
+    {
+      "town": "Hatillo",
+      "grade": "RICH",
+      "local": 3,
+      "returned": 5
+    },
+    {
+      "town": "Lares",
+      "grade": "RICH",
+      "local": 4,
+      "returned": 5
+    },
+    {
+      "town": "Ceiba",
+      "grade": "THIN",
+      "local": 2,
+      "returned": 5
+    },
+    {
+      "town": "Corozal",
+      "grade": "RICH",
+      "local": 3,
+      "returned": 5
+    },
+    {
+      "town": "Aguas Buenas",
+      "grade": "RICH",
+      "local": 3,
+      "returned": 5
+    },
+    {
+      "town": "Cataño",
+      "grade": "THIN",
+      "local": 2,
+      "returned": 5
+    },
+    {
+      "town": "Aibonito",
+      "grade": "RICH",
+      "local": 3,
+      "returned": 5
+    },
+    {
+      "town": "Coamo",
+      "grade": "RICH",
+      "local": 4,
+      "returned": 5
+    },
+    {
+      "town": "Río Grande",
+      "grade": "RICH",
+      "local": 4,
+      "returned": 5
+    },
+    {
+      "town": "Juana Díaz",
+      "grade": "RICH",
+      "local": 3,
+      "returned": 5
+    },
+    {
+      "town": "Maricao",
+      "grade": "RICH",
+      "local": 5,
+      "returned": 5
+    },
+    {
+      "town": "Aguadilla",
+      "grade": "RICH",
+      "local": 5,
+      "returned": 5
+    },
+    {
+      "town": "San Juan",
+      "grade": "RICH",
+      "local": 5,
+      "returned": 5
+    },
+    {
+      "town": "Ponce",
+      "grade": "RICH",
+      "local": 5,
+      "returned": 5
+    },
+    {
+      "town": "Fajardo",
+      "grade": "RICH",
+      "local": 5,
+      "returned": 5
+    },
+    {
+      "town": "Yabucoa",
+      "grade": "THIN",
+      "local": 1,
+      "returned": 5
+    },
+    {
+      "town": "Hormigueros",
+      "grade": "RICH",
+      "local": 5,
+      "returned": 5
+    },
+    {
+      "town": "Aguada",
+      "grade": "RICH",
+      "local": 3,
+      "returned": 5
+    },
+    {
+      "town": "Toa Baja",
+      "grade": "RICH",
+      "local": 3,
+      "returned": 5
+    },
+    {
+      "town": "Adjuntas",
+      "grade": "RICH",
+      "local": 5,
+      "returned": 5
+    },
+    {
+      "town": "Quebradillas",
+      "grade": "RICH",
+      "local": 5,
+      "returned": 5
+    },
+    {
+      "town": "Morovis",
+      "grade": "RICH",
+      "local": 3,
+      "returned": 5
+    },
+    {
+      "town": "Luquillo",
+      "grade": "RICH",
+      "local": 4,
+      "returned": 5
+    },
+    {
+      "town": "Manatí",
+      "grade": "RICH",
+      "local": 4,
+      "returned": 5
+    },
+    {
+      "town": "Yauco",
+      "grade": "RICH",
+      "local": 4,
+      "returned": 5
+    },
+    {
+      "town": "Mayagüez",
+      "grade": "RICH",
+      "local": 5,
+      "returned": 5
+    },
+    {
+      "town": "Sabana Grande",
+      "grade": "RICH",
+      "local": 3,
+      "returned": 5
+    },
+    {
+      "town": "Utuado",
+      "grade": "RICH",
+      "local": 3,
+      "returned": 5
+    },
+    {
+      "town": "Maunabo",
+      "grade": "RICH",
+      "local": 3,
+      "returned": 5
+    },
+    {
+      "town": "Orocovis",
+      "grade": "RICH",
+      "local": 3,
+      "returned": 5
+    },
+    {
+      "town": "Isabela",
+      "grade": "RICH",
+      "local": 5,
+      "returned": 5
+    },
+    {
+      "town": "Cidra",
+      "grade": "THIN",
+      "local": 2,
+      "returned": 5
+    },
+    {
+      "town": "San Lorenzo",
+      "grade": "RICH",
+      "local": 5,
+      "returned": 5
+    },
+    {
+      "town": "Toa Alta",
+      "grade": "THIN",
+      "local": 1,
+      "returned": 5
+    },
+    {
+      "town": "Cabo Rojo",
+      "grade": "THIN",
+      "local": 1,
+      "returned": 5
+    },
+    {
+      "town": "Humacao",
+      "grade": "RICH",
+      "local": 5,
+      "returned": 5
+    },
+    {
+      "town": "Juncos",
+      "grade": "RICH",
+      "local": 3,
+      "returned": 5
+    },
+    {
+      "town": "Barceloneta",
+      "grade": "RICH",
+      "local": 4,
+      "returned": 5
+    },
+    {
+      "town": "Trujillo Alto",
+      "grade": "RICH",
+      "local": 5,
+      "returned": 5
+    },
+    {
+      "town": "Jayuya",
+      "grade": "RICH",
+      "local": 5,
+      "returned": 5
+    },
+    {
+      "town": "Vieques",
+      "grade": "RICH",
+      "local": 5,
+      "returned": 5
+    },
+    {
+      "town": "Cayey",
+      "grade": "RICH",
+      "local": 3,
+      "returned": 5
+    },
+    {
+      "town": "Santa Isabel",
+      "grade": "RICH",
+      "local": 5,
+      "returned": 5
+    },
+    {
+      "town": "Arroyo",
+      "grade": "RICH",
+      "local": 5,
+      "returned": 5
+    },
+    {
+      "town": "San Germán",
+      "grade": "RICH",
+      "local": 5,
+      "returned": 5
+    },
+    {
+      "town": "Guayama",
+      "grade": "RICH",
+      "local": 4,
+      "returned": 5
+    },
+    {
+      "town": "Barranquitas",
+      "grade": "RICH",
+      "local": 3,
+      "returned": 5
+    },
+    {
+      "town": "Guayanilla",
+      "grade": "RICH",
+      "local": 5,
+      "returned": 5
+    },
+    {
+      "town": "San Sebastián",
+      "grade": "RICH",
+      "local": 5,
+      "returned": 5
+    },
+    {
+      "town": "Loíza",
+      "grade": "RICH",
+      "local": 3,
+      "returned": 5
+    },
+    {
+      "town": "Añasco",
+      "grade": "RICH",
+      "local": 5,
+      "returned": 5
+    },
+    {
+      "town": "Patillas",
+      "grade": "RICH",
+      "local": 4,
+      "returned": 5
+    },
+    {
+      "town": "Dorado",
+      "grade": "RICH",
+      "local": 4,
+      "returned": 5
+    },
+    {
+      "town": "Canóvanas",
+      "grade": "RICH",
+      "local": 5,
+      "returned": 5
+    },
+    {
+      "town": "Salinas",
+      "grade": "RICH",
+      "local": 5,
+      "returned": 5
+    },
+    {
+      "town": "Naguabo",
+      "grade": "RICH",
+      "local": 4,
+      "returned": 5
+    },
+    {
+      "town": "Comerío",
+      "grade": "RICH",
+      "local": 5,
+      "returned": 5
+    },
+    {
+      "town": "Lajas",
+      "grade": "RICH",
+      "local": 5,
+      "returned": 5
+    },
+    {
+      "town": "Las Piedras",
+      "grade": "RICH",
+      "local": 5,
+      "returned": 5
+    },
+    {
+      "town": "Naranjito",
+      "grade": "RICH",
+      "local": 5,
+      "returned": 5
+    },
+    {
+      "town": "Moca",
+      "grade": "RICH",
+      "local": 4,
+      "returned": 5
+    },
+    {
+      "town": "Vega Baja",
+      "grade": "RICH",
+      "local": 5,
+      "returned": 5
+    },
+    {
+      "town": "Arecibo",
+      "grade": "RICH",
+      "local": 4,
+      "returned": 5
+    },
+    {
+      "town": "Culebra",
+      "grade": "RICH",
+      "local": 5,
+      "returned": 5
+    },
+    {
+      "town": "Peñuelas",
+      "grade": "RICH",
+      "local": 4,
+      "returned": 5
+    },
+    {
+      "town": "Guánica",
+      "grade": "RICH",
+      "local": 5,
+      "returned": 5
+    },
+    {
+      "town": "Las Marías",
+      "grade": "RICH",
+      "local": 5,
+      "returned": 5
+    }
+  ],
+  "note": "Public copy: each town's top Qloo record is removed. Qloo response data stays out of public repositories; the counts and grades are aggregates."
+}

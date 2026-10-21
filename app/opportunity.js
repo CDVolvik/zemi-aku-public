@@ -1,0 +1,173 @@
+// "Where should I open a…?" Colors the 78 towns by Qloo taste against Census businesses per 10,000
+// residents, from the saved build at /api/opportunity. Every group carries its words, not only a color.
+(function () {
+  const $ = id => document.getElementById(id);
+  const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const norm = s => String(s).normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().replace(/ municipio$/, "").trim();
+
+  const GROUPS = ["gap", "competitive", "quiet", "crowded", "unknown"];
+  const GROUP_COLORS = { gap: "#e07a3d", competitive: "#2f8f7a", quiet: "#9cc3b4", crowded: "#7c5cff", unknown: "#6b7280" };
+  const LABELS = {
+    en: { gap: "Gap: strong taste, few businesses", competitive: "Competitive: strong taste, many businesses",
+      quiet: "Quiet: less taste, few businesses", crowded: "Crowded: less taste, many businesses", unknown: "Not enough data" },
+    es: { gap: "Brecha: mucho gusto, pocos negocios", competitive: "Competido: mucho gusto, muchos negocios",
+      quiet: "Tranquilo: menos gusto, pocos negocios", crowded: "Saturado: menos gusto, muchos negocios", unknown: "Datos insuficientes" },
+  };
+  const INDUSTRIES = [
+    ["cafe", "café", "una cafetería", "Cafés", "Cafeterías"], ["bakery", "bakery", "una panadería", "Bakeries", "Panaderías"],
+    ["restaurant", "restaurant", "un restaurante", "Restaurants", "Restaurantes"], ["bar", "bar", "una barra", "Bars", "Barras"],
+    ["hotel", "hotel", "un hotel", "Hotels", "Hoteles"], ["salon", "salon", "un salón de belleza", "Salons", "Salones de belleza"],
+  ].map(([id, en, es, pluralEn, pluralEs]) => ({ id, en, es, pluralEn, pluralEs }));
+  const TEXT = {
+    en: { kicker: "PUERTO RICO · WHERE TO OPEN", title: name => `Where should I open a ${name}?`, gaps: "Strongest taste with few businesses",
+      loading: "Loading…", unavailable: name => `Opportunity data is unavailable for ${name}.`, close: "Back to the island", rank: n => `taste #${n}`,
+      tap: "Tap a town on the map or below to see its numbers." },
+    es: { kicker: "PUERTO RICO · DÓNDE ABRIR", title: name => `¿Dónde abro ${name}?`, gaps: "Más gusto y pocos negocios",
+      loading: "Cargando…", unavailable: name => `Los datos de oportunidad no están disponibles para ${name}.`, close: "Volver a la isla",
+      rank: n => `gusto #${n}`, tap: "Toque un pueblo en el mapa o abajo para ver sus números." },
+  };
+  const lang2 = value => (value === "es" ? "es" : "en");
+
+  function legendHtml(lang, notes = []) {
+    const l = lang2(lang);
+    return `<ul class="opportunity-legend">${GROUPS.map(group => `<li><span class="swatch" style="background:${GROUP_COLORS[group]}" aria-hidden="true"></span>${esc(LABELS[l][group])}</li>`).join("")}</ul>`
+      + `<div class="opportunity-notes">${notes.map(line => `<p class="small">${esc(line)}</p>`).join("")}</div>`;
+  }
+
+  // Census NAICS 2017 titles for the codes the build sums, in plain words.
+  const NAICS = {
+    "722515": { en: "snack and nonalcoholic beverage bars, where the Census counts cafés and coffee shops", es: "barras de meriendas y bebidas sin alcohol, donde el Census cuenta las cafeterías" },
+    "311811": { en: "retail bakeries", es: "panaderías al detal" },
+    "722511": { en: "full-service restaurants", es: "restaurantes con servicio de mesa" },
+    "722513": { en: "limited-service restaurants, counter service and fast food", es: "restaurantes de servicio limitado, mostrador y comida rápida" },
+    "722410": { en: "drinking places serving alcohol", es: "establecimientos de bebidas alcohólicas" },
+    "721110": { en: "hotels and motels, except casino hotels", es: "hoteles y moteles, sin los hoteles de casino" },
+    "812112": { en: "beauty salons only; nail salons are a separate code the build leaves out", es: "salones de belleza solamente; los salones de uñas son otro código que no se suma" },
+  };
+  const industryById = id => INDUSTRIES.find(i => i.id === id);
+
+  // The six industries as chips: the hero's first row and the readout's "change the question" row share it.
+  function industryChips(lang, { attr, current } = {}) {
+    const l = lang2(lang);
+    return INDUSTRIES.map(i => `<button type="button" ${attr}="${i.id}"${i.id === current ? ' aria-pressed="true"' : ""}>${esc(l === "es" ? i.pluralEs : i.pluralEn)}</button>`).join("");
+  }
+  // The one town question, asked by the map's gap list and the readout alike.
+  function townQuestion(lang, industry, town) {
+    const kind = industryById(industry);
+    if (!kind || !town) return null;
+    return lang2(lang) === "es" ? `¿Debo abrir ${kind.es} en ${town}?` : `Should I open a ${kind.en} in ${town}?`;
+  }
+
+  // What every word on the map means, from the saved build's sources. Shown folded under the legend
+  // and inside a town's "Sources and limits"; a screening for entrepreneurs, never a demand figure.
+  function definitionsHtml(lang, { industry, sources } = {}) {
+    const l = lang2(lang), es = l === "es";
+    const kind = industryById(industry);
+    const name = kind ? (es ? kind.pluralEs : kind.pluralEn) : (es ? "Esta industria" : "This industry");
+    const codes = (sources?.cbp?.naics || []).map(code => `${code} (${NAICS[code]?.[l] || (es ? "código del Census" : "Census code")})`);
+    const year = sources?.cbp?.vintage ? String(sources.cbp.vintage) : "";
+    const period = sources?.census?.period || "";
+    const tag = sources?.qloo?.tag || "";
+    const lines = es ? [
+      `Industria: ${name}. Negocios = ${codes.length ? `código NAICS ${codes.join(" + ")} del Census` : "la cifra del Census para esta industria"}.`
+        + ` Gusto = ${tag ? `lugares que Qloo etiqueta como ${tag}` : "la afinidad de Qloo por esta industria"}, promediada sobre las celdas del pueblo.`,
+      `Negocios: County Business Patterns${year ? ` ${year}` : ""} cuenta los establecimientos con empleados${year ? ` a marzo de ${year}` : ""} a partir de registros contributivos; es un conteo, sin margen de error, pero deja fuera a quienes trabajan por cuenta propia.`,
+      `Población: Puerto Rico Community Survey${period ? ` ${period}` : ""}, estimado de cinco años; tiene un margen de error que la cifra por cada 10,000 no muestra, así que una diferencia pequeña entre pueblos no significa nada.`,
+      "El Census no publica cifras menores de 3: un pueblo sin cifra publicada tiene de 0 a 2 establecimientos, nunca un cero seguro.",
+      "Los colores y las cifras siguen el límite del municipio. La lista de negocios parecidos dentro de un pueblo usa un círculo de 3 km en línea recta alrededor del lugar escogido, que puede cruzar al pueblo vecino; no son la misma área.",
+      "Esto es un primer filtro: dónde el gusto va por delante de la oferta. Este mapa no mide demanda, ingresos ni ganancias, y no sustituye una visita ni un plan de negocio.",
+    ] : [
+      `Industry: ${name}. Businesses = ${codes.length ? `Census NAICS code ${codes.join(" + ")}` : "the Census count for this industry"}.`
+        + ` Taste = ${tag ? `places Qloo tags as ${tag}` : "Qloo's affinity for this industry"}, averaged over the town's map cells.`,
+      `Businesses: County Business Patterns${year ? ` ${year}` : ""} counts employer establishments${year ? ` as of March ${year}` : ""} from tax records; it is a count with no margin of error, but it leaves out the self-employed.`,
+      `People: Puerto Rico Community Survey${period ? ` ${period}` : ""}, a five-year estimate; it carries a margin of error that the per-10,000 figure does not show, so a small difference between towns means nothing.`,
+      "Census does not publish counts below 3: a town without a published count has 0–2 establishments, never a sure zero.",
+      "Colors and counts follow the municipio boundary. The list of similar businesses inside a town uses a 3 km straight line circle around the chosen place, which can cross into the next town; the two are not the same area.",
+      "This is a screening, not demand: where taste runs ahead of supply. The map does not measure demand, revenue or profit, and it does not replace a visit or a business plan.",
+    ];
+    return `<details class="opportunity-definitions small"><summary>${es ? "Definiciones" : "Definitions"}</summary>${lines.map(line => `<p>${esc(line)}</p>`).join("")}</details>`;
+  }
+
+  // Census does not publish counts below 3: an unpublished count is a range, never zero.
+  function supplyText(row, lang) {
+    const es = lang2(lang) === "es";
+    const fix = n => Number(n).toFixed(1);
+    if (!row.suppressed) return { businesses: es ? `${row.establishments} establecimientos · ${row.employees} empleados` : `${row.establishments} establishments · ${row.employees} employees`,
+      per: es ? `${fix(row.perTenThousand)} por cada 10,000 residentes` : `${fix(row.perTenThousand)} per 10,000 residents` };
+    if (!row.establishments) return { businesses: es ? `de 0 a ${row.establishmentsMax} establecimientos (el Census no publica cifras menores de 3)` : `0–${row.establishmentsMax} establishments (Census does not publish counts below 3)`,
+      per: es ? `hasta ${fix(row.perTenThousandMax)} por cada 10,000 residentes` : `up to ${fix(row.perTenThousandMax)} per 10,000 residents` };
+    return { businesses: es ? `al menos ${row.establishments} establecimientos · al menos ${row.employees} empleados` : `at least ${row.establishments} establishments · at least ${row.employees} employees`,
+      per: es ? `${fix(row.perTenThousand)}–${fix(row.perTenThousandMax)} por cada 10,000 residentes` : `${fix(row.perTenThousand)}–${fix(row.perTenThousandMax)} per 10,000 residents` };
+  }
+
+  window.ZemiOpportunity = { GROUP_COLORS, LABELS, legendHtml, definitionsHtml, supplyText, industryChips, townQuestion, mount({ fetchJson, lang, onChange, onAsk }) {
+    const loaded = new Map();
+    let current = null, generation = 0;
+    const industryOf = industryById;
+
+    function render() {
+      const l = lang2(lang()), text = TEXT[l];
+      const industry = industryOf(current?.industry || "");
+      $("opportunity-kicker").textContent = text.kicker;
+      $("opportunity-title").textContent = industry ? text.title(l === "es" ? industry.es : industry.en) : "";
+      $("opportunity-industries").innerHTML = INDUSTRIES.map(i => `<button type="button" data-opportunity-industry="${i.id}" aria-pressed="${i.id === current?.industry}">${esc(l === "es" ? i.pluralEs : i.pluralEn)}</button>`).join("");
+      $("opportunity-close").textContent = text.close;
+      if (!current) { $("opportunity-legend").innerHTML = ""; $("opportunity-gaps").innerHTML = ""; $("opportunity-gaps-heading").textContent = ""; return; }
+      $("opportunity-note").textContent = text.tap;
+      $("opportunity-legend").innerHTML = legendHtml(l, current.data.notes?.[l] || []) + definitionsHtml(l, current.data);
+      $("opportunity-gaps-heading").textContent = text.gaps;
+      const gaps = current.data.towns.filter(row => row.group === "gap").sort((a, b) => a.tasteRank - b.tasteRank).slice(0, 8);
+      $("opportunity-gaps").innerHTML = gaps.map(row => {
+        const facts = [Number.isFinite(row.tasteRank) ? text.rank(row.tasteRank) : "",
+          Number.isFinite(row.perTenThousand) ? supplyText(row, l).per : ""].filter(Boolean).join(" · ");
+        return `<button type="button" class="coast-card" data-opportunity-town="${esc(row.town)}"><strong>${esc(row.town)}</strong><span>${esc(facts)}</span></button>`;
+      }).join("");
+    }
+
+    async function show(id) {
+      const industry = industryOf(id);
+      if (!industry) return;
+      const token = ++generation;
+      $("opportunity-panel").hidden = false;
+      if (!loaded.has(id)) $("opportunity-note").textContent = TEXT[lang2(lang())].loading;
+      let data;
+      try { data = loaded.get(id) || await fetchJson(`/api/opportunity?industry=${encodeURIComponent(id)}`); }
+      catch {
+        if (token !== generation) return;
+        current = null; render(); onChange();
+        $("opportunity-note").textContent = TEXT[lang2(lang())].unavailable(lang2(lang()) === "es" ? industry.es : industry.en);
+        return;
+      }
+      if (token !== generation) return; // A newer choice won while this one loaded.
+      loaded.set(id, data);
+      current = { industry: id, data, groups: new Map(data.towns.map(row => [norm(row.town), row.group])) };
+      render(); onChange();
+    }
+
+    function hide() {
+      generation++; current = null;
+      $("opportunity-panel").hidden = true;
+      onChange();
+    }
+
+    function pickTown(town) {
+      const industry = industryOf(current?.industry || "");
+      if (!industry) return;
+      $("opportunity-panel").hidden = true; // The town readout opens in the same place; the colors stay.
+      onAsk(townQuestion(lang(), industry.id, town));
+    }
+
+    $("opportunity-industries").addEventListener("click", event => {
+      const button = event.target.closest?.("[data-opportunity-industry]");
+      if (button) show(button.dataset.opportunityIndustry);
+    });
+    $("opportunity-gaps").addEventListener("click", event => {
+      const button = event.target.closest?.("[data-opportunity-town]");
+      if (button) pickTown(button.dataset.opportunityTown);
+    });
+    $("opportunity-close").addEventListener("click", () => hide());
+
+    return { show, hide, pickTown, render, active: () => current?.industry || null, panelOpen: () => !$("opportunity-panel").hidden,
+      groupOf: town => current?.groups.get(norm(town)) ?? null };
+  } };
+}());

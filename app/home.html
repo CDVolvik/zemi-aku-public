@@ -1,0 +1,889 @@
+<!doctype html>
+<html lang="en" data-story="business">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zemi-Aku — Where should you open in Puerto Rico?</title>
+<meta name="description" content="Zemi-Aku scores all 78 Puerto Rico towns by Qloo taste for your industry against the businesses the Census already counts there, shows the source for every number, and takes follow-up questions in English or Spanish. Built for the Qloo Agentic Hackathon, October 2026.">
+<meta property="og:title" content="Zemi-Aku — Where should you open in Puerto Rico?">
+<meta property="og:description" content="Scores all 78 Puerto Rico towns by Qloo taste for your industry against the businesses the Census already counts there, with a source for every number and follow-ups in English or Spanish. Built for the Qloo Agentic Hackathon, October 2026.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://zemi.r21digital.com/">
+<meta property="og:image" content="https://zemi.r21digital.com/app/assets/shot-business.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/png" sizes="32x32" href="/app/assets/favicon-32.png">
+<link rel="apple-touch-icon" href="/app/assets/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #28323c;
+    --muted: #505a64;
+    --surface: #f8f6f4;
+    --surface-raised: #fcfaf8;
+    --surface-alt: #f2f0ee;
+    --cream: #e8e6e4;
+    --paper: #f8f6f4;
+    --accent: #5a5aa8;
+    --accent-soft: #8c8cc8;
+    --night: #1a1f26;
+    --night-text: #e8e6e4;
+    --night-accent: #8c8cc8;
+    --highlight: #dfaf56;
+    --lilac: #b4aadc;
+    --sage: #8ca082;
+    --steel: #648c96;
+    --mauve: #b48ca0;
+    --amber: #e6be78;
+    --coral: #f06464;
+    --heat-thin: #fabe50;
+    --heat-some: #f8903e;
+    --heat-broad: #f46a36;
+    --heat-deep: #f04632;
+    --rule: #28323c;
+    --hair: rgba(40, 50, 60, .14);
+    --ink-2: #505a64;
+    --serif: "Inter", system-ui, sans-serif;
+    --quote: "Newsreader", Georgia, serif;
+    --mono: "Fira Code", ui-monospace, Consolas, monospace;
+    --wrap: 1240px;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--surface); color: var(--ink); font: 17px/1.6 var(--serif); }
+  a { color: inherit; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  .wrap { width: min(var(--wrap), calc(100% - 48px)); margin: 0 auto; }
+  .mono { font-family: var(--mono); }
+  .small { font-family: var(--mono); font-size: 12px; line-height: 1.5; color: var(--muted); }
+  .grid-section { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 24px; align-items: start; }
+  .span-12 { grid-column: 1 / -1; }
+  .span-6 { grid-column: span 6; }
+  .span-8 { grid-column: span 8; }
+  .span-4 { grid-column: span 4; }
+  .card { padding: 32px; border-radius: 16px; background: var(--surface-raised); border: 1px solid var(--hair); }
+  .fade-in { opacity: 0; transform: translateY(16px); transition: opacity 520ms ease, transform 520ms ease; }
+  .fade-in.in-view { opacity: 1; transform: none; }
+  .pull-quote { font: italic 22px/1.45 var(--quote); color: var(--ink); margin: 0; }
+
+  /* Masthead */
+  .mast { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 16px; align-items: baseline; padding: 24px 0 12px; border-bottom: 1px solid var(--hair); font: 500 12px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; }
+  .mast > span:first-child { grid-column: span 4; }
+  .mast .mid { grid-column: span 4; text-align: center; color: var(--muted); }
+  .mast nav { grid-column: span 4; display: flex; gap: 18px; justify-content: flex-end; flex-wrap: wrap; }
+  .mast a { text-decoration: none; }
+  .mast a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+  /* Hero */
+  .hero { padding: 96px 0 48px; }
+  h1 { margin: 0; font: 600 clamp(40px, 5.6vw, 72px)/1.02 var(--serif); letter-spacing: -.025em; text-wrap: balance; }
+  .dek { margin: 16px 0 0; font-size: 18px; line-height: 1.6; color: var(--ink-2); text-wrap: pretty; max-width: 52ch; }
+  .taste-stack { margin-top: 24px; }
+  .taste-stack .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .taste-stack button {
+    border: 0; border-radius: 999px; padding: 8px 14px; font: 500 13px/1 var(--mono); cursor: pointer; color: var(--ink);
+    transition: transform 160ms ease, box-shadow 160ms ease;
+  }
+  .taste-stack button[aria-pressed="true"] { box-shadow: inset 0 0 0 2px var(--ink); }
+  .taste-stack button[data-taste="bad-bunny"] { background: var(--lilac); }
+  .taste-stack button[data-taste="mofongo"] { background: var(--sage); }
+  .taste-stack button[data-taste="beaches"] { background: var(--steel); color: #fff; }
+  .taste-stack button[data-taste="coffee"] { background: var(--amber); }
+  .taste-stack button[data-taste="salsa"] { background: var(--mauve); color: #fff; }
+  .taste-readout { margin: 0; padding: 16px 18px; background: var(--surface-alt); border-radius: 12px; font-size: 16px; line-height: 1.55; color: var(--ink-2); min-height: 4.5em; }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 10px 18px;
+    border: 1px solid var(--rule); border-radius: 999px; font: 500 13px/1 var(--mono); text-decoration: none;
+    background: var(--surface-raised); transition: transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease, color 160ms ease;
+  }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  @media (hover: hover) and (pointer: fine) {
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(40, 50, 60, .12); }
+    .btn.primary:hover { background: #4a4a96; border-color: #4a4a96; }
+  }
+  .hero-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-top: 48px; padding-top: 28px; border-top: 1px solid var(--hair); }
+  .hero-stats div { padding: 16px 20px; background: var(--surface-alt); border-radius: 12px; }
+  .hero-stats b { display: block; font: 600 28px/1.1 var(--serif); letter-spacing: -.02em; }
+  .hero-stats span { font: 12px/1.4 var(--mono); color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+
+  /* Map poster */
+  .map-poster { position: relative; margin: 0; border-radius: 16px; overflow: hidden; background: var(--night); border: 1px solid var(--hair); }
+  .map-poster img { display: block; width: 100%; height: 100%; min-height: 280px; object-fit: cover; vertical-align: middle; }
+  .map-poster iframe { display: block; width: 100%; aspect-ratio: 16 / 10; max-height: 520px; border: 0; background: var(--night); }
+  .map-play {
+    position: relative; display: block; width: 100%; padding: 0; border: 0; cursor: pointer; background: var(--night);
+  }
+  .map-play::after {
+    content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 40%, rgba(26, 31, 38, .55));
+    pointer-events: none;
+  }
+  .map-play .play-badge {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 1;
+    display: flex; align-items: center; gap: 10px; padding: 12px 20px; border-radius: 999px;
+    background: rgba(26, 31, 38, .82); color: var(--night-text); font: 500 13px/1 var(--mono); pointer-events: none;
+  }
+  .map-play .play-badge i {
+    width: 36px; height: 36px; border-radius: 50%; background: var(--accent); display: grid; place-items: center;
+    font-style: normal; color: #fff;
+  }
+  .map-poster figcaption { padding: 14px 4px 0; font: 12px/1.5 var(--mono); color: var(--muted); }
+
+  /* Figures */
+  figure { margin: 0; }
+  .fig-rule { padding-top: 24px; }
+  figcaption { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-top: 10px; font: 12px/1.5 var(--mono); color: var(--muted); }
+  .key i { display: inline-block; width: 10px; height: 10px; margin: 0 6px 0 14px; vertical-align: -1px; border-radius: 2px; }
+  #island { position: relative; }
+  #island svg { display: block; width: 100%; height: auto; }
+  #island path { stroke: var(--surface); stroke-width: .9; cursor: pointer; transition: opacity 200ms ease; }
+  #island path.deep { fill: var(--heat-deep); }
+  #island path.broad { fill: var(--heat-broad); }
+  #island path.some { fill: var(--heat-some); }
+  #island path.thin { fill: var(--heat-thin); }
+  @media (hover: hover) and (pointer: fine) {
+    #island svg:hover path { opacity: .55; }
+    #island svg:hover path:hover { opacity: 1; }
+  }
+  #town-tip { position: absolute; pointer-events: none; padding: 8px 10px; background: var(--night); color: var(--night-text); font: 12px/1.4 var(--mono); border-radius: 8px; white-space: nowrap; }
+  #town-tip b { display: block; font: 600 15px/1.3 var(--serif); }
+
+  /* Sections */
+  section { padding: 112px 0 0; }
+  .head { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 24px; border-top: 1px solid var(--hair); padding-top: 24px; margin-bottom: 32px; }
+  .head .label { grid-column: span 3; font: 500 12px/1.4 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .head .head-copy { grid-column: span 9; }
+  h2 { margin: 0; font: 600 clamp(28px, 3.2vw, 40px)/1.08 var(--serif); letter-spacing: -.02em; text-wrap: balance; }
+  .head p { margin: 12px 0 0; max-width: 62ch; color: var(--ink-2); }
+  .body-block { grid-column: 1 / -1; }
+
+  /* Night device mockups */
+  .screens { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 24px; align-items: end; }
+  .night-card {
+    grid-column: span 7; background: var(--night); border-radius: 20px; padding: 14px;
+    box-shadow: 0 24px 48px rgba(26, 31, 38, .18);
+  }
+  .night-card img { display: block; width: 100%; height: auto; border-radius: 12px; border: 1px solid rgba(255,255,255,.06); }
+  .night-card.phone { grid-column: span 5; max-width: 320px; justify-self: end; }
+  .night-card figcaption { margin-top: 12px; padding: 0 4px; color: var(--muted); font: 12px/1.5 var(--mono); }
+
+  /* Steps */
+  .steps { grid-column: 1 / -1; position: relative; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 0; border-radius: 16px; overflow: hidden; border: 1px solid var(--hair); background: var(--surface-raised); }
+  .steps .step-rail {
+    position: absolute; left: 8.33%; right: 8.33%; top: 22px; height: 3px; border-radius: 999px;
+    background: var(--cream); overflow: hidden; pointer-events: none;
+  }
+  .steps .step-rail i {
+    display: block; height: 100%; width: 0; background: var(--accent); border-radius: 999px;
+    transition: width 600ms ease;
+  }
+  .steps[data-active="0"] .step-rail i { width: 16%; }
+  .steps[data-active="1"] .step-rail i { width: 50%; }
+  .steps[data-active="2"] .step-rail i { width: 100%; }
+  .steps .step-item { grid-column: span 4; padding: 36px 32px 28px; border-right: 1px solid var(--hair); transition: background-color 400ms ease; }
+  .steps .step-item:last-child { border-right: 0; }
+  .steps .step-item.active { background: var(--surface-alt); }
+  .steps h3 { margin: 0 0 8px; font: 600 22px/1.2 var(--serif); transition: color 400ms ease; }
+  .steps .step-item.active h3 { color: var(--accent); }
+  .steps p { margin: 0; font-size: 16px; color: var(--ink-2); }
+  .steps .tool-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+  .steps .tool-chips span {
+    display: inline-flex; align-items: center; min-height: 28px; padding: 4px 10px; border-radius: 999px;
+    background: var(--accent); color: #fff; font: 500 11px/1 var(--mono);
+  }
+  .steps .step-item:not(.active) .tool-chips span { background: var(--accent-soft); }
+  .steps .honesty { grid-column: 1 / -1; margin: 0; padding: 14px 32px; border-top: 1px solid var(--hair); background: var(--surface-alt); font: 500 14px/1.5 var(--serif); color: var(--ink); }
+
+  /* Diagram */
+  .diagram svg { display: block; width: 100%; height: auto; }
+  .diagram text { font-family: var(--mono); fill: var(--ink); }
+  .diagram .t { font-family: var(--serif); font-weight: 600; font-size: 19px; }
+  .diagram .s { font-size: 11.5px; fill: var(--ink-2); }
+  .diagram .box { fill: var(--surface-raised); stroke: var(--rule); stroke-width: 1.2; }
+  .diagram .box.q { fill: #eceaf8; }
+  .diagram .wire { stroke: var(--rule); stroke-width: 1.2; fill: none; }
+  .diagram .wl { font-size: 10.5px; fill: var(--muted); }
+
+  /* Catalog merge card */
+  .catalog-card { grid-column: 1 / -1; }
+  .catalog-cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px 40px; }
+  .tbl h3 { margin: 0 0 2px; font: 600 21px/1.2 var(--serif); }
+  .tbl .from { margin: 0 0 10px; font: 12px/1.4 var(--mono); color: var(--muted); }
+  .tbl .count { font: 600 32px/1 var(--serif); color: var(--accent); margin: 0 0 8px; }
+  table { width: 100%; border-collapse: collapse; font: 12.5px/1.45 var(--mono); }
+  th, td { text-align: left; vertical-align: top; padding: 7px 10px 7px 0; border-top: 1px solid var(--hair); }
+  thead th { border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); font-weight: 500; color: var(--muted); }
+  td:first-child { white-space: nowrap; color: var(--ink); font-weight: 500; }
+  td:last-child { color: var(--muted); white-space: nowrap; padding-right: 0; }
+  .tables-extra { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px 40px; margin-top: 32px; }
+
+  /* Findings */
+  .finds { grid-column: 1 / -1; display: grid; gap: 0; }
+  .find { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 24px; padding: 22px 0; border-top: 1px solid var(--hair); }
+  .find:first-child { border-top: 0; padding-top: 0; }
+  .find b { grid-column: span 4; font: 600 22px/1.25 var(--serif); }
+  .find p { grid-column: span 8; margin: 0; color: var(--ink-2); max-width: 66ch; }
+  .find .ev { display: block; margin-top: 8px; font: 12px/1.5 var(--mono); color: var(--muted); }
+
+  /* Qloo ledger */
+  .ledger td:first-child { white-space: nowrap; }
+  .ledger td:last-child { white-space: normal; color: var(--ink); font: 16px/1.4 var(--serif); padding-right: 0; }
+  .ledger td:nth-child(3) { color: var(--ink-2); }
+  .ledger code { font: inherit; color: var(--accent); }
+  .cap { margin-top: 10px; font: 12px/1.5 var(--mono); color: var(--muted); }
+  .traveler-note { margin-top: 20px; padding: 20px 24px; background: var(--surface-alt); border-radius: 12px; border-left: 4px solid var(--accent-soft); }
+  .traveler-note p { margin: 0; color: var(--ink-2); }
+  .specimen { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); gap: 32px; margin-top: 48px; }
+  .specimen pre {
+    align-self: start; margin: 0; padding: 24px; overflow-x: auto; background: var(--surface-alt); border-radius: 12px;
+    font: 12px/1.65 var(--mono); color: var(--ink);
+  }
+  .specimen pre .u { color: var(--muted); }
+  .specimen pre b { font-weight: 500; color: var(--accent); }
+  .specimen ol { margin: 0; padding: 0; list-style: none; }
+  .specimen li { display: grid; grid-template-columns: 30px minmax(0, 1fr); padding: 10px 0; border-top: 1px solid var(--hair); font-size: 16px; line-height: 1.4; color: var(--ink-2); }
+  .specimen li:first-child { border-top: 1px solid var(--rule); }
+  .specimen li > span:first-child { font: 500 12px/1.9 var(--mono); color: var(--accent); }
+  .specimen li code { font: 12.5px/1.4 var(--mono); color: var(--ink); }
+  .specimen li.off > span:first-child { color: var(--muted); }
+  .specimen figcaption { grid-column: 1 / -1; margin-top: 0; }
+
+  /* TestFlight */
+  .tester { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 28px; max-width: 720px; position: relative; }
+  .tester label span { display: block; margin-bottom: 4px; font: 500 12px/1.4 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .tester input {
+    width: 100%; padding: 8px 0; border: 0; border-bottom: 1px solid var(--rule); border-radius: 0;
+    background: transparent; color: var(--ink); font: 18px/1.4 var(--serif);
+  }
+  .tester input:focus-visible { outline: none; border-bottom: 2px solid var(--accent); padding-bottom: 7px; }
+  .tester .wide { grid-column: 1 / -1; }
+  .tester .trap { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+  .tester-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
+  .tester-foot .small { margin: 0; max-width: 46ch; }
+  .tester button:disabled { opacity: .6; cursor: progress; }
+  #iphone details.tester-invite { margin-top: 8px; max-width: 720px; }
+  #iphone details.tester-invite > summary {
+    cursor: pointer; font: 500 14px/1.5 var(--mono); color: var(--muted); margin-bottom: 16px;
+  }
+  #iphone details.tester-invite .tester { margin-top: 0; }
+
+  .limits { grid-column: 1 / -1; columns: 2; column-gap: 40px; margin: 0; padding: 0; list-style: none; }
+  .limits li { break-inside: avoid; padding: 12px 0; border-top: 1px solid var(--hair); color: var(--ink-2); }
+
+  footer { grid-column: 1 / -1; margin-top: 96px; padding: 24px 0 48px; border-top: 1px solid var(--hair); display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; font: 12px/1.6 var(--mono); color: var(--muted); }
+  footer a { color: var(--ink); }
+
+  @media (max-width: 900px) {
+    .span-6, .span-8, .span-4 { grid-column: 1 / -1; }
+    .hero { padding-top: 64px; }
+    .hero-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .head .label, .head .head-copy { grid-column: 1 / -1; }
+    .find b, .find p { grid-column: 1 / -1; }
+    .steps .step-item { grid-column: 1 / -1; border-right: 0; border-bottom: 1px solid var(--hair); }
+    .steps .step-item:last-child { border-bottom: 0; }
+    .catalog-cols, .tables-extra { grid-template-columns: 1fr; }
+    .night-card, .night-card.phone { grid-column: 1 / -1; max-width: none; }
+    .limits { columns: 1; }
+    .tester { grid-template-columns: 1fr; }
+    .specimen { grid-template-columns: 1fr; gap: 20px; }
+    .ledger thead { display: none; }
+    .ledger tr { display: block; padding: 10px 0; border-top: 1px solid var(--hair); }
+    .ledger td { display: block; padding: 2px 0; border: 0; }
+    .ledger td::before { content: attr(data-l) " · "; color: var(--muted); }
+    .ledger td:last-child::before { content: none; }
+    .mast { grid-template-columns: 1fr; }
+    .mast > span:first-child, .mast .mid, .mast nav { grid-column: 1 / -1; }
+    .mast nav { justify-content: flex-start; }
+    .mast .mid { display: none; text-align: left; }
+    table { font-size: 12px; }
+    td:first-child, td:last-child { white-space: normal; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .fade-in, #island path, .btn, .steps .step-item, .steps h3, .steps .step-rail i { transition: none; }
+    .fade-in { opacity: 1; transform: none; }
+    .steps .step-rail i { width: 100%; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="mast grid-section">
+    <span>Zemi-Aku</span>
+    <span class="mid">Qloo Agentic Hackathon · October 2026</span>
+    <nav aria-label="Links">
+      <a href="/app">Live map</a>
+      <a href="https://github.com/CDVolvik/zemi-aku-public">Code</a>
+      <a href="#qloo">What Qloo brings</a>
+      <a href="/compare">With and without Qloo</a>
+      <a href="#how">How it works</a>
+    </nav>
+  </header>
+
+  <div class="hero grid-section">
+    <div class="span-6">
+      <h1 id="hero-title">Where should you open in Puerto Rico?</h1>
+      <p class="dek" id="hero-dek">Zemi-Aku scores all 78 towns by Qloo taste for your industry against the businesses the Census already counts there, shows sources for every number, and lets you ask follow-ups in English or Spanish.</p>
+      <div class="taste-stack" aria-label="Sample taste picks">
+        <div class="chips" role="group" aria-label="Taste chips">
+          <button type="button" data-taste="bad-bunny" aria-pressed="true">Bad Bunny</button>
+          <button type="button" data-taste="mofongo" aria-pressed="false">Mofongo</button>
+          <button type="button" data-taste="beaches" aria-pressed="false">Beaches</button>
+          <button type="button" data-taste="coffee" aria-pressed="false">Coffee</button>
+          <button type="button" data-taste="salsa" aria-pressed="false">Salsa</button>
+        </div>
+        <p class="taste-readout" id="taste-readout" aria-live="polite"></p>
+      </div>
+      <div class="actions" id="hero-actions"></div>
+    </div>
+    <figure class="span-6 map-poster fade-in" id="live">
+      <button type="button" class="map-play" id="map-play" aria-label="Load the live map">
+        <img src="/app/assets/shot-town.png" alt="Zemi-Aku showing Ponce on satellite with places pinned" width="1200" height="750" loading="lazy">
+        <span class="play-badge"><i aria-hidden="true">▶</i> Open live map</span>
+      </button>
+      <iframe id="live-map" title="Zemi-Aku live map" allow="autoplay" loading="lazy" hidden></iframe>
+      <figcaption>Press play to load the interactive map — same view as Fig. 5, but live.</figcaption>
+    </figure>
+    <div class="span-12 hero-stats fade-in" aria-label="Coverage">
+      <div><b>78</b><span>Towns</span></div>
+      <div><b>7,717</b><span>Places on Qloo</span></div>
+      <div><b>16</b><span>Agent tools</span></div>
+      <div><b>5</b><span>Languages</span></div>
+    </div>
+  </div>
+
+  <figure class="fig-rule grid-section fade-in">
+    <div class="span-12" id="island"><img src="/app/assets/island.svg" alt="Puerto Rico's 78 municipalities, coloured by how many places Qloo knows in each" style="width:100%;display:block" loading="lazy"></div>
+    <figcaption class="span-12">
+      <span>Fig. 2 — How many places Qloo knows in each municipality: every page Qloo returns for each town, 7 October 2026. From 1,353 in San Juan to 4 in Maricao. Click a town to open it.</span>
+      <span class="key"><i style="background:var(--heat-deep)"></i>200 or more<i style="background:var(--heat-broad)"></i>100–199<i style="background:var(--heat-some)"></i>25–99<i style="background:var(--heat-thin)"></i>under 25</span>
+    </figcaption>
+  </figure>
+
+  <section id="qloo" class="grid-section fade-in" aria-labelledby="qloo-h">
+    <div class="head">
+      <span class="label">What Qloo brings</span>
+      <div class="head-copy">
+        <h2 id="qloo-h">Take Qloo away and the island is blank.</h2>
+        <p>Every place on the map comes from Qloo, and so does every taste it can search and every "who likes it" chart. Zemi-Aku's job is to ask Qloo the right question for the town on screen, then say only what comes back. Seven kinds of call do the work. The <a href="/compare">with-and-without-Qloo page</a> runs six questions through the same model twice, once without the Qloo tools, and shows what changed and where Qloo added nothing.</p>
+      </div>
+    </div>
+    <div class="body-block">
+      <table class="ledger">
+        <thead><tr><th>Qloo call</th><th>Asked</th><th>Came back</th><th>On screen</th></tr></thead>
+        <tbody>
+          <tr><td data-l="Call"><code>/v2/insights</code> place</td><td data-l="Asked">Ponce, Puerto Rico, every page</td><td data-l="Came back">357 places over 9 pages, each record 41 fields and its tags; 7,717 across the 78 towns</td><td>The town's catalog in ten categories, and its pins</td></tr>
+          <tr><td data-l="Call"><code>/v2/insights</code> heatmap</td><td data-l="Asked">restaurant taste around Ponce</td><td data-l="Came back">A grid of cells, each with an affinity from 0 to 1; the map draws up to 80</td><td>The orange glow where that taste gathers</td></tr>
+          <tr><td data-l="Call"><code>qloo_find_tags</code></td><td data-l="Asked">"mofongo"</td><td data-l="Came back">specialty_dish:place:mofongo, plus a cuisine and a food tag</td><td>Your words turned into something Qloo can filter on</td></tr>
+          <tr><td data-l="Call"><code>/v2/insights</code> filter.tags</td><td data-l="Asked">that tag, all of Puerto Rico</td><td data-l="Came back">6 places that list it: Cayo Caribe, Tayzan, Rompeolas…</td><td>An answer to "where can I eat mofongo?"</td></tr>
+          <tr><td data-l="Call"><code>/search</code></td><td data-l="Asked">"KFC" around San Juan</td><td data-l="Came back">13 locations, all KFC</td><td>Searches by name or chain, in the language of the sign</td></tr>
+          <tr><td data-l="Call"><code>qloo_audience_demographics</code></td><td data-l="Asked">Campioni, by its Qloo id</td><td data-l="Came back">30–34 +0.65 · 35–44 −0.88 · women +0.29, against Qloo's average</td><td>"Who likes it", on every business</td></tr>
+          <tr><td data-l="Call"><code>qloo_where_popular</code></td><td data-l="Asked">Campioni, by its Qloo id</td><td data-l="Came back">20 cells across the island</td><td>The violet footprint: where that place's taste reaches</td></tr>
+        </tbody>
+      </table>
+      <p class="cap">Fig. 3 — Seven Qloo calls, run 7 October 2026. The first five answer questions; the last two open a business. The three <code>qloo_*</code> calls go through Qloo's official agent kit over MCP.</p>
+      <div class="traveler-note">
+        <p><strong>For travelers,</strong> the same calls power taste-led trips: artist affinities surface fan-favored cafés and bars (not celebrity endorsements), tag filters turn "mofongo" or "surf" into verified pins, and heatmaps show where a taste gathers before you commit to a town. Business and traveler journeys share one catalog — opening a bakery and planning from Bad Bunny both start from Qloo's 7,717 places.</p>
+      </div>
+    </div>
+
+    <figure class="specimen">
+<pre aria-label="Campioni's Qloo record, abridged">{
+  "name": "Campioni Pizza Birra &amp; Tapas",
+  "entity_id": "E78D2122-8843-4FCB-858F-104217DB725F",  <b>[1]</b>
+  "popularity": 0.957,                                  <b>[3]</b>
+  "properties": {
+    "geocode": { "name": "Quinto",
+                 "admin2_region": "Ponce" },            <b>[2]</b>
+    "business_rating": 4.5,                             <b>[3]</b>
+    "price_level": 2,                                   <b>[3]</b>
+    "short_description": "Casual Ponce eatery pairing
+      pizza with tapas, craft beer, cocktails…",        <b>[4]</b>
+    "unique_selling_points": "…gourmet, artisanal
+      pizzas baked in a traditional wood-fired oven…",  <b>[5]</b>
+    "keywords": [ { "name": "sangria", "count": 39 },
+                  { "name": "chorizo", "count": 17 },
+                  { "name": "wood oven", "count": 12 },
+                  … ],                                  <b>[6]</b>
+    "ambience_description": "…elegant yet relaxed…",    <b>[7]</b>
+<span class="u">    "images": [ "https://lh3.googleusercontent…" ],
+    … 33 more
+</span>  },
+  "tags": [ "Families", "City core", "Walkable",
+            "Ponce historic zone", … 121 more ]         <b>[8]</b>
+}</pre>
+      <ol>
+        <li><span>1</span><span><code>entity_id</code> is the key for every follow-up call. Looked up by name instead, "Plaza Las Americas" came back as two malls in Mexico.</span></li>
+        <li><span>2</span><span><code>admin2_region</code> is the municipality. <code>name</code> is the barrio, Quinto. Reading the wrong one moves a business to the wrong town.</span></li>
+        <li><span>3</span><span>Popularity sets the order of the list; the rating and price print as ★ 4.5 and $$.</span></li>
+        <li><span>4</span><span>The line under the name.</span></li>
+        <li><span>5</span><span>"Why people go", the first thing the card says.</span></li>
+        <li><span>6</span><span>"People mention", ranked by how often reviews say it.</span></li>
+        <li><span>7</span><span>"The feel". Five more of Qloo's descriptions sit under "More from Qloo": setting, amenities, food, service and who comes.</span></li>
+        <li><span>8</span><span>How a taste search finds it. This record carries 125 tags.</span></li>
+        <li class="off"><span>—</span><span><code>images</code> are Google links that answer 403 to anyone else, so the card shows an aerial of the exact spot instead.</span></li>
+      </ol>
+      <figcaption><span>Fig. 4 — One Qloo record, abridged: Campioni Pizza Birra &amp; Tapas in Ponce, from <code>/v2/insights</code> on 7 October 2026. 41 fields, 28 filled, and the card reads 22 of them.</span></figcaption>
+    </figure>
+  </section>
+
+  <section class="grid-section fade-in" aria-labelledby="see">
+    <div class="head">
+      <span class="label">The product</span>
+      <div class="head-copy">
+        <h2 id="see">A god's-eye map you can talk to.</h2>
+        <p>Pick a town, type a question or press the orb and speak it. The map flies there and the town opens to everything Qloo knows in it, sorted into categories: Ponce has 240 places to eat, 47 to shop and 16 to stay. Every business opens to the facts Qloo holds on it, including who likes it.</p>
+      </div>
+    </div>
+    <figure class="screens">
+      <div class="night-card">
+        <img src="/app/assets/shot-town.png" alt="Zemi-Aku showing Ponce on satellite: all 357 places Qloo knows, sorted into ten categories, with Food open and its kinds, and the food places pinned on the map" loading="lazy">
+        <figcaption><span>Fig. 5 — Ponce opens to all 357 places Qloo knows there, in ten categories. Food is open: 240 places by kind, bakeries to Puerto Rican restaurants, pinned on the map.</span></figcaption>
+      </div>
+      <div class="night-card phone">
+        <img src="/app/assets/shot-phone.png" alt="The same town on a phone" loading="lazy">
+        <figcaption><span>Fig. 6 — On a phone.</span></figcaption>
+      </div>
+    </figure>
+    <figure class="screens" style="margin-top: 32px;">
+      <div class="night-card span-12" style="grid-column: 1 / -1;">
+        <img src="/app/assets/shot-business.png" alt="Campioni Pizza in Ponce: Qloo's description, price, today's hours, sourced contact lines, and who likes it by age and gender" loading="lazy">
+        <figcaption><span>Fig. 7 — One business, opened: an aerial of its exact spot, Qloo's description, why people go, and what they mention. Further down: the sources and who likes it.</span></figcaption>
+      </div>
+    </figure>
+  </section>
+
+  <section id="iphone" class="grid-section fade-in" aria-labelledby="iphone-h">
+    <div class="head">
+      <span class="label">On your iPhone</span>
+      <div class="head-copy">
+        <h2 id="iphone-h">Want it on your phone? Ask for the test build.</h2>
+        <p id="iphone-dek">An iPhone version is on its way to TestFlight, Apple's app for trying apps before they launch. Leave your name and email and we'll send your invite when the build is ready. Today you can already add the live map to your home screen from Safari: Share, then Add to Home Screen.</p>
+      </div>
+    </div>
+    <div class="body-block" id="beta-cta" hidden>
+      <p id="beta-copy">Install Apple's TestFlight app, tap the link, and join while spots last.</p>
+      <div class="actions" style="margin-top: 16px;">
+        <a class="btn primary" id="beta-link" rel="noopener" target="_blank">Get the beta on TestFlight</a>
+      </div>
+    </div>
+    <form class="body-block tester" id="tester-form" novalidate>
+      <label><span>First name</span><input name="firstName" autocomplete="given-name" required maxlength="60"></label>
+      <label><span>Last name</span><input name="lastName" autocomplete="family-name" required maxlength="60"></label>
+      <label class="wide"><span>Email for the invite</span><input name="email" type="email" inputmode="email" autocomplete="email" required maxlength="254"></label>
+      <label class="trap" aria-hidden="true"><span>Website</span><input name="website" tabindex="-1" autocomplete="off"></label>
+      <div class="wide tester-foot">
+        <button class="btn primary" type="submit">Ask for access</button>
+        <p class="small" id="tester-note" role="status">We use it only to invite you through Apple's TestFlight. Nothing else, and it is never sold.</p>
+      </div>
+    </form>
+  </section>
+
+  <section id="how" class="grid-section fade-in" aria-labelledby="how-h">
+    <div class="head">
+      <span class="label">How it works</span>
+      <div class="head-copy">
+        <h2 id="how-h">Ask, read, answer. Nothing is invented.</h2>
+        <p>The agent never answers from memory. It reads Qloo records for the town on screen and says only what they hold. When Qloo knows a town only a little, it says so.</p>
+      </div>
+    </div>
+    <div class="steps body-block" id="how-steps" data-active="0">
+      <div class="step-rail" aria-hidden="true"><i></i></div>
+      <div class="step-item active" data-step="0">
+        <h3>Ask</h3>
+        <p>Type, or talk in English, Spanish, French, Italian or German. Town names are passed to the speech model so "Mayagüez" stays Mayagüez.</p>
+        <div class="tool-chips"><span>/api/ask</span><span>voice</span></div>
+      </div>
+      <div class="step-item" data-step="1">
+        <h3>Read</h3>
+        <p>The server pages through every place Qloo holds for the town, turns words like "surf" or "mofongo" into Qloo taste tags, and pulls a business's audience and footprint.</p>
+        <div class="tool-chips"><span>insights</span><span>find_tags</span><span>audience</span></div>
+      </div>
+      <div class="step-item" data-step="2">
+        <h3>Answer</h3>
+        <p>The answer names the places it used. The voice speaks it, the map flies to them, and the record behind every answer is one click away.</p>
+        <div class="tool-chips"><span>evidence</span><span>map fly</span></div>
+      </div>
+      <p class="honesty">Nothing is invented — every claim traces to a Qloo record or an open-data join with its source.</p>
+    </div>
+
+    <figure class="body-block diagram" style="margin-top: 40px;">
+      <svg viewBox="0 0 1200 500" role="img" aria-labelledby="sys-title">
+        <title id="sys-title">System: the browser talks to one Node server, which sends signals to Qloo, joins Qloo's answers with open data, and keeps every fact's source</title>
+        <g>
+          <rect class="box" x="10" y="170" width="230" height="160"/>
+          <text class="t" x="28" y="202">Browser</text>
+          <text class="s" x="28" y="230">Cesium map · Esri tiles</text>
+          <text class="s" x="28" y="250">Ask bar · missions · picks</text>
+          <text class="s" x="28" y="270">The orb · mic · speaker</text>
+          <text class="s" x="28" y="300">No keys here</text>
+        </g>
+        <g>
+          <rect class="box" x="355" y="60" width="270" height="380"/>
+          <text class="t" x="373" y="92">Node server</text>
+          <text class="s" x="373" y="118">one container, Node 22</text>
+          <text class="s" x="373" y="150">/api/ask      answers</text>
+          <text class="s" x="373" y="170">/api/taste    word → tag</text>
+          <text class="s" x="373" y="190">/api/place    audience · footprint</text>
+          <text class="s" x="373" y="210">/api/places   list · more like these</text>
+          <text class="s" x="373" y="230">/api/town     profile · catalog</text>
+          <text class="s" x="373" y="250">/api/weather  forecast · storms</text>
+          <text class="s" x="373" y="270">/api/speak · listen   voice (WS)</text>
+          <text class="s" x="373" y="302">rate limits · daily caps</text>
+          <text class="s" x="373" y="322">all keys stay here</text>
+          <text class="s" x="373" y="354">cache: town catalogs, Qloo answers</text>
+          <text class="s" x="373" y="372">with their open-data joins</text>
+          <text class="s" x="373" y="404">every fact keeps its source</text>
+          <text class="s" x="373" y="422">nothing is sent back to Qloo</text>
+        </g>
+        <g>
+          <rect class="box q" x="840" y="20" width="350" height="150"/>
+          <text class="t" x="858" y="50">Qloo</text>
+          <text class="s" x="858" y="74">official kit, over MCP:</text>
+          <text class="s" x="858" y="94">  qloo_find_tags</text>
+          <text class="s" x="858" y="112">  qloo_audience_demographics</text>
+          <text class="s" x="858" y="130">  qloo_where_popular</text>
+          <text class="s" x="858" y="154">REST: insights · search · heatmap · tags</text>
+        </g>
+        <g>
+          <rect class="box" x="840" y="200" width="350" height="70"/>
+          <text class="t" x="858" y="230">Deepgram</text>
+          <text class="s" x="858" y="256">Aura-2 voices · nova-3 live speech-to-text</text>
+        </g>
+        <g>
+          <rect class="box" x="840" y="300" width="350" height="180"/>
+          <text class="t" x="858" y="330">Open data</text>
+          <text class="s" x="858" y="356">OpenStreetMap · Wikidata · Wikipedia · Commons</text>
+          <text class="s" x="858" y="374">  name match within 500 m · photos · logos</text>
+          <text class="s" x="858" y="396">Overture Maps · Census PRCS and CBP</text>
+          <text class="s" x="858" y="414">  ground supply, income, business counts</text>
+          <text class="s" x="858" y="436">National Weather Service · NHC · RainViewer</text>
+          <text class="s" x="858" y="454">  forecast, alerts, storms, radar</text>
+          <text class="s" x="858" y="472">Esri World Imagery · the exact spot from above</text>
+        </g>
+        <path class="wire" d="M240 250 H355"/>
+        <text class="wl" x="262" y="242">HTTPS · WS</text>
+        <path class="wire" d="M625 100 H730 V80 H840"/>
+        <text class="wl" x="634" y="72">signals: places · tags · town</text>
+        <path class="wire" d="M840 130 H730 V150 H625"/>
+        <text class="wl" x="634" y="164">ids · affinities · tags</text>
+        <path class="wire" d="M625 235 H840"/>
+        <path class="wire" d="M625 360 H730 V340 H840"/>
+        <text class="wl" x="634" y="332">ids · names · coordinates</text>
+        <path class="wire" d="M840 420 H730 V440 H625"/>
+        <text class="wl" x="634" y="454">facts, each with its source</text>
+      </svg>
+      <figcaption><span>Fig. 8 — The system. The browser never holds a key; every call goes through the server. Qloo's Insights API is read-only, so the loop runs on our side: open data shapes the signals we send Qloo, Qloo's ids and tags drive what we look up in open data, and the join is cached with the answer.</span></figcaption>
+    </figure>
+  </section>
+
+  <section class="grid-section fade-in" aria-labelledby="data-h">
+    <div class="head">
+      <span class="label">The data</span>
+      <div class="head-copy">
+        <h2 id="data-h">What the agent can see.</h2>
+        <p>Five record types. Town catalogs are harvested from Qloo and kept on the server; the rest are read live. No accounts and no personal data: Qloo results describe audiences in aggregate, never a person.</p>
+      </div>
+    </div>
+    <div class="card catalog-card body-block">
+      <div class="catalog-cols">
+        <div class="tbl">
+          <h3>Place</h3>
+          <p class="count">41 fields</p>
+          <p class="from">Qloo /v2/insights · one per business · 7,717 island-wide</p>
+          <table>
+            <thead><tr><th>Field</th><th>Meaning</th><th>Source</th></tr></thead>
+            <tbody>
+              <tr><td>id</td><td>Qloo UUID, used for every follow-up call</td><td>Qloo</td></tr>
+              <tr><td>municipality</td><td>geocode.admin2_region, the real town</td><td>Qloo</td></tr>
+              <tr><td>description</td><td>Qloo's own one-line summary</td><td>Qloo</td></tr>
+              <tr><td>price · rating</td><td>price_level 1–4, business_rating</td><td>Qloo</td></tr>
+              <tr><td>descriptions × 7</td><td>why people go, the feel, setting, amenities, food, service, who comes</td><td>Qloo</td></tr>
+              <tr><td>keywords</td><td>what reviews mention, with counts</td><td>Qloo</td></tr>
+              <tr><td>hours · phone · web</td><td>today's hours, contact</td><td>Qloo · OSM</td></tr>
+              <tr><td>picture</td><td>a public photo, else the brand's logo for a chain, else an aerial of the exact spot</td><td>Wikidata · Esri</td></tr>
+              <tr><td>socials</td><td>when the place has a public record</td><td>Wikidata</td></tr>
+              <tr><td>phone · web · email</td><td>filled in when Qloo has none, matched by name within 300 m</td><td>Overture</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="tbl">
+          <h3>Town catalog</h3>
+          <p class="count">78 towns</p>
+          <p class="from">Every page of /v2/insights per town · data/catalog-counts.json</p>
+          <table>
+            <thead><tr><th>Field</th><th>Meaning</th><th>Source</th></tr></thead>
+            <tbody>
+              <tr><td>town</td><td>one of 78 municipalities</td><td>Census</td></tr>
+              <tr><td>total</td><td>places whose municipality is the town</td><td>Qloo</td></tr>
+              <tr><td>categories × 10</td><td>food, shopping, places to stay…, from each place's genre</td><td>Qloo · derived</td></tr>
+              <tr><td>band</td><td>200 or more, 100, 25, or fewer places</td><td>derived</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="tables-extra body-block">
+      <div class="tbl">
+        <h3>Audience</h3>
+        <p class="from">qloo_audience_demographics · per business</p>
+        <table>
+          <thead><tr><th>Field</th><th>Meaning</th><th>Source</th></tr></thead>
+          <tbody>
+            <tr><td>age × 6</td><td>24 and under … 55 and over</td><td>Qloo</td></tr>
+            <tr><td>gender × 2</td><td>women, men</td><td>Qloo</td></tr>
+            <tr><td>value</td><td>above or below Qloo's average audience</td><td>Qloo</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="tbl">
+        <h3>Footprint · Taste</h3>
+        <p class="from">qloo_where_popular · qloo_find_tags</p>
+        <table>
+          <thead><tr><th>Field</th><th>Meaning</th><th>Source</th></tr></thead>
+          <tbody>
+            <tr><td>cells ≤ 20</td><td>where a business's taste is strongest</td><td>Qloo</td></tr>
+            <tr><td>affinity</td><td>strength of each cell</td><td>Qloo</td></tr>
+            <tr><td>tag</td><td>"surf" → hobby:surfing</td><td>Qloo</td></tr>
+            <tr><td>strict</td><td>places that list the tag, first</td><td>Qloo</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="grid-section fade-in" aria-labelledby="found-h">
+    <div class="head">
+      <span class="label">What we measured</span>
+      <div class="head-copy">
+        <h2 id="found-h">Things Qloo's Puerto Rico data taught us.</h2>
+        <p>Each one changed the build. The evidence line is the measurement behind it.</p>
+      </div>
+    </div>
+    <div class="finds body-block">
+      <div class="find"><b>Never look a place up by name.</b><p>"Plaza Las Americas" by name returned the malls in Ecatepec and Cancún. Every follow-up call uses Qloo's own id instead.<span class="ev">qloo_describe, 7 Oct: two Mexico candidates, no Puerto Rico match</span></p></div>
+      <div class="find"><b>The printed city is often a barrio.</b><p>La Muralla China prints Coto Laurel as its city. Qloo's admin2_region says Ponce. Read the wrong field and a Ponce restaurant becomes a neighbor's.<span class="ev">geocode.city "Coto Laurel" · geocode.admin2_region "Ponce"</span></p></div>
+      <div class="find"><b>A dish needs a filter, not a signal.</b><p>Asked to rank by mofongo, Qloo returned a supermarket and a Mexican restaurant. Filtered to places tagged mofongo, it returned six that serve it.<span class="ev">signal: SuperMax, Lolita's · filter.tags: Cayo Caribe, Tayzan, Rompeolas…</span></p></div>
+      <div class="find"><b>Search in the language of the sign.</b><p>Puerto Rico names its businesses in Spanish. Near Caguas, "farmacia" finds 13 places and "pharmacy" finds none, so the search uses the words as spoken.<span class="ev">/search within 12 miles of Caguas, 7 Oct</span></p></div>
+      <div class="find"><b>A five-place sample hid most of the island.</b><p>Sampling five places a town, eight towns looked thin. Paging through everything Qloo holds told a different story: Cabo Rojo has 169 places and Toa Alta 63, and of the eight only Ceiba, with 15, is small. The map now counts every place. Eleven towns have fewer than 25, and the agent says so when you open one.<span class="ev">Every page of /v2/insights for all 78 towns, 7 Oct 2026: 7,717 places. San Juan alone: 1,353 over 37 pages.</span></p></div>
+    </div>
+  </section>
+
+  <section class="grid-section fade-in" aria-labelledby="limits-h">
+    <div class="head">
+      <span class="label">Limits</span>
+      <div class="head-copy">
+        <h2 id="limits-h">What it does not claim.</h2>
+      </div>
+    </div>
+    <ul class="body-block limits">
+      <li>It is not a census. A town's catalog is every place Qloo holds there, not every business that exists.</li>
+      <li>Popularity and audience are Qloo's aggregate signals, not foot traffic or customers.</li>
+      <li>Affinity is not a visit count, a review score, or proof you will like a place — it is Qloo's taste signal against its average audience.</li>
+      <li>In thin towns some places belong to the next town over; each card says where it is. Eleven municipalities have fewer than 25 places on Qloo.</li>
+      <li>Hours and contact lines can be stale in Qloo's feed; check before you go, especially for holidays.</li>
+      <li>French, Italian and German are answered and spoken by the agent (Deepgram Aura-2 voices, added October 14); the rule-based fallback writes English and Spanish only.</li>
+    </ul>
+  </section>
+
+  <footer class="grid-section">
+    <span class="span-12" style="display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;width:100%">
+      <span>Built by Carlos Jimenez for the Qloo Agentic Hackathon, October 2026. MIT license.</span>
+      <span><a href="/app">Live map</a> · <a href="https://github.com/CDVolvik/zemi-aku-public">Code</a> · Data: Qloo, Overture Maps Foundation (CDLA-Permissive-2.0), Wikidata and Wikimedia Commons, Wikipedia, <a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors (ODbL)</a>, US Census, Deepgram</span>
+    </span>
+  </footer>
+</div>
+
+<script>
+const HERO_COPY = {
+  business: {
+    title: "Where should you open in Puerto Rico?",
+    dek: "Zemi-Aku scores all 78 towns by Qloo taste for your industry against the businesses the Census already counts there, shows sources for every number, and lets you ask follow-ups in English or Spanish.",
+    actions: [
+      { href: "/app", label: "Find a town to open in →", primary: true },
+      { href: "#how", label: "See how taste meets demand" },
+      { href: "/app", label: "Discover through music" },
+      { href: "#iphone", label: "Test it on your iPhone" },
+      { href: "https://github.com/CDVolvik/zemi-aku-public", label: "GitHub" },
+    ],
+  },
+  traveler: {
+    title: "Tell us what you love. We'll show you Puerto Rico.",
+    dek: "Name an artist, a dish, a beach, or a mood — Zemi-Aku turns it into Qloo taste tags, flies the map to matching places across all 78 towns, and answers only from what the catalog holds. English, Spanish, and three more languages by voice.",
+    actions: [
+      { href: "/app", label: "Plan my trip from my taste", primary: true },
+      { href: "/app?mission=bad-bunny", label: "Discover through music" },
+      { href: "#iphone", label: "Test it on your iPhone" },
+      { href: "https://github.com/CDVolvik/zemi-aku-public", label: "GitHub" },
+    ],
+  },
+};
+
+const TASTE_READOUT = {
+  "bad-bunny": "Qloo infers Bad Bunny fan taste → top towns Bayamón, San Juan, Carolina. Sample spots: TocaMadera Café, Los Socios Cafe (affinities, not endorsements).",
+  mofongo: "Qloo infers mofongo taste → top towns Ponce, San Juan, Guaynabo. The saved run named six island-wide when filtered; thin towns may return none.",
+  beaches: "Qloo infers beach and surf taste → top towns Rincón, Cabo Rojo, Fajardo. Heatmaps show where that affinity gathers before you pick a town.",
+  coffee: "Qloo infers café culture → top towns Maricao, Adjuntas, San Juan. Sample pin: Hacienda Carrión Café de Altura in the Bad Bunny fan readout.",
+  salsa: "Qloo infers salsa and live-music taste → top towns San Juan, Ponce, Mayagüez. filter.tags turns “salsa” into pins the agent can name.",
+};
+
+function storyKey() {
+  const fromQuery = new URLSearchParams(location.search).get("story");
+  const fromHtml = document.documentElement.dataset.story;
+  const key = (fromQuery || fromHtml || "business").toLowerCase();
+  return key === "traveler" ? "traveler" : "business";
+}
+
+function applyHero() {
+  const copy = HERO_COPY[storyKey()];
+  document.documentElement.dataset.story = storyKey();
+  $("hero-title").textContent = copy.title;
+  $("hero-dek").textContent = copy.dek;
+  $("hero-actions").innerHTML = copy.actions.map((a) =>
+    `<a class="btn${a.primary ? " primary" : ""}" href="${a.href}">${a.label}</a>`).join("");
+}
+
+function $(id) { return document.getElementById(id); }
+
+applyHero();
+
+document.querySelector(".taste-stack").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-taste]");
+  if (!button) return;
+  for (const chip of document.querySelectorAll("[data-taste]")) chip.setAttribute("aria-pressed", "false");
+  button.setAttribute("aria-pressed", "true");
+  $("taste-readout").textContent = TASTE_READOUT[button.dataset.taste] || "";
+});
+$("taste-readout").textContent = TASTE_READOUT["bad-bunny"];
+
+let mapLoaded = false;
+function loadLiveMap() {
+  if (mapLoaded) return;
+  mapLoaded = true;
+  const iframe = $("live-map");
+  iframe.src = "/app?embed=1";
+  iframe.hidden = false;
+  $("map-play").hidden = true;
+}
+$("map-play").addEventListener("click", loadLiveMap);
+if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+  const mapObserver = new IntersectionObserver((entries) => {
+    if (entries.some((e) => e.isIntersecting)) loadLiveMap();
+  }, { rootMargin: "120px", threshold: 0.2 });
+  mapObserver.observe($("live"));
+}
+
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+if (!reducedMotion) {
+  const fadeObserver = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      if (entry.isIntersecting) entry.target.classList.add("in-view");
+    }
+  }, { threshold: 0.08, rootMargin: "0px 0px -40px 0px" });
+  for (const el of document.querySelectorAll(".fade-in")) fadeObserver.observe(el);
+
+  const stepsBlock = $("how-steps");
+  const steps = [...stepsBlock.querySelectorAll(".step-item")];
+  let stepIndex = 0;
+  const stepTimer = setInterval(() => {
+    stepIndex = (stepIndex + 1) % steps.length;
+    steps.forEach((el, i) => el.classList.toggle("active", i === stepIndex));
+    stepsBlock.dataset.active = String(stepIndex);
+  }, 3200);
+  const stepsObserver = new IntersectionObserver((entries) => {
+    if (!entries[0].isIntersecting) clearInterval(stepTimer);
+  }, { threshold: 0.3 });
+  stepsObserver.observe(stepsBlock);
+} else {
+  for (const el of document.querySelectorAll(".fade-in")) el.classList.add("in-view");
+}
+
+document.getElementById("tester-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const note = document.getElementById("tester-note");
+  const button = form.querySelector("button");
+  const body = Object.fromEntries(new FormData(form));
+  button.disabled = true;
+  try {
+    const res = await fetch("/api/testers", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      note.textContent = data.error || "That did not go through. Please try again.";
+      return;
+    }
+    form.reset();
+    const name = String(body.firstName || "").trim();
+    note.textContent = form.closest("details.tester-invite")
+      ? `Thank you, ${name}. We'll email your TestFlight invite when a spot opens.`
+      : `Thank you, ${name}. We'll email your TestFlight invite when the iPhone build is ready.`;
+  } catch {
+    note.textContent = "That did not go through. Please try again.";
+  } finally {
+    button.disabled = false;
+  }
+});
+
+// When a public TestFlight link is configured, show the join CTA and tuck the request form
+// into a details block beneath it. Form stays visible by default without JavaScript / when unset.
+(async () => {
+  try {
+    const res = await fetch("/api/config");
+    if (!res.ok) return;
+    const data = await res.json().catch(() => ({}));
+    const url = typeof data.betaUrl === "string" ? data.betaUrl : "";
+    if (!url) return;
+    const link = document.getElementById("beta-link");
+    if (!link) return;
+    link.href = url;
+    const cta = document.getElementById("beta-cta");
+    const form = document.getElementById("tester-form");
+    if (!cta || !form || form.closest("details.tester-invite")) return;
+    cta.hidden = false;
+    const details = document.createElement("details");
+    details.className = "body-block tester-invite";
+    const summary = document.createElement("summary");
+    summary.textContent = "Link full? Ask for an invite";
+    form.parentNode.insertBefore(details, form);
+    details.appendChild(summary);
+    details.appendChild(form);
+    document.getElementById("iphone-h").textContent = "Want it on your phone? Get the beta.";
+    document.getElementById("iphone-dek").textContent =
+      "Install Apple's TestFlight app, tap the link below, and join while spots last. Today you can already add the live map to your home screen from Safari: Share, then Add to Home Screen.";
+  } catch {
+    // Keep the request form (progressive fallback).
+  }
+})();
+
+(async () => {
+  const box = document.getElementById("island");
+  try {
+    const svg = await (await fetch("/app/assets/island.svg")).text();
+    if (!svg.startsWith("<svg")) return;
+    box.innerHTML = svg + '<div id="town-tip" hidden></div>';
+  } catch {
+    return;
+  }
+  const tip = document.getElementById("town-tip");
+  const svg = box.querySelector("svg");
+  svg.addEventListener("mousemove", (event) => {
+    const path = event.target.closest("path");
+    if (!path) { tip.hidden = true; return; }
+    const [town, detail] = (path.querySelector("title")?.textContent || "").split(": ");
+    tip.innerHTML = `<b>${town}</b>${detail || ""}`;
+    const rect = box.getBoundingClientRect();
+    tip.style.left = `${Math.min(event.clientX - rect.left + 14, rect.width - 260)}px`;
+    tip.style.top = `${event.clientY - rect.top + 14}px`;
+    tip.hidden = false;
+  });
+  svg.addEventListener("mouseleave", () => { tip.hidden = true; });
+  svg.addEventListener("click", (event) => {
+    const title = event.target.closest("path")?.querySelector("title")?.textContent || "";
+    const town = title.split(": ")[0];
+    if (town) location.href = `/app?town=${encodeURIComponent(town)}`;
+  });
+})();
+</script>
+</body>
+</html>

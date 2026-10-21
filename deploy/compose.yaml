@@ -1,0 +1,33 @@
+name: zemi-aku-demo
+services:
+  app:
+    build: ..
+    env_file: ../.env
+    environment:
+      TRUST_PROXY: "1"
+      ZEMI_PUBLIC_URL: https://${ZEMI_HOST:?Set the approved demo hostname}
+    volumes:
+      - ../cache:/srv/zemi/cache
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+  caddy:
+    image: caddy:2
+    environment:
+      ZEMI_HOST: ${ZEMI_HOST:?Set the approved demo hostname}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+volumes:
+  caddy_data:
+  caddy_config:

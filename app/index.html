@@ -1,0 +1,3224 @@
+<!doctype html>
+<html lang="en" data-theme="night">
+<head>
+<script>
+try {
+  var savedTheme = localStorage.getItem("zemi-theme");
+  if (savedTheme === "night" || savedTheme === "sea" || savedTheme === "paper") {
+    document.documentElement.dataset.theme = savedTheme;
+  }
+} catch (err) {}
+</script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Zemi-Aku — ask Puerto Rico</title>
+<!-- Installable: Add to Home Screen opens the map full screen, under the status bar. -->
+<link rel="manifest" href="/app/manifest.webmanifest">
+<meta name="theme-color" content="#12374d">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Zemi-Aku">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="/app/assets/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/app/assets/favicon-32.png">
+<script src="https://cdn.jsdelivr.net/npm/cesium@1.145.0/Build/Cesium/Cesium.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/cesium@1.145.0/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  html[data-theme="night"] {
+    --paper: #1a1f26; --ink: #e8e6e4; --muted: #a3a7af; --field: #222831; --wash: #2a3038;
+    --line: rgba(232, 230, 228, .1); --shadow: 0 16px 40px rgba(0, 0, 0, .38);
+    --primary: #8c8cc8; --primary-ink: #1a1f26; --link: #8c8cc8; --soft: #c8c6c4; --glass: rgba(26, 31, 38, .92);
+    --accent: #8c8cc8; --accent-soft: #8c8cc8; --highlight: #dfaf56;
+  }
+  html[data-theme="sea"] {
+    --paper: #102029; --ink: #e8e6e4; --muted: #a3b6be; --field: #18303b; --wash: #21414e;
+    --line: rgba(232, 230, 228, .12); --shadow: 0 16px 40px rgba(0, 0, 0, .35);
+    --primary: #8c8cc8; --primary-ink: #102029; --link: #8c8cc8; --soft: #d5e4df; --glass: rgba(16, 32, 41, .9);
+    --accent: #8c8cc8; --accent-soft: #8c8cc8; --highlight: #dfaf56;
+  }
+  html[data-theme="paper"] {
+    --paper: #f8f6f4; --ink: #28323c; --muted: #505a64; --field: #fcfaf8; --wash: #f2f0ee;
+    --line: rgba(40, 50, 60, .12); --shadow: 0 12px 32px rgba(16, 32, 48, .14);
+    --primary: #5a5aa8; --primary-ink: #fff; --link: #5a5aa8; --soft: #505a64; --glass: rgba(248, 246, 244, .94);
+    --accent: #5a5aa8; --accent-soft: #8c8cc8; --highlight: #dfaf56;
+  }
+  :root {
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1); --radius: 16px;
+    /* Same faces as the front page: Inter for speech, Fira Code for labels. */
+    --serif: "Inter", system-ui, sans-serif;
+    --mono: "Fira Code", ui-monospace, Consolas, monospace;
+    --lilac: #b4aadc; --sage: #8ca082; --steel: #648c96; --mauve: #b48ca0; --amber: #e6be78; --coral: #f06464;
+    /* Room for the notch and the home bar when installed full screen on a phone. */
+    --top: env(safe-area-inset-top, 0px); --bottom: env(safe-area-inset-bottom, 0px);
+    --left: env(safe-area-inset-left, 0px); --right: env(safe-area-inset-right, 0px);
+    --panel-w: 400px;
+  }
+  html, body, #globe { margin: 0; width: 100%; height: 100%; background: #1a1f26; overflow: hidden; }
+  body { font: 14px/1.45 var(--serif); color: var(--ink); overflow-x: hidden; }
+  button, input, select { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  button, a { -webkit-tap-highlight-color: transparent; }
+  :focus-visible { outline: 2px solid var(--link); outline-offset: 2px; }
+  [hidden] { display: none !important; }
+  .muted { color: var(--muted); }
+
+  /* Corners */
+  #brand {
+    position: absolute; z-index: 3; top: calc(16px + var(--top)); left: calc(18px + var(--left)); margin: 0;
+    font-size: 15px; font-weight: 650; letter-spacing: -.01em; color: #f4f6f8; text-decoration: none;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, .45);
+  }
+  #brand span { display: block; font: 10.5px/1.5 var(--mono); color: #c9d4db; letter-spacing: .02em; }
+  .icon-btn {
+    width: 40px; height: 40px; border: 0; border-radius: 12px; display: grid; place-items: center;
+    background: var(--glass); color: var(--ink); box-shadow: var(--shadow);
+  }
+  .icon-btn svg { width: 20px; height: 20px; }
+  #map-btn { position: absolute; z-index: 4; top: calc(14px + var(--top)); right: calc(14px + var(--right)); }
+  .menu {
+    position: absolute; z-index: 6; min-width: 200px; padding: 8px;
+    background: var(--paper); color: var(--ink); border-radius: 16px; box-shadow: var(--shadow);
+    transform-origin: var(--origin, top right);
+  }
+  .menu p { margin: 6px 8px 4px; font-size: 12px; color: var(--muted); }
+  #voice-menu { max-width: min(360px, calc(100vw - 32px)); }
+  #talk-voice { max-width: 100%; }
+  #talk-preview { margin: 6px 8px; }
+  #talk-preview, #business-research button { background: var(--wash); color: var(--ink); border: 1px solid var(--line); border-radius: 10px; min-height: 44px; padding: 8px 12px; }
+  #business-research { margin: 16px 0; padding: 14px 0; border-block: 1px solid var(--line); }
+  #business-research h3 { margin: 0 0 8px; font-size: 14px; }
+  #business-research p { font-size: 13px; line-height: 1.5; }
+  #business-research a { display: block; margin: 9px 0; color: var(--link); }
+  #business-research .business-choices { display: flex; flex-wrap: wrap; gap: 6px; }
+  #business-research .business-choices + .business-choices { margin-top: 6px; }
+  #business-evidence h4 { font-size: 13px; margin: 14px 0 4px; }
+  #business-evidence ul { padding-left: 20px; font-size: 13px; line-height: 1.5; }
+  .menu .opt {
+    display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 8px;
+    border: 0; background: transparent; border-radius: 10px; padding: 9px 10px; text-align: left;
+  }
+  .menu .opt:hover { background: var(--wash); }
+  .menu .opt[aria-pressed="true"]::after { content: "✓"; color: var(--link); }
+  #motion-pill {
+    position: absolute; z-index: 4; right: calc(16px + var(--right)); bottom: calc(26px + var(--bottom));
+    border: 0; border-radius: 999px; padding: 7px 12px; min-height: 32px; font-size: 12px;
+    background: var(--glass); color: var(--muted); box-shadow: var(--shadow);
+  }
+  #motion-pill[aria-pressed="true"] { color: var(--ink); }
+  /* At tablet widths this pill overlaps the voice orb; the map menu keeps the same switch. */
+  @media (max-width: 960px) { #motion-pill { display: none; } }
+  #map-menu { top: calc(60px + var(--top)); right: calc(14px + var(--right)); }
+
+  /* Island hero */
+  #hero {
+    position: absolute; z-index: 2; left: 50%; top: calc(15% + var(--top)); transform: translateX(-50%);
+    width: min(560px, calc(100% - 32px)); text-align: center; pointer-events: none;
+    color: #f4f6f8; text-shadow: 0 2px 14px rgba(0, 0, 0, .55);
+  }
+  #hero h1 { margin: 0; font: 500 34px/1.1 var(--serif); letter-spacing: -.015em; text-wrap: balance; }
+  #hero p { margin: 8px 0 0; font-size: 14px; color: #d3dde3; }
+  /* The decision first: six industry chips open the opportunity map. */
+  #decide-start { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 16px; pointer-events: auto; }
+  #decide-start button { border: 0; border-radius: 999px; min-height: 44px; padding: 9px 16px; background: var(--primary); color: var(--primary-ink); box-shadow: var(--shadow); font-size: 14px; font-weight: 600; }
+  #hero-or { margin-top: 20px; font: 11px/1.5 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: #c9d4db; }
+  #journey-start { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 8px; pointer-events: auto; }
+  #journey-start button { border: 1px solid var(--line); border-radius: 999px; min-height: 40px; padding: 7px 14px; background: var(--paper); color: var(--ink); box-shadow: var(--shadow); font-size: 13px; }
+  #hero #journey-status { font-size: 12px; }
+  /* Missions: a tour that plays itself, offered under the artist chips. */
+  #missions { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; margin-top: 18px; pointer-events: auto; }
+  #missions .mission-label { width: 100%; font: 11px/1.5 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: #c9d4db; }
+  #missions button { border: 1px solid rgba(255, 255, 255, .22); border-radius: 999px; min-height: 40px; padding: 7px 14px; background: rgba(8, 24, 36, .55); color: #fff; font-size: 13px; backdrop-filter: blur(8px); }
+  #missions button[aria-pressed="true"] { background: var(--primary); color: var(--primary-ink); border-color: transparent; }
+  /* Embedded on the front page (?embed=1): the globe and the caption only, plus one play button. */
+  html[data-embed] #brand, html[data-embed] #explore-nav, html[data-embed] #panel, html[data-embed] #suggest,
+  html[data-embed] #map-btn, html[data-embed] #talk, html[data-embed] #hero, html[data-embed] #coastal-panel,
+  html[data-embed] #opportunity-panel, html[data-embed] #tip, html[data-embed] #pin-card, html[data-embed] #motion-pill,
+  html[data-embed] #map-chrome { display: none !important; }
+  /* The ask bar keeps its place (the caption is anchored above it) but is not shown. */
+  html[data-embed] #ask { visibility: hidden; }
+  /* On a shared /app?mission= link the ask bar and "Try one" chips are still there, so the play button sits above them. */
+  #embed-play { position: absolute; z-index: 8; left: 50%; bottom: calc(196px + var(--bottom)); transform: translateX(-50%); display: flex; gap: 10px; align-items: center; }
+  html[data-embed] #embed-play { bottom: calc(28px + var(--bottom)); }
+  #embed-play button { border: 0; border-radius: 999px; min-height: 48px; padding: 10px 22px; background: var(--primary); color: var(--primary-ink); font-size: 15px; font-weight: 650; white-space: nowrap; box-shadow: var(--shadow); }
+  #embed-play a { color: #fff; font-size: 13px; white-space: nowrap; text-decoration: underline; text-underline-offset: 3px; }
+  @media (max-width: 480px) { #embed-play { flex-direction: column; gap: 12px; } }
+  #journey-trail { padding: 8px 16px; border-bottom: 1px solid var(--line); font-size: 12px; color: var(--soft); }
+  #journey-trail p { margin: 0; }
+  #journey-return { margin-top: 6px; }
+  #suggest {
+    position: absolute; z-index: 3; left: 50%; bottom: calc(92px + var(--bottom)); transform: translateX(-50%);
+    width: min(640px, calc(100% - 32px)); display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
+  }
+  #suggest button {
+    border: 0; border-radius: 999px; padding: 9px 14px; background: var(--glass); color: var(--ink);
+    box-shadow: var(--shadow); font-size: 13px;
+    transition: transform 160ms var(--ease-out), background-color 160ms ease;
+  }
+  @media (hover: hover) and (pointer: fine) { #suggest button:hover { background: var(--paper); } }
+  #suggest button:active { transform: scale(.97); }
+  @media (prefers-reduced-motion: reduce) { #suggest button:active { transform: none; } }
+
+  /* Panel: docked left on desktop (map stays clickable, no dimming). Bottom sheet on phone. */
+  #panel {
+    position: absolute; z-index: 3; top: calc(12px + var(--top)); left: calc(12px + var(--left)); bottom: calc(12px + var(--bottom));
+    width: min(var(--panel-w), calc(100% - 24px));
+    display: flex; flex-direction: column; background: var(--paper); color: var(--ink);
+    border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; min-width: 0;
+  }
+  #panel-collapse {
+    position: absolute; top: 10px; right: 10px; z-index: 2; width: 44px; height: 44px;
+    border: 1px solid var(--line); border-radius: 12px; background: var(--wash); color: var(--ink);
+    display: grid; place-items: center; font-size: 18px; line-height: 1;
+  }
+  #panel[data-collapsed="true"] { width: 52px; }
+  #panel[data-collapsed="true"] .crumbs,
+  #panel[data-collapsed="true"] .step,
+  #panel[data-collapsed="true"] #journey-trail,
+  #panel[data-collapsed="true"] #coast-return { display: none !important; }
+  #panel-handle {
+    display: none; width: 44px; height: 5px; margin: 10px auto 4px; border-radius: 999px; background: var(--line);
+  }
+  /* Modal backdrop only for true blocking dialogs */
+  .modal-backdrop {
+    position: absolute; inset: 0; z-index: 20; background: rgba(21, 26, 31, .55);
+    display: grid; place-items: center; padding: 24px;
+  }
+  .modal-dialog {
+    width: min(420px, 100%); max-height: min(80vh, 560px); overflow: auto; padding: 24px;
+    background: var(--paper); color: var(--ink); border-radius: var(--radius); box-shadow: var(--shadow);
+  }
+  .modal-dialog .modal-x {
+    float: right; width: 44px; height: 44px; border: 0; border-radius: 12px; background: var(--wash); color: var(--ink); font-size: 20px;
+  }
+  /* Map chrome: compass / top-down / home / 3D */
+  #map-chrome {
+    position: absolute; z-index: 4; right: calc(14px + var(--right)); bottom: calc(68px + var(--bottom));
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  #map-chrome button {
+    width: 44px; height: 44px; border: 0; border-radius: 12px; display: grid; place-items: center;
+    background: var(--glass); color: var(--ink); box-shadow: var(--shadow); font: 600 11px/1 var(--mono);
+  }
+  #map-chrome #compass-btn svg { width: 22px; height: 22px; transform-origin: 50% 50%; transition: transform 80ms linear; }
+  @media (prefers-reduced-motion: reduce) { #map-chrome #compass-btn svg { transition: none; } }
+  #map-chrome #tilt-btn[aria-pressed="true"] { color: var(--highlight); }
+  .crumbs {
+    display: flex; align-items: center; gap: 4px; flex-wrap: wrap; padding: 12px 14px 0; font-size: 12px; color: var(--muted);
+  }
+  .crumbs button { border: 0; background: transparent; padding: 4px 6px; border-radius: 8px; color: var(--link); }
+  @media (hover: hover) and (pointer: fine) { .crumbs button:hover { background: var(--wash); } }
+  .crumbs b { font-weight: 600; color: var(--ink); padding: 4px 6px; }
+  .step { flex: 1 1 auto; overflow: auto; overscroll-behavior: contain; padding: 8px 16px 16px; display: flex; flex-direction: column; gap: 12px; }
+  .step h2 { margin: 2px 0 0; font: 600 24px/1.15 var(--serif); letter-spacing: -.01em; }
+  .lede { margin: 0; color: var(--soft); font-size: 14px; }
+  .small { margin: 0; color: var(--muted); font: 12px/1.5 var(--mono); }
+  .say { margin: 0; padding: 12px 14px; background: var(--field); border-radius: 14px; font: 15.5px/1.45 var(--serif); }
+  /* Top picks: the places an answer names, as photo cards above the list */
+  .picks { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .pick { display: grid; align-content: start; gap: 6px; padding: 0; border: 0; border-top: 3px solid var(--kind, var(--line)); border-radius: 14px; background: var(--field); color: inherit; text-align: left; overflow: hidden; transition: background-color 160ms ease; }
+  @media (hover: hover) and (pointer: fine) { .pick:hover { background: var(--wash); } }
+  .pick img, .pick .pick-initial { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; background: var(--wash); }
+  .pick .pick-initial { display: grid; place-items: center; font-size: 24px; font-weight: 650; color: var(--muted); }
+  /* Logos and site icons sit whole on a plain tile; photos fill it. */
+  .pick img.logo, #pin-card img.logo, .shot.logo, .result-logo.logo, img.thumb.logo {
+    object-fit: contain; padding: 10px; box-sizing: border-box; background: #fff;
+  }
+  .shot.letter, .pick-initial.letter, .result-logo.letter, .thumb.letter {
+    display: grid; place-items: center; font-weight: 650; color: #1a1f26;
+    background: var(--chip, var(--field));
+  }
+  .location-shot { margin: 10px 0 0; max-width: 140px; }
+  .location-thumb { display: block; width: 140px; height: 88px; object-fit: cover; border-radius: 10px; background: var(--wash); }
+  .location-shot figcaption { margin-top: 4px; font-size: 11px; color: var(--muted); }
+  .why-line { margin: 6px 0 0; font-size: 13px; color: var(--soft); }
+  .answer-cards {
+    display: flex; flex-direction: column; gap: 8px; margin: 10px 0 0;
+    list-style: none; padding: 0;
+  }
+  .answer-cards > li { margin: 0; padding: 0; min-width: 0; }
+  .result-card {
+    position: relative; display: flex; flex-direction: column; gap: 8px; padding: 10px; border-radius: 14px;
+    background: var(--field); color: inherit; text-align: left; border-left: 3px solid var(--chip, var(--accent));
+  }
+  .result-card:has(.result-name[aria-current="true"]) { background: var(--wash); }
+  @media (hover: hover) and (pointer: fine) { .result-card:hover { background: color-mix(in srgb, var(--wash) 70%, var(--field)); } }
+  .result-top { display: grid; grid-template-columns: 56px 1fr; gap: 10px; align-items: start; }
+  .result-logo {
+    width: 56px; height: 56px; border-radius: 12px; object-fit: cover; background: var(--wash);
+    display: grid; place-items: center; font-size: 22px;
+  }
+  .result-text { display: grid; gap: 4px; min-width: 0; }
+  .result-name {
+    justify-self: start; margin: 0; padding: 0; border: 0; background: none; color: inherit;
+    font: inherit; font-size: 14px; font-weight: 650; line-height: 1.25; text-align: left;
+    overflow-wrap: anywhere; cursor: pointer;
+  }
+  .result-name::after { content: ""; position: absolute; inset: 0; }
+  .result-name:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .cat-chip {
+    justify-self: start; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600;
+    background: color-mix(in srgb, var(--chip, var(--accent)) 28%, transparent); color: var(--ink);
+  }
+  .result-credit { font-size: 10px; color: var(--muted); }
+  .result-why { margin: 0; font-size: 12px; line-height: 1.35; color: var(--soft); }
+  .result-why .why-label { color: var(--muted); font: 11px/1.3 var(--mono); }
+  .result-meta { margin: 0; font-size: 12px; color: var(--muted); }
+  .result-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+  .result-act {
+    position: relative; z-index: 1;
+    border: 1px solid var(--line); background: var(--paper); color: var(--ink); border-radius: 999px;
+    padding: 5px 10px; font-size: 12px; min-height: 28px; text-decoration: none; cursor: pointer;
+  }
+  @media (hover: hover) and (pointer: fine) { .result-act:hover { background: var(--wash); } }
+  .result-location { margin: 0; width: 96px; }
+  .result-location img { display: block; width: 96px; height: 64px; object-fit: cover; border-radius: 8px; background: var(--wash); }
+  .result-location figcaption { margin-top: 2px; font-size: 10px; color: var(--muted); }
+  #caption .answer-cards { max-width: 100%; }
+  #caption .result-card { background: var(--paper); }
+  .picks-more { justify-self: start; margin-top: -2px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--field); color: var(--ink); font: inherit; font-size: 12px; cursor: pointer; }
+  .picks-more:disabled { opacity: .5; cursor: default; }
+  .pick .pick-text { display: grid; gap: 2px; padding: 0 10px 10px; font-size: 11px; line-height: 1.3; color: var(--muted); }
+  .pick strong { font-size: 13px; line-height: 1.25; color: var(--ink); overflow-wrap: anywhere; }
+  .pick .pick-rating { color: var(--ink); }
+  .group-title { margin: 4px 0 0; font: 500 11px/1.5 var(--mono); color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+  .weather-line { margin: -4px 0 0; color: var(--muted); }
+  .cards { display: flex; flex-direction: column; gap: 6px; }
+  /* Town at a glance: four numbers, then what the town loves (Qloo's locality signal) */
+  .stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .stat { background: var(--field); border-radius: 12px; padding: 10px 12px; }
+  .stat b { display: block; font-size: 20px; font-weight: 650; line-height: 1.15; font-variant-numeric: tabular-nums; }
+  .stat span { display: block; margin-top: 2px; font-size: 11px; color: var(--muted); line-height: 1.3; }
+  .profile { display: flex; flex-direction: column; gap: 6px; }
+  .profile .chips { margin-top: 0; }
+  .profile .chip.out { border-color: #f5b301; }
+  .profile .chip.out::before { content: "●"; color: #f5b301; margin-right: 5px; font-size: 9px; vertical-align: 1px; }
+  .profile details.row { border-top: 1px solid var(--line); padding-top: 2px; }
+  .profile details.row summary { display: flex; align-items: center; gap: 8px; min-height: 36px; cursor: pointer; list-style: none; font-size: 13px; color: var(--ink); }
+  .profile details.row summary::-webkit-details-marker { display: none; }
+  .profile details.row summary .count { margin-left: auto; font: 11px/1 var(--mono); color: var(--muted); }
+  .profile details.row summary::after { content: "+"; font: 14px/1 var(--mono); color: var(--muted); }
+  .profile details.row[open] summary::after { content: "\2212"; }
+  .profile details.row .chips { padding-bottom: 8px; }
+  .dir-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  /* Under a question's list the directory is one line until asked for. */
+  #directory.folded .dir-head .seg, #directory.folded .dir, #directory.folded .dir-ask { display: none; }
+  #dir-title button { border: 0; padding: 0; background: none; color: var(--link); font: inherit; text-transform: inherit; letter-spacing: inherit; cursor: pointer; }
+  .dir-head .group-title { margin: 0; }
+  .dir-ask { display: flex; flex-direction: column; gap: 6px; }
+  .dir-ask button { text-align: left; border: 1px solid var(--line); background: transparent; color: var(--ink); border-radius: 12px; padding: 9px 12px; font-size: 13px; }
+  @media (hover: hover) and (pointer: fine) { .dir-ask button:hover { background: var(--wash); } }
+  /* Landmarks: photographed places from Wikidata, a strip that scrolls sideways */
+  #landmarks { display: flex; flex-direction: column; gap: 8px; }
+  #landmarks .src { font-weight: 400; text-transform: none; letter-spacing: 0; }
+  .lm-row { display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 4px; overscroll-behavior-x: contain; }
+  .lm { flex: 0 0 116px; border: 0; padding: 0; background: transparent; color: var(--ink); text-align: left; scroll-snap-align: start; }
+  .lm img { display: block; width: 116px; height: 80px; object-fit: cover; border-radius: 10px; background: var(--wash); }
+  .lm span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-top: 4px; font-size: 12px; line-height: 1.3; }
+  /* Directory: the town's whole catalog, by category, then by kind */
+  #directory { display: flex; flex-direction: column; gap: 8px; }
+  .dir { display: flex; flex-wrap: wrap; gap: 6px; }
+  .dir button {
+    border: 1px solid var(--line); background: transparent; color: var(--ink); border-radius: 999px;
+    padding: 6px 12px; min-height: 32px; font-size: 13px; transition: background-color 160ms ease;
+  }
+  .dir button b { margin-left: 6px; font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .dir button[aria-pressed="true"] { background: var(--primary); color: var(--primary-ink); border-color: var(--primary); }
+  .dir button[aria-pressed="true"] b { color: inherit; opacity: .7; }
+  @media (hover: hover) and (pointer: fine) { .dir button:not([aria-pressed="true"]):hover { background: var(--wash); } }
+  .dir.kinds button { font-size: 12px; padding: 4px 10px; min-height: 28px; }
+  #dir-more { align-self: flex-start; }
+  .star { color: #f5b301; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .card {
+    display: grid; grid-template-columns: 64px 1fr 14px; gap: 12px; align-items: center;
+    width: 100%; padding: 8px; border: 0; border-radius: 14px; background: transparent; text-align: left;
+    transition: background-color 160ms ease;
+  }
+  .card[aria-current="true"] { background: var(--wash); }
+  @media (hover: hover) and (pointer: fine) { .card:hover { background: var(--wash); } }
+  .card .thumb {
+    width: 64px; height: 56px; border-radius: 12px; object-fit: cover; display: grid; place-items: center;
+    background: var(--field); color: var(--muted); font-weight: 650;
+  }
+  .card .name { display: block; font-weight: 600; line-height: 1.3; }
+  .card .meta { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .card .tag { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px; background: var(--primary); color: var(--primary-ink); font-size: 10px; font-weight: 650; vertical-align: 1px; }
+  .card .chev { color: var(--muted); }
+  .skeleton { height: 64px; border-radius: 14px; background: var(--field); }
+  .tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .seg { display: inline-flex; gap: 2px; padding: 3px; border-radius: 999px; background: var(--wash); }
+  .seg button { border: 0; background: transparent; color: var(--muted); border-radius: 999px; padding: 6px 12px; font-size: 13px; min-height: 32px; }
+  .seg button[aria-pressed="true"] { background: var(--paper); color: var(--ink); box-shadow: 0 1px 4px rgba(0, 0, 0, .18); }
+  .ghost { border: 1px solid var(--line); background: transparent; border-radius: 999px; padding: 7px 14px; font-size: 13px; min-height: 34px; }
+  .ghost:hover { background: var(--wash); }
+  #compare-box { display: flex; gap: 8px; }
+  #compare-find { flex: 1; min-width: 0; border: 1px solid var(--line); background: var(--field); border-radius: 999px; padding: 8px 14px; }
+  #compare-hits { margin: 0; padding: 4px; list-style: none; background: var(--field); border-radius: 14px; }
+  #compare-hits button { width: 100%; text-align: left; border: 0; background: transparent; padding: 8px 10px; border-radius: 10px; }
+  #compare-hits button:hover { background: var(--wash); }
+  details.fold { border-top: 1px solid var(--line); padding-top: 10px; }
+  details.fold summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+  details.fold[open] summary { margin-bottom: 8px; }
+  .about p { margin: 0 0 6px; color: var(--soft); font-size: 13px; }
+  .about img { width: 100%; height: 120px; object-fit: cover; border-radius: 12px; margin-bottom: 8px; }
+  .record table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .record th { text-align: left; font-weight: 600; vertical-align: top; width: 80px; padding: 4px 8px 4px 0; color: var(--muted); }
+  .record td { padding: 4px 0; vertical-align: top; }
+  .record pre { margin: 8px 0; white-space: pre-wrap; font: 12px/1.45 inherit; background: var(--field); border-radius: 12px; padding: 10px 12px; }
+  .compare-col { display: flex; flex-direction: column; gap: 8px; padding: 10px 0; border-top: 1px solid var(--line); }
+  .compare-col h3 { margin: 0; font-size: 15px; }
+  a { color: var(--link); }
+
+  /* Business step (dossier.js markup) */
+  #spot h3 { margin: 0; font-size: 20px; font-weight: 650; line-height: 1.25; }
+  #spot p, #spot ul { margin: 4px 0 0; }
+  #spot ul { padding: 0; list-style: none; }
+  #spot li { display: flex; justify-content: space-between; gap: 8px; padding: 5px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+  #spot .src { color: var(--muted); font-size: 11px; white-space: nowrap; }
+  .hero-shot { margin: 0 0 4px; }
+  .shot { width: 100%; height: 190px; object-fit: cover; display: block; border-radius: 14px; background: var(--wash); }
+  .hero-shot figcaption { margin-top: 4px; font-size: 11px; color: var(--muted); }
+  .place-intro { display: flex; align-items: flex-start; gap: 12px; }
+  .place-heading { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+  .place-intro .hero-shot { flex: 0 0 96px; width: 96px; }
+  .place-intro .shot { height: 88px; border-radius: 10px; }
+  .place-intro .shot.letter { font-size: 28px; }
+  .place-intro figcaption { font-size: 11px; line-height: 1.3; }
+  .place-3d { margin-top: 10px; font-size: 12px; padding: 6px 12px; }
+  .place-overview { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .taste-links { border-top: 1px solid var(--line); padding-top: 12px; }
+  .taste-links h4 { margin: 0 0 8px; font-size: 15px; }
+  #spot .taste-links .note { margin-top: 8px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .chip { border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; font-size: 12px; }
+  .prose { margin: 4px 0 0; color: var(--soft); font-size: 13px; line-height: 1.5; }
+  .prose.lead { color: var(--ink); font-size: 14px; }
+  details.more { margin-top: 10px; }
+  details.more summary { box-sizing: border-box; cursor: pointer; color: var(--link); font-size: 13px; padding: 9px 0; min-height: 40px; }
+  .badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .badge { background: var(--wash); border-radius: 999px; padding: 4px 10px; font-size: 12px; font-variant-numeric: tabular-nums; }
+  .about { color: var(--soft); }
+  #spot .about { font-size: 14px; line-height: 1.5; margin-top: 10px !important; }
+  .aud { margin-top: 12px; }
+  .section { margin: 6px 0 0; font-size: 13px; font-weight: 650; }
+  .note { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.4; }
+  #spot .bars li { display: grid; grid-template-columns: 84px 1fr 96px; align-items: center; gap: 8px; padding: 4px 0; border: 0; font-size: 12px; }
+  .track { position: relative; height: 8px; border-radius: 999px; background: var(--wash); }
+  .track::after { content: ""; position: absolute; left: 50%; top: -2px; bottom: -2px; width: 1px; background: var(--muted); }
+  .track i { position: absolute; top: 0; bottom: 0; border-radius: 999px; }
+  .track i.up { background: #7c5cff; }
+  .track i.down { background: var(--muted); }
+
+  /* Ask bar */
+  #dockbar {
+    position: absolute; z-index: 5; left: 50%; bottom: calc(18px + var(--bottom)); transform: translateX(-50%);
+    width: min(620px, calc(100% - 32px));
+  }
+  #caption {
+    position: absolute; left: 50%; bottom: calc(100% + 10px); transform: translateX(-50%);
+    width: max-content; max-width: 100%; box-sizing: border-box;
+    margin: 0; padding: 10px 34px 10px 14px; border-radius: 14px; background: var(--glass); color: var(--ink);
+    box-shadow: var(--shadow); font: 15.5px/1.45 var(--serif);
+    max-height: 38vh; overflow-y: auto;
+  }
+  #caption .who { color: var(--muted); font: 11px/1 var(--mono); margin-right: 6px; }
+  #caption .x {
+    position: absolute; top: 6px; right: 6px; width: 26px; height: 26px; padding: 0; border: 0; border-radius: 999px;
+    background: transparent; color: var(--muted); font: 16px/1 var(--mono); cursor: pointer;
+  }
+  @media (hover: hover) and (pointer: fine) { #caption .x:hover { background: var(--wash); color: var(--ink); } }
+  /* The evidence drawer: one folded mono line under the answer; open, one line per tool call. */
+  #caption .evidence { margin: 8px 0 0; padding-top: 6px; border-top: 1px solid var(--line); color: var(--muted); font: 11.5px/1.4 var(--mono); }
+  #caption .evidence summary { cursor: pointer; list-style: none; }
+  #caption .evidence summary::before { content: "▸ "; }
+  #caption .evidence[open] summary::before { content: "▾ "; }
+  #caption .evidence ul { margin: 6px 0 0; padding-left: 14px; }
+  #caption .evidence li { margin: 2px 0; overflow-wrap: anywhere; }
+  #caption .evidence p { margin: 6px 0 0; overflow-wrap: anywhere; }
+  #caption .evidence code { font: inherit; color: var(--ink); }
+  /* With the panel open on a desktop, the ask bar centres on the free map area right of the ~400px dock. */
+  @media (min-width: 1024px) {
+    body:has(#panel:not([hidden]):not([data-collapsed="true"])) #dockbar {
+      left: calc((212px + var(--left) + 100%) / 2); width: min(620px, calc(100% - 460px - var(--left)));
+    }
+  }
+  #ask {
+    display: flex; align-items: center; gap: 6px; padding: 6px 6px 6px 18px;
+    background: var(--paper); border-radius: 999px; box-shadow: var(--shadow); border: 1px solid var(--line);
+  }
+  #q { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--ink); font-size: 15px; padding: 10px 0; }
+  #q::placeholder { color: var(--muted); }
+  #q:focus-visible { outline: none; }
+  #ask:focus-within { border-color: var(--link); }
+  #voice-btn {
+    border: 0; background: var(--wash); border-radius: 999px; padding: 8px 12px; font-size: 12px; color: var(--muted); min-height: 36px; white-space: nowrap;
+  }
+  /* Dictation: the mic turns red while it listens; the words appear in the box as you speak */
+  #dictate {
+    flex: 0 0 auto; width: 36px; height: 36px; padding: 0; border: 0; border-radius: 999px;
+    display: grid; place-items: center; background: var(--wash); color: var(--muted);
+    transition: background-color 160ms ease, color 160ms ease;
+  }
+  #dictate svg { width: 18px; height: 18px; }
+  #dictate[aria-pressed="true"] { background: #9f2d2d; color: #f6f3ec; animation: dictate-pulse 1.6s ease-in-out infinite; }
+  @keyframes dictate-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(159, 45, 45, .45); } 50% { box-shadow: 0 0 0 6px rgba(159, 45, 45, 0); } }
+  @media (prefers-reduced-motion: reduce) { #dictate[aria-pressed="true"] { animation: none; } }
+  #talk-pause, #talk-stop { border: 0; border-radius: 999px; padding: 8px 12px; font-size: 12px; min-height: 36px; background: var(--wash); }
+  #talk-stop { background: #9f2d2d; color: #f6f3ec; }
+  #wisp-button { flex: 0 0 auto; width: 52px; height: 52px; padding: 0; border: 0; border-radius: 999px; background: transparent; }
+  #wisp { display: block; width: 52px; height: 52px; }
+  #wisp-button[data-mode]:not([data-mode="off"]) { display: flex; align-items: center; gap: 6px; width: auto; padding-right: 10px; background: var(--field); }
+  #voice-state { font-size: 12px; font-weight: 600; white-space: nowrap; }
+  #voice-wave { display: flex; align-items: center; gap: 2px; height: 20px; }
+  #voice-wave i { display: block; width: 2px; height: 18px; background: var(--link); border-radius: 2px; transform: scaleY(.18); transition: transform 80ms linear; }
+  @media (prefers-reduced-motion: reduce) { #voice-wave i { transform: scaleY(.3) !important; transition: none; } }
+  #hits {
+    position: absolute; left: 0; right: 0; bottom: calc(100% + 10px); margin: 0; padding: 6px; list-style: none;
+    max-height: 320px; overflow: auto; background: var(--paper); border-radius: 16px; box-shadow: var(--shadow);
+  }
+  #hits button {
+    display: flex; justify-content: space-between; gap: 12px; width: 100%; text-align: left;
+    border: 0; background: transparent; padding: 10px 12px; border-radius: 10px;
+  }
+  #hits button[aria-selected="true"] { background: var(--wash); }
+  @media (hover: hover) and (pointer: fine) { #hits button:hover { background: var(--wash); } }
+  #hits span { color: var(--muted); font-size: 12px; white-space: nowrap; }
+  #hits li.none, #hits li.ask-hint { padding: 10px 12px; color: var(--muted); font-size: 13px; }
+  #voice-menu { bottom: calc(100% + 10px); right: 0; --origin: bottom right; }
+  #voice-menu select { width: 100%; margin: 4px 0 8px; border: 1px solid var(--line); background: var(--field); border-radius: 10px; padding: 8px; }
+  #talk-voice-name { margin: 6px 8px 2px; font-size: 12px; color: var(--muted); }
+
+  #tip {
+    position: fixed; z-index: 7; pointer-events: none; max-width: 240px; padding: 10px 12px;
+    background: var(--paper); color: var(--ink); border-radius: 12px; box-shadow: var(--shadow); font-size: 13px;
+  }
+  #tip strong { display: block; }
+  #tip p { margin: 2px 0 0; color: var(--muted); font-size: 12px; }
+  #pin-card {
+    position: fixed; z-index: 7; pointer-events: none; width: 252px; padding: 0 0 10px; overflow: hidden;
+    background: var(--paper); color: var(--ink); border-radius: 14px; box-shadow: var(--shadow); font-size: 13px;
+  }
+  #pin-card img { display: block; width: 100%; height: 132px; object-fit: cover; background: var(--field); }
+  #pin-card strong { display: block; margin: 8px 12px 0; font-size: 14px; line-height: 1.3; }
+  #pin-card p { margin: 3px 12px 0; color: var(--muted); font-size: 12px; }
+  #pin-card .kind { display: flex; align-items: center; gap: 6px; color: var(--ink); font-weight: 600; }
+  #pin-card .kind i, .legend-chip i { width: 10px; height: 10px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px rgba(0, 0, 0, .18); flex: none; }
+  #pin-card .badges { display: flex; flex-wrap: wrap; gap: 4px 10px; color: var(--ink); }
+  #pin-card .hint { margin-top: 6px; font-style: italic; }
+  .legend { display: flex; flex-wrap: wrap; gap: 4px 10px; margin: 2px 0 0; }
+  .legend-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; color: var(--muted); }
+  .legend-chip b { font-weight: 600; color: var(--ink); margin-left: -1px; }
+  #toast {
+    position: absolute; z-index: 6; left: 50%; top: calc(16px + var(--top)); transform: translateX(-50%); margin: 0;
+    padding: 8px 14px; border-radius: 999px; background: var(--paper); color: var(--ink); box-shadow: var(--shadow); font-size: 13px;
+  }
+  #toast:empty { display: none; }
+
+  .cesium-widget-credits { opacity: .7; }
+  /* Cesium ion's logo and "Data attribution" must stay on screen: clear of the docked panels on desktop.
+     Cesium positions this row with an inline style, hence !important. */
+  @media (min-width: 721px) {
+    body:has(#panel:not([hidden]), #opportunity-panel:not([hidden]), #coastal-panel:not([hidden])) .cesium-viewer-bottom {
+      left: calc(24px + var(--panel-w) + var(--left)) !important;
+    }
+    body:has(#panel:not([hidden])[data-collapsed="true"]):not(:has(#opportunity-panel:not([hidden]), #coastal-panel:not([hidden]))) .cesium-viewer-bottom {
+      left: calc(76px + var(--left)) !important;
+    }
+  }
+
+  /* iOS zooms the page into any field under 16px when it takes focus. */
+  @media (pointer: coarse) { #q, #compare-find, .menu select { font-size: 16px; } }
+
+  @media (max-width: 720px) {
+    #hero { top: calc(11% + var(--top)); width: min(560px, calc(100% - 24px)); }
+    #hero h1 { font-size: 26px; }
+    #suggest { bottom: calc(86px + var(--bottom)); left: 50%; transform: translateX(-50%); width: min(100% - 16px, 520px); flex-wrap: wrap; justify-content: center; }
+    /* Two "Try one" chips on a phone; the other two are a thumb's width of island. */
+    #suggest button:nth-child(n+3) { display: none; }
+    #panel {
+      top: auto; left: calc(8px + var(--left)); right: calc(8px + var(--right)); width: auto;
+      bottom: calc(84px + var(--bottom) + var(--caption-h, 0px)); max-height: 48%;
+      border-radius: 16px 16px 12px 12px;
+    }
+    #panel[data-collapsed="true"] { width: auto; max-height: 56px; }
+    #panel-handle { display: block; }
+    #panel-collapse { top: 4px; right: 8px; width: 40px; height: 40px; }
+    /* The ask bar sits just above the Cesium credit row on a phone. */
+    #dockbar { width: calc(100% - 16px); bottom: calc(16px + var(--bottom)); }
+    .cesium-viewer-bottom { bottom: calc(var(--bottom) - 3px) !important; }
+    #voice-btn { padding: 8px 10px; }
+    #caption { bottom: calc(100% + 8px); max-width: calc(100vw - 24px); }
+    #map-chrome { bottom: calc(100px + var(--bottom)); right: calc(8px + var(--right)); }
+    /* With a sheet open the chrome would sit over its legend; park it under the style button instead. */
+    body:has(#panel:not([hidden]):not([data-collapsed="true"])) #map-chrome,
+    body:has(#opportunity-panel:not([hidden])) #map-chrome,
+    body:has(#coastal-panel:not([hidden])) #map-chrome { top: calc(62px + var(--top)); bottom: auto; flex-direction: row; }
+    #decide-start, #journey-start, #missions { max-width: 100%; }
+    #decide-start button, #journey-start button, #missions button { max-width: 100%; white-space: normal; }
+    .chips, .dir, .badges, .tools { max-width: 100%; }
+    .card { grid-template-columns: 56px 1fr 12px; gap: 8px; min-width: 0; }
+    .picks { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .answer-cards {
+      flex-direction: row; overflow-x: auto; scroll-snap-type: x mandatory;
+      padding-bottom: 4px; overscroll-behavior-x: contain; gap: 8px;
+    }
+    .answer-cards > li { display: flex; flex: 0 0 min(280px, 82vw); scroll-snap-align: start; }
+    .answer-cards .result-card { flex: 1; }
+  }
+  @media (max-width: 390px) {
+    #hero h1 { font-size: 22px; }
+    #ask { padding-left: 12px; gap: 4px; }
+    #wisp-button { width: 44px; height: 44px; }
+    #wisp { width: 44px; height: 44px; }
+    .stat b { font-size: 18px; }
+    #map-chrome button { width: 44px; height: 44px; }
+  }
+  /* Info surfaces are not interactive affordances */
+  .stat, .pick, #pin-card, .coast-card { cursor: default; }
+  @media (hover: hover) and (pointer: fine) {
+    .stat:hover, #pin-card:hover { transform: none; box-shadow: none; }
+  }
+</style>
+<link href="/app/coastal.css" rel="stylesheet">
+<link href="/app/opportunity.css" rel="stylesheet">
+</head>
+<body>
+<div id="globe"></div>
+
+<a id="brand" href="/">Zemi-Aku<span>Puerto Rico, through Qloo's taste data</span></a>
+<aside id="coastal-panel" aria-label="Coastal discovery" hidden>
+  <div class="step">
+    <div><p class="small">PUERTO RICO · COASTAL DISCOVERY</p><h2 id="coastal-title">Ports</h2></div>
+    <p class="lede" id="coastal-note" role="status"></p>
+    <input type="search" id="coastal-search" placeholder="Search a port" aria-label="Search coastal records">
+    <div id="coastal-detail" hidden></div>
+    <div class="cards" id="coastal-list"></div>
+    <p class="small" id="coastal-source"></p>
+  </div>
+</aside>
+
+<aside id="opportunity-panel" aria-label="Where to open a business" hidden>
+  <div class="step">
+    <div><p class="small" id="opportunity-kicker"></p><h2 id="opportunity-title"></h2></div>
+    <div class="business-choices" role="group" aria-label="Industry" id="opportunity-industries"></div>
+    <p class="lede" id="opportunity-note" role="status"></p>
+    <div id="opportunity-legend"></div>
+    <h3 id="opportunity-gaps-heading"></h3>
+    <div class="cards" id="opportunity-gaps"></div>
+    <button type="button" class="ghost" id="opportunity-close"></button>
+  </div>
+</aside>
+
+<button type="button" id="map-btn" class="icon-btn" aria-label="Map style and theme" aria-expanded="false" aria-controls="map-menu">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 3 8l9 5 9-5-9-5Z"/><path d="m3 13 9 5 9-5"/></svg>
+</button>
+<div id="map-menu" class="menu" role="menu" hidden>
+  <p>Explore</p>
+  <nav id="explore-nav" aria-label="Explore Puerto Rico">
+    <button type="button" data-explore="places" aria-pressed="true"><span aria-hidden="true">◉</span>Places</button>
+    <button type="button" data-explore="ships" aria-pressed="false"><span aria-hidden="true">◇</span>Ships</button>
+    <button type="button" data-explore="ports" aria-pressed="false"><span aria-hidden="true">⚓</span>Ports</button>
+  </nav>
+  <p>Map</p>
+  <button type="button" class="opt" data-style="eagle" aria-pressed="true">Island view</button>
+  <button type="button" class="opt" data-style="satellite" aria-pressed="false">Satellite</button>
+  <button type="button" class="opt" data-style="buildings" aria-pressed="false">3D buildings</button>
+  <button type="button" class="opt" data-style="photo" aria-pressed="false">Photoreal 3D</button>
+  <p>Theme</p>
+  <button type="button" class="opt" data-theme-pick="night" aria-pressed="true">Night</button>
+  <button type="button" class="opt" data-theme-pick="sea" aria-pressed="false">Sea</button>
+  <button type="button" class="opt" data-theme-pick="paper" aria-pressed="false">Paper</button>
+  <p>Weather</p>
+  <button type="button" class="opt" data-layer="radar" aria-pressed="false">Rain radar</button>
+  <button type="button" class="opt" data-layer="clouds" aria-pressed="false">Clouds</button>
+  <p>Camera</p>
+  <button type="button" class="opt" data-motion aria-pressed="true">Gentle motion over a town</button>
+</div>
+<button type="button" id="motion-pill" aria-pressed="true">Camera motion on</button>
+<div id="map-chrome" role="group" aria-label="Map camera">
+  <button type="button" id="compass-btn" aria-label="Reset north">
+    <svg id="compass-needle" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2 15 14H9L12 2Zm0 20-3-12h6L12 22Z"/><circle cx="12" cy="12" r="2.2" fill="var(--highlight, #dfaf56)"/></svg>
+  </button>
+  <button type="button" id="topdown-btn" aria-label="Top-down view">2D</button>
+  <button type="button" id="home-view-btn" aria-label="Island home view">⌂</button>
+  <button type="button" id="tilt-btn" aria-label="Allow 3D tilt" aria-pressed="false">3D</button>
+</div>
+
+<div id="hero">
+  <h1 id="hero-title">Where should I open a business in Puerto Rico?</h1>
+  <p id="hero-lede">Qloo's taste for all 78 towns, against the businesses the Census already counts. Pick an industry.</p>
+  <div id="decide-start" role="group" aria-label="Where should I open…"></div>
+  <p class="small" id="hero-or">Or start with an artist</p>
+  <div id="journey-start" role="group" aria-label="Discover places through an artist">
+    <button type="button" data-artist="Bad Bunny">Bad Bunny</button>
+    <button type="button" data-artist="Vico C">Vico C</button>
+    <button type="button" data-artist="Obie Bermúdez">Obie Bermúdez</button>
+  </div>
+  <p id="journey-status" role="status"></p>
+  <div id="missions" role="group" aria-label="Watch a tour"></div>
+</div>
+<div id="embed-play" hidden>
+  <button type="button" id="embed-play-btn">▶ Play with sound</button>
+  <a id="embed-open" href="/app" target="_top">Open the full map ↗</a>
+</div>
+<div id="suggest" aria-label="Try one">
+  <button type="button" data-opportunity="bakery">Where to open a bakery</button>
+  <button type="button" data-job="ponce">Open a restaurant in Ponce</button>
+  <button type="button" data-job="surf">Surf spots in Rincón</button>
+  <button type="button" data-job="mofongo">Where to eat mofongo</button>
+</div>
+
+<aside id="panel" aria-label="Details" hidden>
+  <div id="panel-handle" aria-hidden="true"></div>
+  <button type="button" id="panel-collapse" aria-label="Collapse panel" aria-expanded="true">‹</button>
+  <button type="button" class="ghost" id="coast-return" hidden>Back to port</button>
+  <nav class="crumbs" id="crumbs" aria-label="Where you are"></nav>
+  <div id="journey-trail" hidden>
+    <p id="journey-progress"></p>
+    <button type="button" class="ghost" id="journey-return" hidden>Back to taste matches</button>
+  </div>
+  <section class="step" id="step-town">
+    <div>
+      <h2 id="town-title"></h2>
+      <p class="lede" id="town-lede"></p>
+      <p class="small weather-line" id="town-weather" hidden></p>
+      <section id="business-research" hidden aria-label="Business research">
+        <div id="business-sale-links">
+        <h3 id="business-heading">Find businesses for sale</h3>
+        <p id="business-scope">External listing directories. Check the town and sale status with the seller.</p>
+        <a href="https://www.clasificadosonline.com/Negocios/Listings.asp" target="_blank" rel="noopener noreferrer">ClasificadosOnline · Puerto Rico ↗</a>
+        <a href="https://www.bizbuysell.com/puerto-rico-businesses-for-sale/" target="_blank" rel="noopener noreferrer">BizBuySell · Puerto Rico ↗</a>
+        <a id="business-town-search" target="_blank" rel="noopener noreferrer"></a>
+        </div>
+        <h3 id="business-context-heading">Explore the local market</h3>
+        <p id="business-counts"></p>
+        <div id="business-evidence"></div>
+        <div id="business-rerun" hidden></div>
+        <div class="business-choices" role="group" aria-label="Business type" id="business-types">
+          <button type="button" data-business-question="a cafe">Cafés</button>
+          <button type="button" data-business-question="a store">Retail</button>
+          <button type="button" data-business-question="a hotel">Lodging</button>
+          <button type="button" data-business-question="a salon">Health / Beauty</button>
+        </div>
+        <div class="business-choices" role="group" aria-label="Research details">
+          <button type="button" data-business-topic="income">Household income</button>
+          <button type="button" data-business-topic="taste">Local tastes</button>
+          <button type="button" data-business-topic="nearby">Nearby competitors</button>
+        </div>
+      </section>
+    </div>
+    <p class="say" id="town-say" hidden></p>
+    <div class="picks" id="picks" aria-label="Top picks" hidden></div>
+    <button type="button" id="picks-more" class="picks-more" hidden>More like these</button>
+    <div class="stats" id="town-stats" hidden></div>
+    <section class="profile" id="town-profile" hidden></section>
+    <div id="landmarks" hidden>
+      <p class="group-title">Landmarks and history <span class="src">Wikidata</span></p>
+      <div class="lm-row" id="lm-row"></div>
+    </div>
+    <div id="directory" hidden>
+      <div class="dir-head">
+        <p class="group-title" id="dir-title"></p>
+        <div class="seg" id="dir-mode" role="group" aria-label="How to browse">
+          <button type="button" data-mode="cats" aria-pressed="true">By category</button>
+          <button type="button" data-mode="ask" aria-pressed="false">Ask Zemi-Aku</button>
+        </div>
+      </div>
+      <div class="dir" id="dir-cats"></div>
+      <div class="dir kinds" id="dir-kinds" hidden></div>
+      <div class="dir-ask" id="dir-ask" hidden></div>
+    </div>
+    <p class="group-title" id="list-title" hidden></p>
+    <div class="legend" id="legend" aria-label="Kinds of place on the map" hidden></div>
+    <div class="cards" id="places"></div>
+    <button type="button" class="ghost" id="dir-more" hidden></button>
+    <div class="tools" id="town-tools">
+      <div class="seg" role="group" aria-label="What Qloo should rank">
+        <button type="button" data-taste="" aria-pressed="true">All places</button>
+        <button type="button" data-taste="restaurant" aria-pressed="false">Restaurants</button>
+      </div>
+      <button type="button" class="ghost" id="compare-open">Compare with…</button>
+    </div>
+    <p class="small" id="heat-note" hidden>Orange glow on the map: where restaurant taste gathers in this town.</p>
+    <div id="compare-box" hidden>
+      <input id="compare-find" type="search" placeholder="Another town" aria-label="Compare with a town" autocomplete="off">
+      <button type="button" class="ghost" id="compare-go">Compare</button>
+    </div>
+    <ul id="compare-hits" hidden></ul>
+    <div id="compare-out"></div>
+    <details class="fold about" id="town-about" hidden><summary>About this town</summary><div id="about-body"></div></details>
+    <details class="fold record" id="town-sources" hidden><summary>Sources and the record behind this answer</summary><div id="sources-body"></div></details>
+  </section>
+  <section class="step" id="step-place" hidden>
+    <div id="spot"></div>
+  </section>
+</aside>
+
+<div id="dockbar">
+  <div id="caption" hidden></div>
+  <ul id="hits" role="listbox" hidden></ul>
+  <form id="ask" autocomplete="off">
+    <input id="q" type="search" placeholder="Ask about any town, or search a place" aria-label="Ask Zemi-Aku, or search a town or place" aria-controls="hits" aria-expanded="false">
+    <button type="button" id="dictate" aria-pressed="false" aria-label="Dictate your question" title="Speak, watch it type, then press Enter"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-2.08A7 7 0 0 0 19 12h-2Z"/></svg></button>
+    <button type="button" id="talk-pause" hidden>Pause</button>
+    <button type="button" id="talk-stop" hidden>End</button>
+    <button type="button" id="voice-btn" aria-expanded="false" aria-controls="voice-menu" title="Language and voice">EN</button>
+    <button type="button" id="wisp-button" aria-label="Talk with Zemi-Aku"><canvas id="wisp" aria-hidden="true"></canvas><span id="voice-state" role="status" hidden></span><span id="voice-wave" aria-hidden="true" hidden><i></i><i></i><i></i><i></i></span></button>
+  </form>
+  <div id="voice-menu" class="menu" hidden>
+    <p>Language</p>
+    <select id="talk-lang" aria-label="Language"></select>
+    <p>Voice</p>
+    <select id="talk-voice" aria-label="Voice"></select>
+    <button type="button" id="talk-preview">Hear this voice</button>
+    <p id="talk-voice-name"></p>
+  </div>
+  <div id="talk" data-mode="off" hidden><p id="talk-status"></p></div>
+</div>
+
+<div id="tip" hidden><strong id="tip-name"></strong><p id="tip-where"></p></div>
+<div id="pin-card" hidden></div>
+<p id="toast"></p>
+
+<script src="/app/config.js"></script>
+<script src="/app/lang.js"></script>
+<script src="/app/dossier.js"></script>
+<script src="/app/marks.js"></script>
+<script src="/app/weather.js"></script>
+<script src="/app/missions.js"></script>
+<script src="/app/flight.js"></script>
+<script src="/app/history.js"></script>
+<script src="/app/wisp.js"></script>
+<script src="/app/voice-player.js"></script>
+<script src="/app/converse.js"></script>
+<script src="/app/dictate.js"></script>
+<script src="/app/coastal.js"></script>
+<script src="/app/opportunity.js"></script>
+<script src="/app/evidence.js"></script>
+<script>
+const THEMES = ["night", "sea", "paper"];
+function applyTheme(name) {
+  const theme = THEMES.includes(name) ? name : "night";
+  document.documentElement.dataset.theme = theme;
+  for (const button of document.querySelectorAll("[data-theme-pick]")) {
+    button.setAttribute("aria-pressed", String(button.dataset.themePick === theme));
+  }
+  try { localStorage.setItem("zemi-theme", theme); } catch (err) {}
+}
+applyTheme((() => {
+  try { return localStorage.getItem("zemi-theme"); } catch (err) { return "night"; }
+})());
+
+const $ = (id) => document.getElementById(id);
+const EAGLE = { lon: -66.15, lat: 18.22, height: 195000 };
+// By how many places Qloo knows in the town (data/catalog-counts.json): 200+, 100+, 25+, fewer.
+const COLORS = {
+  deep: Cesium.Color.fromCssColorString("#f04632"),
+  broad: Cesium.Color.fromCssColorString("#f46a36"),
+  some: Cesium.Color.fromCssColorString("#f8903e"),
+  thin: Cesium.Color.fromCssColorString("#fabe50"),
+};
+const norm = (s) => String(s).normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().replace(/ municipio$/, "").trim();
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+// R21's own ion token from .env (CESIUM_ION_TOKEN). Without it Cesium falls back to its demo token.
+if (window.ZEMI_ION_TOKEN) Cesium.Ion.defaultAccessToken = window.ZEMI_ION_TOKEN;
+const viewer = new Cesium.Viewer("globe", {
+  baseLayer: false, baseLayerPicker: false, geocoder: false, homeButton: false, sceneModePicker: false,
+  navigationHelpButton: false, animation: false, timeline: false, fullscreenButton: false,
+  infoBox: false, selectionIndicator: false,
+});
+viewer.scene.globe.baseColor = Cesium.Color.fromCssColorString("#12374d");
+viewer.scene.backgroundColor = Cesium.Color.fromCssColorString("#12374d");
+// The island arrives as itself: satellite from the first frame, a blue haze at the horizon, the
+// Caribbean fading into the night-blue page past the limb.
+viewer.scene.globe.showGroundAtmosphere = true;
+viewer.scene.globe.depthTestAgainstTerrain = false;
+viewer.scene.skyAtmosphere.show = true;
+// No starfield above the horizon on tilted views; the sea-blue background shows instead.
+if (viewer.scene.skyBox) viewer.scene.skyBox.show = false;
+viewer.scene.screenSpaceCameraController.enableCollisionDetection = true;
+viewer.scene.screenSpaceCameraController.minimumZoomDistance = 20;
+if (viewer.scene.sun) viewer.scene.sun.show = false;
+if (viewer.scene.moon) viewer.scene.moon.show = false;
+viewer.cesiumWidget.creditContainer.style.fontSize = "10px";
+// Opens high over the island and settles onto it once the towns are drawn (main flies home).
+viewer.camera.setView({
+  destination: Cesium.Cartesian3.fromDegrees(EAGLE.lon, EAGLE.lat, 900000),
+  orientation: { heading: 0, pitch: Cesium.Math.toRadians(-89), roll: 0 },
+});
+
+// State
+let pickedId = null;
+let hoverTown = null;
+let lastQuestion = "";
+let styleName = "eagle";
+let imageryLayer = null;
+let buildings = null;
+let photoTiles = null;
+const byName = new Map();
+let openPlaces = [];
+let leadNames = [];
+let townView = false; // the panel shows a town (stats, profile, directory) rather than an answer
+let focusedIndex = -1;
+let focusToken = 0;
+let pinsWide = false;
+let hitIndex = -1;
+let openHeat = [];
+let heatTown = "";
+let step = "island";
+let listTitle = "";
+let journeyData = null;
+let journeyRequest = null;
+
+const placeSource = new Cesium.CustomDataSource("places");
+const heatSource = new Cesium.CustomDataSource("heat");
+const footSource = new Cesium.CustomDataSource("footprint");
+viewer.dataSources.add(placeSource);
+viewer.dataSources.add(heatSource);
+viewer.dataSources.add(footSource);
+let coastalUI = null;
+let weatherUI = null;
+let opportunityUI = null;
+// A town question asked from the opportunity view keeps its colors; anything else leaves the view.
+let keepOpportunity = false;
+// Whether the phone camera is currently framed for the opportunity panel (see flyOpportunityFrame).
+let opportunityFramed = false;
+function leaveOpportunity() { if (!keepOpportunity) opportunityUI?.hide(); }
+
+function toast(text) {
+  $("toast").textContent = text || "";
+}
+
+// Terrain and the two 3D views come from Cesium ion. Without R21's own token they stay off, so the
+// public page never runs on Cesium's demo token (or shows Google tiles under someone else's).
+if (window.ZEMI_ION_TOKEN) {
+  const terrainReady = viewer.scene.setTerrain(Cesium.Terrain.fromWorldTerrain());
+  terrainReady.errorEvent.addEventListener(() => {
+    viewer.scene.globe.terrainProvider = new Cesium.EllipsoidTerrainProvider();
+    toast("Terrain is unavailable. Showing the map without elevation.");
+  });
+} else {
+  for (const style of ["buildings", "photo"]) document.querySelector(`[data-style="${style}"]`).hidden = true;
+}
+if (!window.ZEMI_PHOTOREAL_ENABLED) document.querySelector('[data-style="photo"]').hidden = true;
+
+// ---------- Camera ----------
+function flyLook(lon, lat, eye, ground, duration) {
+  ZemiFlight.travel(viewer, { lon, lat, eye, ground }, { duration });
+}
+function fly(lon, lat, height, duration, opts = {}) {
+  ZemiFlight.travel(viewer, { lon, lat, eye: height, ground: 0 }, { duration, ...opts });
+}
+// The whole town in view, beside the panel: sized from its outline and shifted so the panel
+// (on the left on a computer, the lower half on a phone) does not cover it. 3D styles stay close.
+function frameWholeTown(name, duration) {
+  const entry = byName.get(name);
+  if (!entry) return;
+  const [lon, lat] = entry.centroid;
+  if (styleName === "photo" || styleName === "buildings") return frameTown(lon, lat, duration);
+  const d = Math.min(100000, Math.max(5000, entry.radius * 2.7));
+  const phone = innerWidth <= 720;
+  const westShift = phone ? 0 : (0.27 * d) / (111320 * Math.cos((lat * Math.PI) / 180));
+  const southShift = phone ? (0.33 * d) / 110540 : 0;
+  flyLook(lon - westShift, lat - southShift, d * 0.64, d * 0.77, duration);
+}
+
+function frameTown(lon, lat, duration) {
+  if (styleName === "photo") flyLook(lon, lat, 380, 820, duration);
+  else if (styleName === "buildings") flyLook(lon, lat, 460, 980, duration);
+  else if (styleName === "eagle") flyLook(lon, lat, 26000, 30000, duration);
+  else flyLook(lon, lat, 1500, 1900, duration);
+}
+function walkTo(lon, lat, duration) {
+  if (styleName === "photo") flyLook(lon, lat, 78, 150, duration);
+  else if (styleName === "buildings") flyLook(lon, lat, 120, 250, duration);
+  else if (styleName === "satellite") flyLook(lon, lat, 420, 760, duration);
+  else flyLook(lon, lat, 2600, 3600, duration);
+}
+// Island home: top-down by default; tilted south-west view only when 3D tilt is on.
+function homePose() {
+  if (!ZemiFlight.allowTilt()) {
+    return { lon: EAGLE.lon, lat: EAGLE.lat, eye: EAGLE.height, ground: 0 };
+  }
+  const phone = innerWidth <= 720;
+  return phone
+    ? { lon: EAGLE.lon, lat: EAGLE.lat, eye: EAGLE.height, ground: 60000 }
+    : { lon: EAGLE.lon - 0.12, lat: EAGLE.lat - 0.1, eye: 190000, ground: 125000 };
+}
+function flyHome(duration) {
+  ZemiFlight.travel(viewer, homePose(), { duration });
+}
+// On a phone the opportunity panel takes the lower half, so the colored island moves up into the
+// half that stays tappable: higher, a little west, aimed south of the island (measured at 390 px).
+function flyOpportunityFrame() {
+  if (innerWidth > 720) return;
+  ZemiFlight.travel(viewer, { lon: EAGLE.lon - 0.55, lat: EAGLE.lat - 0.85, eye: 340000, ground: 70000 }, { duration: reducedMotion ? 0 : 1.6 });
+}
+function focusSanJuan(duration) {
+  if (byName.has("San Juan")) frameWholeTown("San Juan", duration);
+  else flyHome(duration);
+}
+function framePlaces(places) {
+  const pts = places.filter((place) => place.lat != null && place.lon != null);
+  // Island-wide answers with no town: default the camera to San Juan.
+  if (!pts.length) return pinsWide ? focusSanJuan() : flyHome();
+  if (pts.length === 1) return walkTo(pts[0].lon, pts[0].lat);
+  const lats = pts.map((place) => place.lat);
+  const lons = pts.map((place) => place.lon);
+  const span = Math.max(Math.max(...lats) - Math.min(...lats), Math.max(...lons) - Math.min(...lons));
+  fly((Math.min(...lons) + Math.max(...lons)) / 2, (Math.min(...lats) + Math.max(...lats)) / 2,
+    Math.min(195000, Math.max(12000, span * 111000 * 1.6)));
+}
+
+// How far the town's main outline reaches from its centre, in metres.
+function radiusOf(geometry, [lon0, lat0]) {
+  const rings = geometry.type === "Polygon" ? [geometry.coordinates[0]] : geometry.coordinates.map((p) => p[0]);
+  const ring = rings.sort((a, b) => b.length - a.length)[0];
+  const k = Math.cos((lat0 * Math.PI) / 180);
+  return Math.max(...ring.map(([lon, lat]) => Math.hypot((lon - lon0) * 111320 * k, (lat - lat0) * 110540)));
+}
+
+function centroid(geometry) {
+  const rings = geometry.type === "Polygon" ? [geometry.coordinates[0]] : geometry.coordinates.map((p) => p[0]);
+  const ring = rings.sort((a, b) => b.length - a.length)[0];
+  let lon = 0, lat = 0;
+  for (const pair of ring) { lon += pair[0]; lat += pair[1]; }
+  return [lon / ring.length, lat / ring.length];
+}
+
+// ---------- Map marks ----------
+function markCanvas(draw) {
+  const canvas = document.createElement("canvas");
+  canvas.width = 64;
+  canvas.height = 64;
+  draw(canvas.getContext("2d"));
+  return canvas;
+}
+function pinMark(fill, ring = "#fff") {
+  return markCanvas((g) => {
+    g.beginPath(); g.arc(32, 34, 16, 0, Math.PI * 2); g.fillStyle = "rgba(0, 0, 0, .28)"; g.fill();
+    g.beginPath(); g.arc(32, 30, 13, 0, Math.PI * 2); g.fillStyle = fill; g.fill();
+    g.lineWidth = 4; g.strokeStyle = ring; g.stroke();
+  });
+}
+// One color per kind of place (app/marks.js); the answer's top picks get a gold ring.
+const marks = new Map();
+function markFor(place, lead) {
+  const kind = ZemiMarks.kindOf(place);
+  const key = `${kind}:${lead ? "lead" : "pin"}`;
+  if (!marks.has(key)) marks.set(key, pinMark(ZemiMarks.KINDS[kind].color, lead ? "#ffd27a" : "#fff"));
+  return marks.get(key);
+}
+function glowMark(rgb, core) {
+  return markCanvas((g) => {
+    const glow = g.createRadialGradient(32, 32, 2, 32, 32, 32);
+    glow.addColorStop(0, `rgba(${rgb}, ${core})`);
+    glow.addColorStop(0.42, `rgba(${rgb}, .28)`);
+    glow.addColorStop(1, `rgba(${rgb}, 0)`);
+    g.fillStyle = glow;
+    g.fillRect(0, 0, 64, 64);
+  });
+}
+const HEAT_MARK = glowMark("224, 122, 61", 0.85);
+const FOOT_MARK = glowMark("124, 92, 255", 0.95);
+
+// Town shapes: a light glow over the satellite island with white hairlines between towns, so the
+// real coast and hills show through. The open town gets a solid white edge; hover lifts the fill.
+// The opportunity map keeps strong tints, because there the colors are the data.
+function paint(entity, band, selected, hovered) {
+  const group = opportunityUI?.groupOf(entity.parentTown);
+  const color = group ? Cesium.Color.fromCssColorString(ZemiOpportunity.GROUP_COLORS[group]) : COLORS[band] || COLORS.thin;
+  const overview = styleName === "eagle";
+  let alpha = group ? 0.55 : overview ? 0.2 : 0.06;
+  if (hovered) alpha = group ? 0.72 : overview ? 0.38 : 0.2;
+  if (selected) alpha = group ? 0.78 : overview ? 0.26 : 0.24;
+  entity.polygon.material = color.withAlpha(alpha);
+  entity.polygon.outlineColor = selected ? Cesium.Color.WHITE : Cesium.Color.WHITE.withAlpha(overview ? 0.55 : 0.2);
+  entity.polygon.show = styleName !== "photo";
+  entity.polygon.extrudedHeight = 0;
+}
+function repaint() {
+  for (const [town, entry] of byName) paint(entry.entity, entry.record.band, town === pickedId, town === hoverTown);
+}
+
+// Where a top pick's name sits relative to its pin: first above, second below, third to the right.
+const LABEL_SIDES = [
+  { offset: new Cesium.Cartesian2(0, -16), vertical: Cesium.VerticalOrigin.BOTTOM, horizontal: Cesium.HorizontalOrigin.CENTER },
+  { offset: new Cesium.Cartesian2(0, 16), vertical: Cesium.VerticalOrigin.TOP, horizontal: Cesium.HorizontalOrigin.CENTER },
+  { offset: new Cesium.Cartesian2(16, 0), vertical: Cesium.VerticalOrigin.CENTER, horizontal: Cesium.HorizontalOrigin.LEFT },
+];
+function drawPlaces(places) {
+  placeSource.entities.removeAll();
+  showCard(null);
+  const pinHeight = styleName === "photo" ? 20 : styleName === "buildings" ? 36 : 48;
+  const reach = pinsWide ? 500000 : 70000;
+  places.forEach((place, index) => {
+    if (place.lat == null || place.lon == null) return;
+    const lead = leadNames.includes(place.name);
+    const on = index === focusedIndex;
+    const pin = placeSource.entities.add({
+      position: Cesium.Cartesian3.fromDegrees(place.lon, place.lat, pinHeight),
+      billboard: {
+        image: markFor(place, lead),
+        width: on ? 30 : lead ? 22 : 18,
+        height: on ? 30 : lead ? 22 : 18,
+        verticalOrigin: Cesium.VerticalOrigin.CENTER,
+        disableDepthTestDistance: 1500,
+        scaleByDistance: new Cesium.NearFarScalar(800, 1.15, 80000, 0.72),
+        distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, reach),
+      },
+      // The top picks carry their name on the map; every other pin names itself on hover.
+      // Three picks in one downtown would stack, so each rank hangs its label on a different side.
+      label: lead ? {
+        text: place.name,
+        font: "600 13px system-ui, -apple-system, 'Segoe UI', sans-serif",
+        fillColor: Cesium.Color.WHITE,
+        showBackground: true,
+        backgroundColor: Cesium.Color.fromCssColorString("rgba(8, 24, 36, 0.8)"),
+        backgroundPadding: new Cesium.Cartesian2(8, 5),
+        pixelOffset: LABEL_SIDES[leadNames.indexOf(place.name) % 3].offset,
+        verticalOrigin: LABEL_SIDES[leadNames.indexOf(place.name) % 3].vertical,
+        horizontalOrigin: LABEL_SIDES[leadNames.indexOf(place.name) % 3].horizontal,
+        disableDepthTestDistance: Number.POSITIVE_INFINITY,
+        scaleByDistance: new Cesium.NearFarScalar(800, 1, 80000, 0.8),
+        distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, reach),
+      } : undefined,
+    });
+    pin.walkTo = { lon: place.lon, lat: place.lat };
+    pin.placeIndex = index;
+  });
+  const legend = $("legend");
+  legend.innerHTML = ZemiMarks.legend(places);
+  legend.hidden = !legend.innerHTML;
+}
+
+function drawGlow(source, mark, points, base, reach) {
+  source.entities.removeAll();
+  for (const point of points || []) {
+    if (point.lat == null || point.lon == null) continue;
+    const affinity = Number.isFinite(Number(point.affinity)) ? Number(point.affinity) : 0.5;
+    const size = base + affinity * base;
+    source.entities.add({
+      position: Cesium.Cartesian3.fromDegrees(point.lon, point.lat, 8),
+      billboard: {
+        image: mark, width: size, height: size, verticalOrigin: Cesium.VerticalOrigin.CENTER,
+        disableDepthTestDistance: Number.POSITIVE_INFINITY,
+        distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, reach),
+      },
+    });
+  }
+}
+const drawHeat = (points) => drawGlow(heatSource, HEAT_MARK, points, 28, 90000);
+const drawFootprint = (points) => drawGlow(footSource, FOOT_MARK, points, 34, 600000);
+
+// Restaurant heat only with the Restaurants taste, so the map never shows every layer at once.
+async function loadHeat(town) {
+  heatTown = town;
+  openHeat = [];
+  drawHeat([]);
+  $("heat-note").hidden = true;
+  if (currentTaste() !== "restaurant") return;
+  try {
+    const data = await (await fetch("/api/heat?town=" + encodeURIComponent(town))).json();
+    if (heatTown !== town || pickedId !== town || currentTaste() !== "restaurant") return;
+    openHeat = data.points || [];
+    drawHeat(openHeat);
+    $("heat-note").hidden = !openHeat.length;
+  } catch { /* the list still works without heat */ }
+}
+
+// ---------- Panel steps ----------
+function renderCrumbs() {
+  const parts = [`<button type="button" data-crumb="island">Puerto Rico</button>`];
+  if (step === "town" || step === "place") {
+    const trail = [{ key: "town", text: listTitle }];
+    const label = categoryLabel();
+    if (label) trail.push({ key: "list", text: label });
+    if (step === "place" && openPlaces[focusedIndex]) trail.push({ key: "", text: openPlaces[focusedIndex].name });
+    trail.forEach((item, i) => parts.push(i === trail.length - 1
+      ? `<b>${esc(item.text)}</b>`
+      : `<button type="button" data-crumb="${item.key}">${esc(item.text)}</button>`));
+  }
+  $("crumbs").innerHTML = parts.join(`<span aria-hidden="true">›</span>`);
+}
+
+const STEP_ORDER = { island: 0, town: 1, place: 2 };
+function goStep(next) {
+  const forward = STEP_ORDER[next] >= STEP_ORDER[step];
+  const changed = next !== step;
+  const wasIsland = step === "island";
+  step = next;
+  updateJourney();
+  const island = next === "island";
+  $("hero").hidden = !island;
+  $("suggest").hidden = !island;
+  $("panel").hidden = island;
+  $("step-town").hidden = next !== "town";
+  $("step-place").hidden = next !== "place";
+  // One extra layer at a time: restaurant heat on a town, the footprint on a business.
+  heatSource.show = next === "town";
+  footSource.show = next === "place";
+  renderCrumbs();
+  placeholder();
+  if (!changed) return;
+  if (island) {
+    // Back to the island: the hero and the chips fade in over the flight home instead of cutting.
+    for (const el of [$("hero"), $("suggest")]) el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 220, easing: "cubic-bezier(0.23, 1, 0.32, 1)" });
+    return;
+  }
+  const target = next === "town" ? $("step-town") : $("step-place");
+  target.scrollTop = 0;
+  const ease = { duration: 220, easing: "cubic-bezier(0.23, 1, 0.32, 1)" };
+  // Coming from the island the whole panel enters; between steps only the content slides.
+  // A new step takes over from wherever the last one was instead of stacking restarts.
+  const panel = $("panel");
+  for (const el of [panel, $("step-town"), $("step-place")]) el.getAnimations().forEach((a) => a.cancel());
+  if (STEP_ORDER[next] === 1 && forward && wasIsland) {
+    panel.animate([{ opacity: 0, transform: `translateX(${reducedMotion ? 0 : -8}px)` }, { opacity: 1, transform: "none" }], ease);
+    return;
+  }
+  const shift = reducedMotion ? 0 : (forward ? 14 : -14);
+  target.animate([{ opacity: 0, transform: `translateX(${shift}px)` }, { opacity: 1, transform: "none" }], ease);
+}
+
+function placeholder() {
+  const name = step === "place" ? openPlaces[focusedIndex]?.name : step === "town" ? (pickedId || listTitle) : "";
+  $("q").placeholder = name ? `Ask about ${name}…` : "Ask about any town, or search a place";
+}
+
+$("crumbs").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-crumb]");
+  if (!button) return;
+  if (button.dataset.crumb === "island") return goHome();
+  if (step === "place") backToTown();
+  if (button.dataset.crumb === "town") closeCategory();
+});
+
+function backToTown() {
+  focusToken += 1;
+  focusedIndex = -1;
+  drawFootprint([]);
+  drawPlaces(openPlaces);
+  renderList();
+  goStep("town");
+  const entry = byName.get(pickedId);
+  if (entry && !pinsWide) frameWholeTown(pickedId);
+  else framePlaces(openPlaces);
+}
+
+// Hash / history: ZemiHistory owns parse, sync, restore, and navSeq.
+// Callbacks close over later function declarations (select / setStyle / …) and resolve at call time.
+let mapHistory = ZemiHistory.create({
+  select: (name, opts) => select(name, opts),
+  openPlace: (place, opts) => openPlace(place, opts),
+  goHome: (opts) => goHome(opts),
+  showCatalog: (data, opts) => showCatalog(data, opts),
+  setStyle: (mode, opts) => setStyle(mode, opts),
+  getState: () => ({ pickedId, step, styleName, openPlaces, focusedIndex }),
+  resolveTown: townKey,
+  history,
+  location,
+});
+function townKey(raw) {
+  if (!raw) return "";
+  if (byName.has(raw)) return raw;
+  return [...byName.keys()].find((name) => norm(name) === norm(raw)) || "";
+}
+function syncHash(opts) { return mapHistory.syncHash(opts); }
+function readHash() { return mapHistory.readHash(); }
+function restoreHash() { return mapHistory.restoreHash(); }
+function goHome(opts = {}) {
+  if (!opts.fromHistory) mapHistory.beginUserNav();
+  $("coast-return").hidden = true;
+  opportunityUI?.hide();
+  clearJourney();
+  ZemiApp.stopSpeaking?.();
+  pickedId = null;
+  pinsWide = false;
+  focusedIndex = -1;
+  focusToken += 1;
+  openPlaces = [];
+  leadNames = [];
+  openHeat = [];
+  heatTown = "";
+  placeSource.entities.removeAll();
+  heatSource.entities.removeAll();
+  drawFootprint([]);
+  repaint();
+  hideCaption();
+  $("q").value = "";
+  showHits([]);
+  goStep("island");
+  flyHome();
+  syncHash();
+}
+
+// Town header in plain words.
+function townLede(record) {
+  if (!record) return "";
+  return record.band === "thin"
+    ? `Qloo knows only ${record.total} places in ${record.town}. Some answers may reach into the next town; each place says where it is.`
+    : `${record.town} at a glance, what its people love, then every place Qloo knows there.`;
+}
+
+function openTownView(record) {
+  // The town loaders below arrive later; they draw only while the panel is still the town view.
+  townView = true;
+  listTitle = record.town;
+  $("town-title").textContent = record.town;
+  delete $("directory").dataset.folded;
+  $("town-lede").textContent = townLede(record);
+  // One National Weather Service line under the lede; it arrives after the town opens.
+  $("town-weather").hidden = true;
+  fetch("/api/weather?town=" + encodeURIComponent(record.town)).then((res) => (res.ok ? res.json() : null)).then((data) => {
+    const text = data ? ZemiWeather.line(data) : "";
+    if (!text || !townView || pickedId !== record.town) return;
+    $("town-weather").textContent = `${text} National Weather Service.`;
+    $("town-weather").hidden = false;
+  }).catch(() => {});
+  $("business-research").hidden = true;
+  $("town-say").hidden = true;
+  $("town-tools").hidden = false;
+  $("compare-out").innerHTML = "";
+  $("town-about").hidden = true;
+  $("town-sources").hidden = true;
+  goStep("town");
+}
+
+function skeleton(count = 4) {
+  $("places").innerHTML = Array.from({ length: count }, () => `<div class="skeleton"></div>`).join("");
+}
+
+function initial(name) {
+  return esc(String(name || "?").trim().charAt(0).toUpperCase());
+}
+
+function metaLine(place) {
+  const home = place.municipality || place.city || "";
+  const bits = [place.genre, place.price, place.rating != null ? `★ ${place.rating}` : ""];
+  if (Number.isFinite(place.distanceKm)) bits.push(`${place.distanceKm.toFixed(1)} km from ${place.distanceFrom || "harbor"}`);
+  if (pinsWide || (pickedId && home && norm(home) !== norm(pickedId))) bits.push(home);
+  return bits.filter(Boolean).join(" · ");
+}
+
+function distanceOrigin() {
+  if (pickedId && byName.has(pickedId)) {
+    const [lon, lat] = byName.get(pickedId).centroid;
+    return { lat, lon };
+  }
+  try {
+    const carto = Cesium.Cartographic.fromCartesian(viewer.camera.positionWC);
+    return { lat: Cesium.Math.toDegrees(carto.latitude), lon: Cesium.Math.toDegrees(carto.longitude) };
+  } catch {
+    return null;
+  }
+}
+
+function letterTileForCard(card) {
+  const name = card?.dataset.name || "?";
+  const tone = card?.dataset.tone || "steel";
+  return Object.assign(document.createElement("span"), {
+    className: "result-logo letter",
+    style: `--chip:var(--${tone})`,
+    textContent: name.trim().charAt(0).toUpperCase() || "?",
+    ariaHidden: "true",
+  });
+}
+
+function wireResultLogos(root) {
+  root?.querySelectorAll("img.result-logo").forEach((img) => {
+    if (img.dataset.wired) return;
+    img.dataset.wired = "1";
+    const fail = () => {
+      if (!img.isConnected) return;
+      img.replaceWith(letterTileForCard(img.closest(".result-card")));
+    };
+    img.addEventListener("error", fail);
+    // DDG returns a 48×48 PNG body on 404, which fires load — not error. Only treat that host.
+    img.addEventListener("load", () => {
+      const src = img.currentSrc || img.src || "";
+      if (!/icons\.duckduckgo\.com\//.test(src)) return;
+      if (img.naturalWidth <= 48 && img.naturalHeight <= 48) fail();
+    });
+  });
+}
+
+function placeFromResultCard(card) {
+  if (!card) return null;
+  const id = card.dataset.id || "";
+  const name = card.dataset.name || "";
+  if (id) {
+    const byId = openPlaces.find((row) => row.id && row.id === id);
+    if (byId) return byId;
+    return null; // stale id — do not fall back to name/index
+  }
+  // Index is only a same-name tiebreak — never alone.
+  if (name && card.dataset.index !== "" && card.dataset.index != null) {
+    const index = Number(card.dataset.index);
+    if (Number.isInteger(index) && index >= 0 && openPlaces[index]) {
+      const place = openPlaces[index];
+      if (place.name === name) return place;
+    }
+  }
+  if (name) {
+    const byName = openPlaces.find((row) => row.name === name);
+    if (byName) return byName;
+  }
+  return null;
+}
+
+function onResultCardActivate(card, { fly } = {}) {
+  const place = placeFromResultCard(card);
+  if (!place) return;
+  const canMap = Number.isFinite(place.lat) && Number.isFinite(place.lon);
+  openPlace(place, { fly: fly != null ? fly : canMap });
+}
+
+function onResultCardClick(event) {
+  const card = event.target.closest(".result-card");
+  if (!card) return;
+  if (event.target.closest("a")) return;
+  if (event.target.closest("[data-ask-more]")) {
+    event.preventDefault();
+    event.stopPropagation();
+    const place = placeFromResultCard(card);
+    const name = place?.name || card.dataset.name || "";
+    qInput.value = ZemiConverse.voice().lang === "es"
+      ? `Cuéntame más sobre ${name}`
+      : `Tell me more about ${name}`;
+    qInput.focus({ preventScroll: true });
+    return;
+  }
+  if (event.target.closest("[data-open-place]")) {
+    event.preventDefault();
+    event.stopPropagation();
+    onResultCardActivate(card);
+  }
+}
+
+// One list. Answer catalogs use rich result cards; the town directory stays compact.
+function renderList() {
+  const box = $("places");
+  if (!openPlaces.length) {
+    box.innerHTML = `<p class="small">Qloo has no places to show here. That does not mean there are none.</p>`;
+    return;
+  }
+  if (!townView) {
+    const rows = openPlaces.map((place, index) => ({ ...place, index }));
+    box.innerHTML = ZemiMarks.resultCards(rows, {
+      from: distanceOrigin(),
+      lang: ZemiConverse.voice().lang,
+      focusedIndex,
+    });
+    wireResultLogos(box);
+    return;
+  }
+  box.innerHTML = openPlaces.map((place, index) => {
+    const picture = ZemiDossier.pictureOf(place);
+    const thumb = picture.letter
+      ? `<span class="thumb letter" style="--chip:var(--${picture.tone})" aria-hidden="true">${esc(picture.initial)}</span>`
+      : `<img class="thumb${picture.logo ? " logo" : ""}" alt="" src="${esc(picture.src)}" referrerpolicy="no-referrer" loading="lazy">`;
+    const lead = leadNames.includes(place.name) ? `<span class="tag">Top pick</span>` : "";
+    const meta = esc(metaLine(place)).replace("★", `<span class="star" aria-hidden="true">★</span>`);
+    return `<button type="button" class="card" data-index="${index}" aria-current="${index === focusedIndex}">${thumb}<span><span class="name">${esc(place.name)}${lead}</span><span class="meta">${meta}</span></span><span class="chev" aria-hidden="true">›</span></button>`;
+  }).join("");
+  box.querySelectorAll("img.thumb").forEach((img) => img.addEventListener("error", () => {
+    const card = img.closest(".card");
+    const index = Number(card?.dataset.index);
+    const place = Number.isInteger(index) ? openPlaces[index] : null;
+    const tone = place ? ZemiDossier.chipTone(place) : "steel";
+    img.replaceWith(Object.assign(document.createElement("span"), {
+      className: "thumb letter",
+      style: `--chip:var(--${tone})`,
+      textContent: card?.querySelector(".name")?.textContent?.charAt(0) || "?",
+      ariaHidden: "true",
+    }));
+  }));
+}
+
+function orderByLead() {
+  if (!leadNames.length) return;
+  const rank = (place) => {
+    const at = leadNames.indexOf(place.name);
+    return at < 0 ? leadNames.length : at;
+  };
+  openPlaces = openPlaces.map((place, index) => ({ place, index }))
+    .sort((a, b) => rank(a.place) - rank(b.place) || a.index - b.index)
+    .map((row) => row.place);
+}
+
+$("places").addEventListener("click", (event) => {
+  if (event.target.closest(".result-card")) return onResultCardClick(event);
+  const card = event.target.closest(".card[data-index]");
+  if (!card) return;
+  const place = openPlaces[Number(card.dataset.index)];
+  if (place) openPlace(place);
+});
+
+// The top picks: photo cards for the places an answer names, above the list. Each opens its place.
+let pickIds = [];
+let pickNames = [];
+function showPicks(names) {
+  const rows = (names || []).map((name) => {
+    const index = openPlaces.findIndex((place) => place.name === name);
+    return index < 0 ? null : { ...openPlaces[index], index };
+  }).filter(Boolean);
+  $("picks").innerHTML = ZemiMarks.pickCards(rows);
+  $("picks").hidden = !rows.length;
+  pickIds = rows.map((place) => place.id).filter(Boolean);
+  pickNames = rows.filter((place) => place.id).map((place) => String(place.name).replace(/\|/g, " "));
+  $("picks-more").textContent = ZemiConverse.voice().lang === "es" ? "Más como estos" : "More like these";
+  $("picks-more").hidden = pickIds.length < 2;
+}
+$("picks").addEventListener("click", (event) => {
+  const pick = event.target.closest(".pick[data-index]");
+  if (!pick) return;
+  const place = openPlaces[Number(pick.dataset.index)];
+  if (place) openPlace(place);
+});
+
+// The picks, sent to Qloo together as one entity signal: places whose audience overlaps theirs.
+async function moreLikeThese() {
+  const button = $("picks-more");
+  if (button.disabled || pickIds.length < 2) return;
+  button.disabled = true;
+  const lang = ZemiConverse.voice().lang;
+  try {
+    const town = pickedId && byName.has(pickedId) ? `&town=${encodeURIComponent(pickedId)}` : "";
+    const res = await fetch(`/api/places/like?ids=${encodeURIComponent(pickIds.join(","))}&names=${encodeURIComponent(pickNames.join("|"))}&lang=${lang}${town}`);
+    if (!res.ok) throw new Error(String(res.status));
+    const data = await res.json();
+    showCatalog(data);
+    narrate(data);
+  } catch {
+    narrate({ speech: lang === "es" ? "Qloo no respondió ahora mismo." : "Qloo did not answer just now." });
+  } finally {
+    button.disabled = false;
+  }
+}
+$("picks-more").addEventListener("click", moreLikeThese);
+
+// ---------- Business step ----------
+function openPlace(place, { fly: move = true, fromHistory = false } = {}) {
+  if (!place) return;
+  if (!fromHistory) mapHistory.beginUserNav();
+  focusedIndex = openPlaces.indexOf(place);
+  drawPlaces(openPlaces);
+  const spot = $("spot");
+  const artist = journeyData?.journey?.artist || "";
+  spot.innerHTML = ZemiDossier.markup(place, {
+    show3D: !!window.ZEMI_ION_TOKEN && place.lat != null && place.lon != null && styleName !== "buildings" && styleName !== "photo",
+    artist,
+  });
+  spot.querySelectorAll("img").forEach((img) => img.addEventListener("error", () => { img.nextElementSibling?.classList.contains("muted") && img.nextElementSibling.remove(); img.remove(); }));
+  goStep("place");
+  loadDossierExtras(place, ++focusToken);
+  if (move && place.lat != null && place.lon != null) walkTo(place.lon, place.lat);
+  syncHash();
+}
+
+$("spot").addEventListener("click", (event) => {
+  if (event.target.closest("[data-place-3d]")) {
+    mapHistory.beginUserNav();
+    setStyle("buildings"); // setStyle enables tilt for buildings/photo
+  }
+});
+
+async function loadDossierExtras(place, token) {
+  drawFootprint([]);
+  if (!place.id) return;
+  const id = encodeURIComponent(place.id);
+  const read = (view) => fetch(`/api/place/${id}/${view}`).then((res) => res.json()).catch(() => null);
+  await Promise.all([
+    read("culture").then((data) => {
+      if (token !== focusToken) return;
+      const tastes = document.querySelector("#spot [data-culture]");
+      if (tastes) tastes.innerHTML = ZemiDossier.cultureMarkup(data);
+    }),
+    read("audience").then((data) => {
+      if (token !== focusToken) return;
+      const aud = document.querySelector("#spot [data-aud]");
+      if (aud) aud.innerHTML = ZemiDossier.audienceMarkup(data);
+    }),
+    read("footprint").then((data) => {
+      if (token !== focusToken) return;
+      const foot = document.querySelector("#spot [data-foot]");
+      if (foot) foot.textContent = ZemiDossier.footprintLine(data, place.name);
+      drawFootprint(data?.status === "ok" ? data.points : []);
+    }),
+  ]);
+}
+
+// ---------- Loading a town ----------
+function currentTaste() {
+  return document.querySelector("[data-taste][aria-pressed='true']")?.dataset.taste || "";
+}
+function setTaste(taste) {
+  for (const button of document.querySelectorAll("[data-taste]")) {
+    button.setAttribute("aria-pressed", String(button.dataset.taste === (taste || "")));
+  }
+}
+
+// Qloo's list first (fast=1), so the town opens at once. Photos, social links and OpenStreetMap facts
+// follow from a second request (OpenStreetMap allows one lookup a second).
+async function loadPlaces(record) {
+  resetCategory();
+  skeleton();
+  const taste = currentTaste();
+  const query = "/api/places?town=" + encodeURIComponent(record.town) + "&taste=" + encodeURIComponent(taste);
+  const res = await fetch(query + "&fast=1");
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "places failed");
+  if (pickedId !== record.town) return;
+  openPlaces = data.places || [];
+  orderByLead();
+  showListTitle(directory?.total ? "Best known" : "");
+  renderList();
+  drawPlaces(openPlaces);
+  if (openPlaces.some((place) => place.osm === "skipped")) enrichPlaces(record.town, taste, query);
+}
+
+// ---------- Ground truth beside the taste: town facts and landmarks ----------
+// Population (Wikidata), what Overture's map lists, and photographed landmarks (Wikidata, Commons).
+function statTile(value, label) {
+  return value == null ? "" : `<div class="stat"><b>${Number(value).toLocaleString("en-US")}</b><span>${label}</span></div>`;
+}
+
+// One taste row of the town profile, a section that folds: the first stays open, the rest show their count,
+// so the panel reads as a few headings rather than a wall of chips.
+function profileRow(label, items, open) {
+  if (!items?.length) return "";
+  const chips = items.map((item) => `<span class="chip${item.standout ? " out" : ""}">${esc(item.name)}</span>`).join("");
+  return `<details class="row"${open ? " open" : ""}><summary>${label} <span class="count">${items.length}</span></summary><div class="chips">${chips}</div></details>`;
+}
+
+// The town at a glance, then what its people love (Qloo's locality signal, compared with the island).
+async function loadProfile(town) {
+  $("town-stats").hidden = true;
+  $("town-profile").hidden = true;
+  let data;
+  try {
+    data = await (await fetch("/api/town/profile?town=" + encodeURIComponent(town))).json();
+  } catch {
+    return;
+  }
+  if (!townView || pickedId !== town || !data?.stats) return;
+  const s = data.stats;
+  $("town-stats").innerHTML = statTile(s.population, "people · Wikidata")
+    + statTile(s.ground, "places on the ground · Overture")
+    + statTile(s.qloo, "places Qloo knows by taste")
+    + statTile(s.landmarks, "landmarks with photos · Wikidata");
+  $("town-stats").hidden = false;
+  const p = data.profile;
+  if (!p) return;
+  const any = [...(p.vibe || []), ...(p.music || []), ...(p.tv || [])].some((item) => item.standout);
+  $("town-profile").innerHTML = `<p class="group-title">What ${esc(town)} loves <span class="src">Qloo</span></p>`
+    + profileRow("The feel of its places", p.vibe, true) + profileRow("Music", p.music, false) + profileRow("On TV", p.tv, false)
+    + `<p class="note">${any ? "● stands out here: not in Puerto Rico's own top list. " : ""}From Qloo's taste data for the town, not a survey of its residents.</p>`;
+  $("town-profile").hidden = false;
+}
+
+let landmarkList = [];
+async function loadLandmarks(town) {
+  $("landmarks").hidden = true;
+  landmarkList = [];
+  try {
+    const data = await (await fetch("/api/landmarks?town=" + encodeURIComponent(town))).json();
+    if (!townView || pickedId !== town || !data?.landmarks?.length) return;
+    landmarkList = data.landmarks;
+    $("lm-row").innerHTML = landmarkList.map((item, index) =>
+      `<button type="button" class="lm" data-lm="${index}" title="${esc(item.description)}"><img alt="" src="${esc(item.thumb)}" loading="lazy" referrerpolicy="no-referrer"><span>${esc(item.name)}</span></button>`).join("");
+    $("lm-row").querySelectorAll("img").forEach((img) => img.addEventListener("error", () => img.closest(".lm")?.remove()));
+    $("landmarks").hidden = false;
+  } catch { /* the town works without its landmarks */ }
+}
+
+$("lm-row").addEventListener("click", (event) => {
+  const item = landmarkList[Number(event.target.closest("[data-lm]")?.dataset.lm)];
+  if (!item) return;
+  walkTo(item.lon, item.lat);
+  showCaption("zemi", item.description ? `${item.name}: ${item.description}.` : item.name);
+  if ($("talk").dataset.mode === "off") captionTimer = setTimeout(hideCaption, 7000);
+});
+
+// ---------- Camera motion: the gentle sway over a town, on or off ----------
+function showMotion() {
+  const on = ZemiFlight.motion() && !reducedMotion;
+  $("motion-pill").setAttribute("aria-pressed", String(on));
+  $("motion-pill").textContent = on ? "Camera motion on" : "Camera motion off";
+  document.querySelector("[data-motion]").setAttribute("aria-pressed", String(on));
+}
+function toggleMotion() {
+  ZemiFlight.setMotion(!ZemiFlight.motion());
+  showMotion();
+}
+$("motion-pill").addEventListener("click", toggleMotion);
+document.querySelector("[data-motion]").addEventListener("click", toggleMotion);
+$("motion-pill").hidden = reducedMotion;
+showMotion();
+
+// ---------- Directory: every place Qloo knows in the town, by category ----------
+// /api/catalog pages through Qloo for the town (Ponce: 357 places) and sorts them by what they are.
+let directory = null;
+let dirCat = "";
+let dirKind = "";
+let dirCount = 0;
+let dirToken = 0;
+let dirMode = "cats";
+let dirAllKinds = false;
+
+function showListTitle(text) {
+  $("list-title").textContent = text;
+  $("list-title").hidden = !text;
+}
+
+function categoryLabel() {
+  if (dirCat === "all") return "";
+  const category = dirCat && directory?.categories.find((item) => item.id === dirCat);
+  return category ? dirKind || category.label : "";
+}
+
+async function loadDirectory(town) {
+  directory = null;
+  resetCategory();
+  $("directory").hidden = true;
+  try {
+    const data = await (await fetch("/api/catalog?town=" + encodeURIComponent(town))).json();
+    if (!townView || pickedId !== town || !data?.categories) return;
+    directory = data;
+    renderDirectory();
+    // A category opened from a link may have arrived first; it gets its name now.
+    if (dirCat) showListTitle(`${categoryLabel() || "All places"} · ${dirCount}, most popular first`);
+    else if (openPlaces.length) showListTitle("Best known");
+    renderCrumbs();
+  } catch { /* the best-known list still works */ }
+}
+
+function renderDirectory() {
+  const box = $("directory");
+  if (!directory?.total || pinsWide) {
+    box.hidden = true;
+    return;
+  }
+  box.hidden = false;
+  const folded = box.dataset.folded === "true";
+  box.classList.toggle("folded", folded);
+  if (folded) {
+    $("dir-title").innerHTML = `<button type="button" data-unfold>Browse all ${directory.total.toLocaleString("en-US")} places${pickedId ? ` in ${esc(pickedId)}` : ""} ›</button>`;
+    return;
+  }
+  $("dir-title").textContent = `All ${directory.total.toLocaleString("en-US")} places`;
+  const asking = dirMode === "ask";
+  for (const button of $("dir-mode").querySelectorAll("[data-mode]")) button.setAttribute("aria-pressed", String(button.dataset.mode === dirMode));
+  $("dir-ask").hidden = !asking;
+  $("dir-cats").hidden = asking;
+  if (asking) {
+    const t = pickedId;
+    $("dir-ask").innerHTML = [`Where do people eat in ${t}?`, `Bakeries in ${t}`, `Where would I stay in ${t}?`, `Bad Bunny fans in ${t}`, `What do people like in ${t}?`]
+      .map((q) => `<button type="button" data-q="${esc(q)}">${esc(q)}</button>`).join("")
+      + `<p class="note">Or type your own question below, or press the orb and talk.</p>`;
+  }
+  $("dir-cats").innerHTML = `<button type="button" data-cat="all" aria-pressed="${dirCat === "all"}">All<b>${directory.total}</b></button>` + directory.categories.map((category) =>
+    `<button type="button" data-cat="${category.id}" aria-pressed="${category.id === dirCat}">${esc(category.label)}<b>${category.count}</b></button>`).join("");
+  const category = directory.categories.find((item) => item.id === dirCat);
+  // The seven biggest kinds, so the list stays in view; the rest one tap away.
+  const all = category && category.kinds.length > 1 ? category.kinds : [];
+  const shown = dirAllKinds || all.length <= 8 ? all : all.filter((kind, i) => i < 7 || kind.name === dirKind);
+  $("dir-kinds").hidden = !all.length || asking;
+  $("dir-kinds").innerHTML = all.length
+    ? [`<button type="button" data-kind="" aria-pressed="${!dirKind}">All<b>${category.count}</b></button>`,
+      ...shown.map((kind) => `<button type="button" data-kind="${esc(kind.name)}" aria-pressed="${kind.name === dirKind}">${esc(kind.name)}<b>${kind.count}</b></button>`),
+      shown.length < all.length ? `<button type="button" data-more-kinds>${all.length - shown.length} more kinds</button>` : ""].join("")
+    : "";
+}
+
+function resetCategory() {
+  dirToken += 1;
+  dirAllKinds = false;
+  dirCat = "";
+  dirKind = "";
+  $("dir-more").hidden = true;
+  renderDirectory();
+}
+
+// Back to the whole town: every place, most popular first.
+function closeCategory() {
+  if (dirCat === "all") return;
+  openCategory("all");
+  renderCrumbs();
+}
+
+// A category (and maybe one kind inside it), most popular first, fifty at a time.
+async function openCategory(category, kind = "", { more = false } = {}) {
+  const town = pickedId;
+  if (!town) return;
+  const token = more ? dirToken : ++dirToken;
+  if (!more) {
+    if (category !== dirCat) dirAllKinds = false;
+    dirCat = category;
+    dirKind = kind;
+    focusedIndex = -1;
+    leadNames = [];
+    renderDirectory();
+    renderCrumbs();
+    skeleton();
+  }
+  const params = new URLSearchParams({ town, category, offset: String(more ? openPlaces.length : 0) });
+  if (kind) params.set("kind", kind);
+  let data;
+  try {
+    data = await (await fetch("/api/catalog?" + params)).json();
+  } catch {
+    return toast("The category did not load. Try again.");
+  }
+  if (!townView || token !== dirToken || pickedId !== town || !data?.places) return;
+  openPlaces = more ? [...openPlaces, ...data.places] : data.places;
+  dirCount = data.count;
+  showListTitle(`${categoryLabel() || "All places"} · ${dirCount}, most popular first`);
+  renderList();
+  drawPlaces(openPlaces);
+  const left = dirCount - openPlaces.length;
+  $("dir-more").hidden = left <= 0;
+  $("dir-more").textContent = `Show ${Math.min(50, left)} more of ${dirCount}`;
+}
+
+$("dir-title").addEventListener("click", (event) => {
+  if (!event.target.closest("[data-unfold]")) return;
+  delete $("directory").dataset.folded;
+  renderDirectory();
+});
+$("dir-cats").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-cat]");
+  if (!button) return;
+  if (button.dataset.cat === dirCat && !dirKind) closeCategory();
+  else openCategory(button.dataset.cat);
+});
+$("dir-kinds").addEventListener("click", (event) => {
+  if (event.target.closest("[data-more-kinds]")) {
+    dirAllKinds = true;
+    return renderDirectory();
+  }
+  const button = event.target.closest("[data-kind]");
+  if (button) openCategory(dirCat, button.dataset.kind);
+});
+$("dir-more").addEventListener("click", () => openCategory(dirCat, dirKind, { more: true }));
+$("dir-mode").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-mode]");
+  if (!button) return;
+  dirMode = button.dataset.mode;
+  renderDirectory();
+  if (dirMode === "ask") $("q").focus({ preventScroll: true });
+});
+$("dir-ask").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-q]");
+  if (button) ZemiApp.ask(button.dataset.q);
+});
+
+async function enrichPlaces(town, taste, query) {
+  let data;
+  try {
+    data = await (await fetch(query)).json();
+  } catch {
+    return;
+  }
+  if (pickedId !== town || currentTaste() !== taste || !data?.places?.length) return;
+  const full = new Map(data.places.map((place) => [place.id || place.name, place]));
+  openPlaces = openPlaces.map((place) => ({ ...place, ...(full.get(place.id || place.name) || {}) }));
+  if (step === "town") renderList();
+  if (step === "place" && openPlaces[focusedIndex]) {
+    $("spot").innerHTML = ZemiDossier.markup(openPlaces[focusedIndex]);
+    loadDossierExtras(openPlaces[focusedIndex], ++focusToken);
+  }
+}
+
+function select(name, opts = {}) {
+  if (!opts.fromHistory) mapHistory.beginUserNav();
+  leaveOpportunity();
+  const entry = byName.get(name);
+  if (!entry) return Promise.resolve();
+  $("coast-return").hidden = true;
+  clearJourney();
+  pinsWide = false;
+  focusedIndex = -1;
+  focusToken += 1;
+  drawFootprint([]);
+  pickedId = name;
+  leadNames = opts.keepLead ? leadNames : [];
+  showPicks([]);
+  repaint();
+  openPlaces = [];
+  openTownView(entry.record);
+  loadHeat(name);
+  loadProfile(name);
+  loadDirectory(name);
+  loadLandmarks(name);
+  // Fly at once: the whole town, beside the panel, while its places load.
+  if (opts.frame !== false) frameWholeTown(name);
+  syncHash();
+  return loadPlaces(entry.record)
+    .catch((err) => toast(err.message))
+    .then(() => {
+      // Every place in the town, most popular first, unless an answer has taken the list meanwhile.
+      if (pickedId === name && !leadNames.length && !dirCat) return openCategory("all");
+    });
+}
+
+// A business found by search or by the agent: open its town, add it if the town sample missed it,
+// then show its dossier.
+async function openFoundPlace(place, town) {
+  if (town && byName.has(town) && pickedId !== town) await select(town, { frame: false });
+  let index = openPlaces.findIndex((item) => (place.id && item.id === place.id) || item.name === place.name);
+  if (index < 0) {
+    openPlaces.push(place);
+    index = openPlaces.length - 1;
+  }
+  openPlace(openPlaces[index]);
+}
+
+// A list that is not one town: "Mofongo in Puerto Rico", "KFC in San Juan".
+function showCatalog(data, opts = {}) {
+  if (!opts.fromHistory) mapHistory.beginUserNav();
+  townView = false;
+  $("coast-return").hidden = true;
+  if (!data.journey) clearJourney();
+  journeyData = data.journey ? data : null;
+  pinsWide = !data.town || !byName.has(data.town);
+  pickedId = !pinsWide ? data.town : null;
+  repaint();
+  openHeat = [];
+  drawHeat([]);
+  focusedIndex = -1;
+  focusToken += 1;
+  drawFootprint([]);
+  openPlaces = data.places || [];
+  leadNames = (data.cards || []).map((card) => card.name);
+  // A spoken answer's named places lead the list and become the photo picks above it.
+  if (!leadNames.length && data.speech) leadNames = ZemiMarks.picks(openPlaces, data.speech).map((place) => place.name);
+  // The town's whole directory folds under a question's list; one tap opens it. Set before the
+  // category reset below, which already draws the directory.
+  $("directory").dataset.folded = "true";
+  orderByLead();
+  resetCategory();
+  showListTitle("");
+  $("town-stats").hidden = true;
+  $("town-profile").hidden = true;
+  $("landmarks").hidden = true;
+  $("town-weather").hidden = true;
+  // "food in Mayagüez" from the router reads as a title once its first letter is up.
+  const focus = data.focus || data.query || "Places";
+  listTitle = focus.charAt(0).toUpperCase() + focus.slice(1);
+  $("town-title").textContent = listTitle;
+  $("town-lede").textContent = data.note || "";
+  showBusinessResearch(data.business);
+  $("town-tools").hidden = true;
+  $("compare-box").hidden = true;
+  $("compare-out").innerHTML = "";
+  $("town-about").hidden = true;
+  showSay(data);
+  if (data.journey) $("town-say").hidden = true;
+  showSources(data);
+  renderList();
+  showPicks(data.speech ? leadNames : []);
+  drawPlaces(openPlaces);
+  goStep("town");
+  if (pinsWide) {
+    const pts = openPlaces.filter((place) => place.lat != null && place.lon != null);
+    if (pts.length) framePlaces(openPlaces);
+    else focusSanJuan();
+  } else {
+    framePlaces(openPlaces);
+  }
+  if (data.business && !openPlaces.length && pickedId) frameWholeTown(pickedId);
+  syncHash();
+}
+
+function showBusinessResearch(business) {
+  $("business-research").hidden = !business;
+  if (!business) return;
+  const es = ZemiConverse.voice().lang === "es";
+  $("business-sale-links").hidden = business.mode !== 'buy';
+  $("business-heading").textContent = es ? "Buscar negocios en venta" : "Find businesses for sale";
+  $("business-scope").textContent = es ? "Directorios externos para Puerto Rico. Filtre por pueblo y confirme la venta con el vendedor. No hemos consultado sus anuncios."
+    : "External Puerto Rico directories. Filter by town and confirm the sale with the seller. We haven’t searched their listings.";
+  $("business-town-search").href = `https://www.google.com/search?q=${encodeURIComponent(`${business.town} Puerto Rico negocios en venta business for sale`)}`;
+  $("business-town-search").textContent = es ? `Buscar anuncios de ${business.town} en la web ↗` : `Search ${business.town} listings on the web ↗`;
+  $("business-context-heading").textContent = es ? "Investigar un negocio aquí" : "Research a business here";
+  const categoriesEs = { food: "Comida", drinks: "Barras y vida nocturna", stay: "Hospedaje", groceries: "Supermercados y farmacias", shopping: "Tiendas", fun: "Actividades", outdoors: "Playas y aire libre", culture: "Historia y cultura", health: "Salud y bienestar", other: "Servicios" };
+  $("business-counts").textContent = business.available
+    ? `${business.total} ${es ? "lugares en el catálogo guardado de Qloo" : "places in Qloo’s saved catalog"}. ${business.counts.map(c => `${es ? categoriesEs[c.id] || c.label : c.label}: ${c.count}`).join(" · ")}`
+    : es ? "El catálogo de Qloo no está disponible. Los otros datos se muestran por separado." : "Qloo’s catalog is unavailable. Other source data is shown separately.";
+  const evidence = business.evidence || {}, parts = [];
+  const supply = evidence.supply, census = evidence.demographics;
+  parts.push(`<h4>Overture · ${es ? "oferta observada en el pueblo" : "observed supply in the town"}</h4><p>${supply
+    ? `${supply.count} ${es ? "lugares registrados de este tipo" : "listed places of this type"} · ${es ? "publicación" : "release"} ${esc(supply.release || "—")}. ${es ? "La cobertura puede ser incompleta o haber cambiado." : "Coverage may be incomplete or have changed."}`
+    : es ? "Datos no disponibles." : "Data unavailable."}</p>`);
+  if (supply?.places?.length) parts.push(`<details><summary>${es ? 'Ver ejemplos de Overture' : 'View Overture examples'}</summary><ul>${supply.places.map(p => `<li>${esc(p.name)}</li>`).join('')}</ul></details>`);
+  const number = metric => Number.isFinite(metric?.estimate) ? metric.estimate.toLocaleString('en-US') : '—';
+  const income = census?.medianHouseholdIncome;
+  parts.push(`<h4>Census PRCS · ${es ? "contexto municipal" : "municipality context"}</h4><p>${census
+    ? `${esc(census.period || '—')} · ${es ? "población" : "population"}: ${number(census.population)}.<br>${es ? "Ingreso mediano del hogar" : "Median household income"}: ${Number.isFinite(income?.estimate) ? '$' + number(income) : '—'} ${Number.isFinite(income?.marginOfError) ? `± $${income.marginOfError.toLocaleString('en-US')} (90%)` : ''} · ${es ? "dólares ajustados a 2024" : "2024-adjusted dollars"}.`
+    : es ? "Datos no disponibles." : "Data unavailable."}</p>`);
+  if (evidence.taste?.status === 'ready') {
+    const profile = evidence.taste.profile;
+    const labels = es ? { vibe: 'Ambiente', music: 'Música', tv: 'TV' } : { vibe: 'Vibe', music: 'Music', tv: 'TV' };
+    parts.push(`<h4>Qloo · ${es ? "afinidades culturales" : "cultural affinities"}</h4><p>${['vibe', 'music', 'tv'].map(kind => `${labels[kind]}: ${(profile[kind] || []).slice(0, 5).map(row => esc(row.name)).join(', ') || '—'}`).join('<br>')}</p>`);
+  } else if (evidence.taste) {
+    parts.push(`<p>Qloo · ${evidence.taste.status === 'empty' ? (es ? 'No devolvió señales de gustos para este pueblo.' : 'No taste signals returned for this town.') : (es ? 'Perfil de gustos no disponible.' : 'Taste profile unavailable.')}</p>`);
+  }
+  const opportunity = evidence.opportunity;
+  if (opportunity) {
+    const supply = ZemiOpportunity.supplyText(opportunity, es ? "es" : "en");
+    const island = Number.isFinite(opportunity.islandPerTenThousand) ? ` (${es ? "isla, cifras publicadas" : "island, published counts"}: ${opportunity.islandPerTenThousand.toFixed(1)})` : "";
+    parts.push(`<h4>${es ? "Gusto de Qloo y negocios del Census" : "Qloo taste and Census businesses"}</h4><p>${esc(ZemiOpportunity.LABELS[es ? "es" : "en"][opportunity.group] || "")}${Number.isFinite(opportunity.tasteRank) ? ` · ${es ? "gusto" : "taste"} #${opportunity.tasteRank}` : ""}.<br>${esc(supply.businesses)} (County Business Patterns 2023) · ${esc(supply.per)}${esc(island)}.</p>`
+      + `<details class="small"><summary>${es ? "Fuentes y límites" : "Sources and limits"}</summary>${(opportunity.notes || []).map(line => `<p>${esc(line)}</p>`).join("")}${ZemiOpportunity.definitionsHtml(es ? "es" : "en", opportunity)}</details>`);
+  }
+  if (business.proximity) parts.push(`<p>${business.proximity.reference ? `${esc(business.proximity.reference.name)} · ${esc(business.proximity.note)}` : (es ? 'Abra un lugar para usarlo como referencia de distancia.' : 'Open a place to use as the distance reference.')}</p>`);
+  $("business-evidence").innerHTML = parts.join('');
+  // The second turn of the decision: another industry for this town, or back to the colored island.
+  // The six industries replace the older four-type row while they are on screen.
+  $("business-rerun").hidden = !opportunity;
+  $("business-types").hidden = Boolean(opportunity);
+  if (opportunity) {
+    $("business-rerun").dataset.industry = opportunity.industry;
+    $("business-rerun").innerHTML = `<h4>${es ? "Cambie la pregunta" : "Change the question"}</h4>`
+      + `<div class="business-choices" role="group" aria-label="${es ? "Otra industria" : "Another industry"}">${ZemiOpportunity.industryChips(es ? "es" : "en", { attr: "data-business-industry", current: opportunity.industry })}</div>`
+      + `<button type="button" class="ghost" data-business-map>${es ? "Comparar pueblos en el mapa" : "Compare towns on the map"}</button>`;
+  }
+  const buttons = document.querySelectorAll("[data-business-question]");
+  const labels = es ? ["Cafés", "Tiendas", "Hoteles", "Salones"] : ["Cafés", "Retail", "Hotels", "Salons"];
+  buttons.forEach((button, i) => { button.textContent = labels[i]; });
+  document.querySelectorAll('[data-business-topic]').forEach(button => {
+    const labels = es ? { income: 'Ingreso del hogar', taste: 'Gustos locales', nearby: 'Competencia cercana' }
+      : { income: 'Household income', taste: 'Local tastes', nearby: 'Nearby competitors' };
+    button.textContent = labels[button.dataset.businessTopic];
+  });
+}
+
+$("business-research").addEventListener("click", event => {
+  const button = event.target.closest("[data-business-question]");
+  if (button) {
+    const q = ZemiConverse.voice().lang === "es" ? `¿Qué tal ${button.dataset.businessQuestion === "a cafe" ? "una cafetería" : button.dataset.businessQuestion === "a store" ? "una tienda" : button.dataset.businessQuestion === "a hotel" ? "un hotel" : "un salón"}?`
+      : `What about ${button.dataset.businessQuestion}?`;
+    window.ZemiApp.ask(q).then(narrate);
+  }
+  const topic = event.target.closest('[data-business-topic]')?.dataset.businessTopic;
+  if (topic) {
+    const questions = ZemiConverse.voice().lang === 'es'
+      ? { income: '¿Qué tal el ingreso de los hogares?', taste: 'Gustos locales', nearby: 'Competencia cerca de este lugar' }
+      : { income: 'What about household income?', taste: 'Local tastes', nearby: 'Competitors near this place' };
+    window.ZemiApp.ask(questions[topic]).then(narrate);
+  }
+  const industry = event.target.closest("[data-business-industry]")?.dataset.businessIndustry;
+  if (industry) {
+    const q = ZemiOpportunity.townQuestion(ZemiConverse.voice().lang, industry, currentTown());
+    if (q) { unlockAudio(); keepOpportunity = true; window.ZemiApp.ask(q).then(narrate).finally(() => { keepOpportunity = false; }); }
+  }
+  if (event.target.closest("[data-business-map]")) { const id = $("business-rerun").dataset.industry; goHome(); opportunityUI.show(id); }
+});
+// The town the readout is about; null anywhere else.
+function currentTown() { return byName.has(pickedId) ? pickedId : null; }
+
+// ---------- Answers ----------
+function showSay(data) {
+  const say = data?.speech || "";
+  $("town-say").textContent = say;
+  $("town-say").hidden = !say;
+}
+
+function safePage(value) {
+  try {
+    const url = new URL(value);
+    if (url.protocol !== "https:" || !url.hostname.endsWith("wikipedia.org")) return "";
+    return url.toString();
+  } catch {
+    return "";
+  }
+}
+
+function showAbout(history) {
+  if (!history?.extract) {
+    $("town-about").hidden = true;
+    return;
+  }
+  const page = safePage(history.url);
+  const shot = history.image ? `<img alt="" src="${esc(history.image)}" referrerpolicy="no-referrer">` : "";
+  $("about-body").innerHTML = `${shot}<p>${esc(history.extract)}</p>${page ? `<a href="${esc(page)}" target="_blank" rel="noopener noreferrer">${esc(history.title || "Wikipedia")} · Wikipedia</a>` : ""}`;
+  $("town-about").hidden = false;
+}
+
+function recordTable(packet) {
+  if (!packet) return "";
+  const rows = [["Question", packet.question], ["Qloo call", packet.qloo]];
+  for (const card of [...(packet.places || []), ...(packet.landmarks || [])]) {
+    const score = card.popularity > 0 ? ` · popularity ${Number(card.popularity).toFixed(2)}` : "";
+    rows.push(["Place", `${card.name} — ${card.record}${score}`]);
+  }
+  if (packet.history?.title) rows.push(["History", `${packet.history.title} · Wikipedia`]);
+  if (packet.note) rows.push(["Note", packet.note]);
+  return `<table>${rows.filter(([, value]) => value).map(([key, value]) => `<tr><th>${esc(key)}</th><td>${esc(value)}</td></tr>`).join("")}</table>`;
+}
+
+function briefText(data) {
+  const lines = [data?.focus || data?.town || "Town"];
+  if (data?.question) lines.push(data.question);
+  for (const card of data?.cards || []) lines.push(`- ${card.name} (${card.line})`);
+  if (data?.history?.extract) lines.push(data.history.extract);
+  if (data?.note) lines.push(data.note);
+  lines.push(data?.business
+    ? "Sources: Qloo’s saved catalog for local context." + (data.business.mode === 'buy' ? " External sale directories are linked; their listings have not been searched." : '')
+    : "Sources: Qloo place records and Wikipedia.");
+  if (data?.business?.evidence?.supply) lines.push(`Observed supply: Overture release ${data.business.evidence.supply.release || 'unknown'}. Dataset coverage, not a verified competitor census.`);
+  if (data?.business?.evidence?.demographics) lines.push(`Demographics: Census PRCS ${data.business.evidence.demographics.period || 'unknown period'}. Municipality estimates, not business revenue.`);
+  if (data?.business?.evidence?.taste?.status === 'ready') lines.push('Cultural affinities: Qloo locality signal. Not measured business demand.');
+  return lines.join("\n");
+}
+
+function showSources(...packs) {
+  const real = packs.filter(Boolean);
+  if (!real.length) {
+    $("town-sources").hidden = true;
+    return;
+  }
+  $("sources-body").innerHTML = real.map((data) => recordTable(data.packet)).join("")
+    + `<pre id="brief-text">${esc(real.map(briefText).join("\n\n"))}</pre><button type="button" class="ghost" id="copy-brief">Copy brief</button>`;
+  $("town-sources").hidden = false;
+  $("copy-brief").addEventListener("click", async (event) => {
+    try {
+      await navigator.clipboard.writeText($("brief-text").textContent);
+      event.target.textContent = "Copied";
+    } catch {
+      event.target.textContent = "Select the text above to copy";
+    }
+  });
+}
+
+// The answer's first place opens next, and the list keeps the answer's places on top.
+function applyAnswer(data) {
+  leadNames = (data.cards || []).map((card) => card.name);
+  orderByLead();
+  showSay(data);
+  showAbout(data.history);
+  showSources(data);
+  renderList();
+  drawPlaces(openPlaces);
+}
+
+// ---------- Hover and clicks on the map ----------
+function showTip(text, sub, x, y) {
+  const tip = $("tip");
+  if (!text) {
+    tip.hidden = true;
+    return;
+  }
+  $("tip-name").textContent = text;
+  $("tip-where").textContent = sub || "";
+  tip.hidden = false;
+  tip.style.left = `${x + 14}px`;
+  tip.style.top = `${y + 16}px`;
+}
+// The card at a pin: photo, name, kind, town, Qloo standing. Hover on a computer; on a phone the
+// first tap shows it and the second opens the full record.
+const touchScreen = window.matchMedia("(pointer: coarse)").matches;
+let tappedIndex = -1;
+function showCard(place, x, y) {
+  const card = $("pin-card");
+  if (!place) {
+    card.hidden = true;
+    tappedIndex = -1;
+    return;
+  }
+  card.innerHTML = ZemiMarks.card(place, { touch: touchScreen });
+  card.hidden = false;
+  card.style.left = `${Math.max(8, Math.min(x + 14, innerWidth - 268))}px`;
+  card.style.top = `${Math.max(8, Math.min(y + 16, innerHeight - card.offsetHeight - 8))}px`;
+}
+
+viewer.screenSpaceEventHandler.setInputAction((movement) => {
+  const hit = viewer.scene.pick(movement.endPosition);
+  const rect = viewer.scene.canvas.getBoundingClientRect();
+  const x = rect.left + movement.endPosition.x;
+  const y = rect.top + movement.endPosition.y;
+  const place = openPlaces[hit?.id?.placeIndex];
+  if (place) {
+    showTip(null);
+    showCard(place, x, y);
+    viewer.canvas.style.cursor = "pointer";
+    return;
+  }
+  if (!touchScreen) showCard(null);
+  const town = hit?.id?.parentTown || null;
+  if (town !== hoverTown) {
+    const old = hoverTown;
+    hoverTown = town;
+    for (const name of [old, town]) {
+      const entry = name && byName.get(name);
+      if (entry) paint(entry.entity, entry.record.band, name === pickedId, name === hoverTown);
+    }
+  }
+  viewer.canvas.style.cursor = town ? "pointer" : "";
+  if (town && town !== pickedId) {
+    const record = byName.get(town)?.record;
+    showTip(town, record ? `${record.total.toLocaleString("en-US")} places on Qloo · tap to open` : "Tap to open", x, y);
+  } else showTip(null);
+}, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+viewer.scene.canvas.addEventListener("mouseleave", () => { showTip(null); if (!touchScreen) showCard(null); });
+
+viewer.screenSpaceEventHandler.setInputAction((click) => {
+  const hit = viewer.scene.pick(click.position);
+  if (coastalUI?.pick(hit?.id)) return;
+  if (hit?.id?.walkTo) {
+    const index = hit.id.placeIndex;
+    if (touchScreen && tappedIndex !== index) {
+      const rect = viewer.scene.canvas.getBoundingClientRect();
+      showCard(openPlaces[index], rect.left + click.position.x, rect.top + click.position.y);
+      tappedIndex = index;
+      return;
+    }
+    showCard(null);
+    openPlace(openPlaces[index]);
+    return;
+  }
+  showCard(null);
+  const town = hit?.id?.parentTown;
+  if (town) {
+    showTip(null);
+    if (opportunityUI?.panelOpen()) opportunityUI.pickTown(town);
+    else select(town);
+  }
+}, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+// ---------- Map style and theme menu ----------
+function toggleMenu(menu, button, open) {
+  const next = open ?? menu.hidden;
+  menu.hidden = !next;
+  button.setAttribute("aria-expanded", String(next));
+  if (next) {
+    // Reduced motion keeps the fade and drops the scale.
+    const from = reducedMotion ? { opacity: 0 } : { opacity: 0, transform: "scale(.96)" };
+    const to = reducedMotion ? { opacity: 1 } : { opacity: 1, transform: "scale(1)" };
+    menu.animate([from, to], { duration: 160, easing: "cubic-bezier(0.23, 1, 0.32, 1)" });
+  }
+}
+$("map-btn").addEventListener("click", () => toggleMenu($("map-menu"), $("map-btn")));
+$("voice-btn").addEventListener("click", () => toggleMenu($("voice-menu"), $("voice-btn")));
+document.addEventListener("click", (event) => {
+  if (!event.target.closest("#map-menu, #map-btn")) toggleMenu($("map-menu"), $("map-btn"), false);
+  if (!event.target.closest("#voice-menu, #voice-btn")) toggleMenu($("voice-menu"), $("voice-btn"), false);
+  if (!event.target.closest("#dockbar")) showHits([]);
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key !== "Escape") return;
+  toggleMenu($("map-menu"), $("map-btn"), false);
+  toggleMenu($("voice-menu"), $("voice-btn"), false);
+});
+$("map-menu").addEventListener("click", (event) => {
+  const theme = event.target.closest("[data-theme-pick]");
+  if (theme) applyTheme(theme.dataset.themePick);
+  const style = event.target.closest("[data-style]");
+  if (style) {
+    mapHistory.beginUserNav();
+    setStyle(style.dataset.style);
+    syncHash({ replace: true });
+  }
+  const layer = event.target.closest("[data-layer]");
+  if (layer) setWeatherLayer(layer.dataset.layer, layer.getAttribute("aria-pressed") !== "true");
+  // Places / Ships / Ports: the coastal module handles the pick; the menu gets out of the way.
+  if (event.target.closest("[data-explore]")) toggleMenu($("map-menu"), $("map-btn"), false);
+});
+// Rain radar and clouds from RainViewer. The agent turns the rain on when its answer mentions it.
+async function setWeatherLayer(kind, on) {
+  const shown = await weatherUI.show(kind, on);
+  document.querySelector(`[data-layer="${kind}"]`)?.setAttribute("aria-pressed", String(shown));
+  if (on && !shown) { toast("That weather layer is unavailable right now."); setTimeout(() => toast(""), 4000); }
+  return shown;
+}
+
+function esriImagery() {
+  return new Cesium.UrlTemplateImageryProvider({
+    url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    credit: "Esri, Vantor, Earthstar Geographics, and the GIS User Community",
+    maximumLevel: 19,
+  });
+}
+
+let styleToken = 0;
+let buildingsPromise = null;
+let photoPromise = null;
+
+function ensureImagery() {
+  if (imageryLayer) return imageryLayer;
+  imageryLayer = viewer.imageryLayers.addImageryProvider(esriImagery());
+  return imageryLayer;
+}
+// Satellite under every style; the island view only changes how strongly the towns are tinted.
+function showImagery() {
+  ensureImagery().alpha = 1;
+}
+ensureImagery();
+function warmBuildings() {
+  if (buildings) return Promise.resolve(buildings);
+  if (!buildingsPromise) {
+    buildingsPromise = Cesium.createOsmBuildingsAsync({ scene: viewer.scene }).then((tileset) => {
+      tileset.show = false;
+      viewer.scene.primitives.add(tileset);
+      buildings = tileset;
+      return tileset;
+    }).catch((err) => { buildingsPromise = null; throw err; });
+  }
+  return buildingsPromise;
+}
+function warmPhoto() {
+  if (!window.ZEMI_PHOTOREAL_ENABLED) return Promise.resolve(null);
+  if (photoTiles) return Promise.resolve(photoTiles);
+  if (!photoPromise) {
+    photoPromise = Cesium.createGooglePhotorealistic3DTileset({ onlyUsingWithGoogleGeocoder: true }).then((tileset) => {
+      tileset.show = false;
+      viewer.scene.primitives.add(tileset);
+      photoTiles = tileset;
+      return tileset;
+    }).catch((err) => { photoPromise = null; throw err; });
+  }
+  return photoPromise;
+}
+async function tilesReady(tileset) {
+  const start = performance.now();
+  while (performance.now() - start < 6000) {
+    if ((tileset.statistics?.numberOfTilesWithContentReady || 0) > 0) return true;
+    await new Promise((resolve) => setTimeout(resolve, 120));
+  }
+  return false;
+}
+
+function setTiltEnabled(on) {
+  ZemiFlight.setAllowTilt(on);
+  $("tilt-btn").setAttribute("aria-pressed", String(!!on));
+}
+function reframeCurrent(duration) {
+  const hop = duration ?? (reducedMotion ? 0 : 0.45);
+  const place = openPlaces[focusedIndex];
+  if (place?.lat != null) walkTo(place.lon, place.lat, hop);
+  else if (pickedId && byName.get(pickedId)) frameWholeTown(pickedId, hop);
+  else flyHome(hop);
+}
+let tiltBeforeAuto = null; // tilt preference before buildings/photo auto-enabled it
+async function setStyle(next, { reframe = true, waitTiles = true } = {}) {
+  if (next === "photo" && !window.ZEMI_PHOTOREAL_ENABLED) return;
+  const token = ++styleToken;
+  // Buildings and photoreal need a tilted look; remember the prior preference and restore it on leave.
+  const tilt = ZemiHistory.autoTilt({
+    mode: next,
+    prevMode: styleName,
+    tiltEnabled: ZemiFlight.allowTilt(),
+    tiltBeforeAuto,
+  });
+  tiltBeforeAuto = tilt.tiltBeforeAuto;
+  setTiltEnabled(tilt.tiltEnabled);
+  styleName = next;
+  const reveal = document.querySelector("#spot [data-place-3d]");
+  if (reveal) reveal.hidden = next === "buildings" || next === "photo";
+  for (const button of document.querySelectorAll("[data-style]")) {
+    button.setAttribute("aria-pressed", String(button.dataset.style === next));
+  }
+  showImagery();
+  // The flat town shapes sit at sea level; mountains would cut holes in them. Terrain depth only
+  // matters where buildings stand on the ground.
+  viewer.scene.globe.depthTestAgainstTerrain = next === "buildings" || next === "photo";
+  if (buildings) buildings.show = next === "buildings";
+  if (photoTiles) photoTiles.show = next === "photo";
+  viewer.scene.globe.show = !(next === "photo" && photoTiles?.tilesLoaded);
+  repaint();
+  drawHeat(openHeat);
+  drawPlaces(openPlaces);
+  const hop = reducedMotion ? 0 : 0.45;
+  if (reframe) reframeCurrent(hop);
+  if (next !== "buildings" && next !== "photo") return toast("");
+  toast(next === "buildings" ? "Loading 3D buildings…" : "Loading photoreal 3D…");
+  const warm = async () => {
+    try {
+      const tileset = await (next === "buildings" ? warmBuildings() : warmPhoto());
+      if (token !== styleToken) return;
+      tileset.show = true;
+      const drew = await tilesReady(tileset);
+      if (token !== styleToken) return;
+      if (next === "photo" && drew) viewer.scene.globe.show = false;
+      toast("");
+    } catch {
+      if (token !== styleToken) return;
+      showImagery(true);
+      toast("That view needs a Cesium ion token. Showing satellite.");
+      setTimeout(() => toast(""), 4000);
+    }
+  };
+  // History restore skips awaiting tiles so Back/Forward and user clicks stay responsive.
+  if (!waitTiles) { warm(); return; }
+  await warm();
+}
+
+for (const button of document.querySelectorAll("[data-taste]")) {
+  button.addEventListener("click", () => {
+    setTaste(button.dataset.taste);
+    const entry = byName.get(pickedId);
+    if (!entry) return;
+    leadNames = [];
+    $("town-say").hidden = true;
+    loadHeat(pickedId);
+    loadPlaces(entry.record).catch((err) => toast(err.message));
+  });
+}
+
+// ---------- Compare ----------
+function resolveTown(query) {
+  const q = norm(query);
+  const options = [];
+  if (q) for (const town of byName.keys()) if (norm(town).includes(q)) options.push(town);
+  options.sort((a, b) => a.localeCompare(b));
+  const exact = options.find((town) => norm(town) === q);
+  return { town: exact || (options.length === 1 ? options[0] : ""), options: options.slice(0, 6) };
+}
+
+$("compare-open").addEventListener("click", () => {
+  $("compare-box").hidden = !$("compare-box").hidden;
+  if (!$("compare-box").hidden) $("compare-find").focus();
+});
+$("compare-find").addEventListener("input", () => {
+  const found = resolveTown($("compare-find").value);
+  const hitsBox = $("compare-hits");
+  hitsBox.hidden = Boolean(found.town) || !found.options.length;
+  hitsBox.innerHTML = found.options.map((town) => `<li><button type="button" data-compare="${esc(town)}">${esc(town)}</button></li>`).join("");
+});
+$("compare-hits").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-compare]");
+  if (button) runCompare(button.dataset.compare);
+});
+$("compare-go").addEventListener("click", () => runCompare());
+$("compare-find").addEventListener("keydown", (event) => {
+  if (event.key === "Enter") { event.preventDefault(); runCompare(); }
+});
+
+async function runCompare(townName) {
+  const resolved = townName || resolveTown($("compare-find").value).town;
+  if (!pickedId || !resolved || norm(resolved) === norm(pickedId)) {
+    toast(resolved ? "Pick a different town." : "Type a town to compare.");
+    setTimeout(() => toast(""), 2500);
+    return;
+  }
+  $("compare-hits").hidden = true;
+  $("compare-find").value = resolved;
+  const question = lastQuestion || (currentTaste() === "restaurant" ? "Where can I eat?" : "What is already here?");
+  $("compare-out").innerHTML = `<div class="skeleton"></div>`;
+  const [left, right] = await Promise.all([
+    askTown(pickedId, question, { pinTown: true }),
+    askTown(resolved, question, { pinTown: true }),
+  ]);
+  const column = (data, town) => `<div class="compare-col"><h3>${esc(town)}</h3><p class="lede">${esc(townLede(byName.get(town)?.record))}</p>${(data.cards || []).map((card) => `<p class="small"><b>${esc(card.name)}</b> · ${esc(card.line)}</p>`).join("") || `<p class="small">Qloo had nothing to compare here.</p>`}</div>`;
+  $("compare-out").innerHTML = column(left, pickedId) + column(right, resolved);
+  showSources(left, right);
+}
+
+// ---------- Search and ask, one bar ----------
+const qInput = $("q");
+const hits = $("hits");
+let shownHits = [];
+
+function searchItems(query) {
+  const q = norm(query);
+  if (!q) return [];
+  const rank = (text) => {
+    const name = norm(text);
+    if (name.startsWith(q)) return 0;
+    if (name.split(/\s+/).some((word) => word.startsWith(q))) return 1;
+    return q.length > 1 && name.includes(q) ? 2 : -1;
+  };
+  const towns = [];
+  for (const [town, entry] of byName) {
+    const at = rank(town);
+    if (at >= 0) towns.push({ kind: "town", town, label: town, hint: `Town · ${entry.record.total.toLocaleString("en-US")} places`, at });
+  }
+  towns.sort((a, b) => a.at - b.at || a.label.localeCompare(b.label));
+  const places = [];
+  const seen = new Set();
+  for (const place of openPlaces) {
+    if (rank(place.name) < 0 || seen.has(norm(place.name))) continue;
+    seen.add(norm(place.name));
+    places.push({ kind: "place", town: pickedId, label: place.name, hint: metaLine(place), place });
+  }
+  return towns.slice(0, 4).concat(places.slice(0, 4));
+}
+
+function showHits(items) {
+  hitIndex = -1;
+  shownHits = items;
+  if (!items.length) {
+    hits.hidden = true;
+    hits.innerHTML = "";
+    qInput.setAttribute("aria-expanded", "false");
+    return;
+  }
+  hits.hidden = false;
+  qInput.setAttribute("aria-expanded", "true");
+  hits.innerHTML = items.map((item, index) => {
+    if (item.kind === "none" || item.kind === "hint") return `<li role="presentation" class="${item.kind === "none" ? "none" : "ask-hint"}">${esc(item.label)}</li>`;
+    return `<li role="presentation"><button type="button" role="option" data-hit="${index}">${esc(item.label)}<span>${esc(item.hint || "")}</span></button></li>`;
+  }).join("");
+}
+
+// A sentence is a question for the assistant; a word or a name is a search.
+const looksLikeQuestion = (text) => text.trim().split(/\s+/).length >= 4 || /\?$/.test(text.trim());
+
+let searchToken = 0;
+let searchTimer = 0;
+qInput.addEventListener("input", () => {
+  const query = qInput.value.trim();
+  const token = ++searchToken;
+  clearTimeout(searchTimer);
+  if (query.length < 1) return showHits([]);
+  if (looksLikeQuestion(query)) return showHits([{ kind: "hint", label: "Press Enter to ask Zemi-Aku." }]);
+  const local = searchItems(query);
+  showHits(local);
+  if (query.length < 2) return;
+  searchTimer = setTimeout(() => {
+    const found = [];
+    let taste = null;
+    const merge = () => {
+      if (token !== searchToken || qInput.value.trim() !== query) return;
+      const seen = new Set(local.map((item) => norm(item.label)));
+      const extra = found.filter((item) => item.label && !seen.has(norm(item.label)));
+      const list = (taste ? [taste] : []).concat(local.slice(0, 4), extra).slice(0, 8);
+      showHits(list.length ? list : [{ kind: "none", label: `Nothing matches “${query}”. Try a town, a business, or a taste such as surf.` }]);
+    };
+    fetch("/api/search?q=" + encodeURIComponent(query)).then((res) => res.json())
+      .then((data) => { found.push(...(data.places || []).map((item) => ({ ...item, hint: item.hint }))); merge(); })
+      .catch(() => {});
+    const isTown = [...byName.keys()].some((town) => norm(town) === norm(query));
+    if (query.length >= 3 && !isTown) {
+      fetch("/api/taste?q=" + encodeURIComponent(query)).then((res) => res.json())
+        .then((data) => { if (data?.tag) { taste = { kind: "taste", label: data.label, hint: "Taste", data }; merge(); } })
+        .catch(() => {});
+    }
+  }, 260);
+});
+
+qInput.addEventListener("keydown", (event) => {
+  const buttons = [...hits.querySelectorAll("button")];
+  if (event.key === "Escape") return showHits([]);
+  if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+    if (!buttons.length) return;
+    event.preventDefault();
+    hitIndex = event.key === "ArrowDown" ? Math.min(buttons.length - 1, hitIndex + 1) : Math.max(0, hitIndex - 1);
+    buttons.forEach((button, index) => button.setAttribute("aria-selected", String(index === hitIndex)));
+    buttons[hitIndex]?.scrollIntoView({ block: "nearest" });
+  }
+});
+
+function openHit(item) {
+  showHits([]);
+  if (!item) return;
+  qInput.value = "";
+  if (item.kind === "taste") return showCatalog(item.data);
+  if (item.kind === "place" && item.place) return openFoundPlace(item.place, item.town);
+  if (item.town && businessFlow) return ZemiApp.ask(item.town);
+  if (item.town) select(item.town);
+}
+
+hits.addEventListener("click", (event) => {
+  const button = event.target.closest("button[data-hit]");
+  if (button) openHit(shownHits[Number(button.dataset.hit)]);
+});
+
+// Enter: a highlighted result opens; an exact town opens; anything else is a question.
+$("ask").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const text = qInput.value.trim();
+  if (!text) return;
+  if (hitIndex >= 0) return openHit(shownHits[hitIndex]);
+  const exact = [...byName.keys()].find((town) => norm(town) === norm(text));
+  if (exact && !businessFlow) {
+    showHits([]);
+    qInput.value = "";
+    return select(exact);
+  }
+  showHits([]);
+  qInput.value = "";
+  const narrateThis = speakNext;
+  speakNext = false;
+  if (narrateThis) unlockAudio();
+  const data = await ZemiApp.ask(text);
+  if (narrateThis) narrate(data);
+});
+
+// ---------- Suggestions ----------
+const JOBS = {
+  ponce: { kind: "ask", town: "Ponce", taste: "restaurant", question: "I want to open a restaurant in Ponce. Who is already there?" },
+  surf: { kind: "taste", q: "surf rincon" },
+  mofongo: { kind: "taste", q: "mofongo" },
+};
+
+$("suggest").addEventListener("click", async (event) => {
+  const button = event.target.closest("[data-job]");
+  if (!button) return;
+  unlockAudio();
+  const job = JOBS[button.dataset.job];
+  if (job.kind === "taste") {
+    showCaption("you", button.textContent);
+    const lang = ZemiConverse.voice().lang;
+    const data = await (await fetch(`/api/taste?q=${encodeURIComponent(job.q)}&lang=${lang}`)).json();
+    if (data?.tag) {
+      showCatalog(data);
+      narrate(data);
+    }
+    return;
+  }
+  setTaste(job.taste);
+  await select(job.town);
+  speakNext = true;
+  qInput.value = job.question;
+  $("ask").requestSubmit();
+});
+
+// ---------- Caption (the orb's words) ----------
+let captionTimer = 0;
+function answerPlacesForCaption(places) {
+  const list = Array.isArray(places) ? places.filter(Boolean) : [];
+  if (!list.length) return [];
+  return list.slice(0, 6).map((place) => {
+    let index = place.id ? openPlaces.findIndex((row) => row.id === place.id) : -1;
+    if (index < 0) index = openPlaces.findIndex((row) => row.name === place.name);
+    return { ...place, index: index >= 0 ? index : null };
+  });
+}
+function showCaption(who, text, evidence, places) {
+  clearTimeout(captionTimer);
+  const caption = $("caption");
+  if (!text) return hideCaption();
+  const lang = ZemiConverse.voice().lang;
+  // Answer places render as rich cards above the folded evidence line.
+  const rows = answerPlacesForCaption(places);
+  const cards = rows.length
+    ? ZemiMarks.resultCards(rows, { from: distanceOrigin(), lang, focusedIndex })
+    : "";
+  caption.innerHTML = `<span class="who">${who === "you" ? "You" : "Zemi-Aku"}</span>${esc(text)}<button type="button" class="x" aria-label="Dismiss">×</button>${ZemiEvidence.answerBody(lang, evidence, cards)}`;
+  wireResultLogos(caption);
+  // Only the appearance animates; text updates while listening must not (they come many per second).
+  if (caption.hidden) {
+    caption.hidden = false;
+    caption.animate(
+      reducedMotion ? [{ opacity: 0 }, { opacity: 1 }] : [{ opacity: 0, translate: "0 4px" }, { opacity: 1, translate: "0 0" }],
+      { duration: 180, easing: "cubic-bezier(0.23, 1, 0.32, 1)" },
+    );
+  }
+}
+function hideCaption() {
+  $("caption").hidden = true;
+}
+// On a phone the caption rises from the dock over the readout's last lines; the readout lifts by the caption's
+// height instead (--caption-h feeds the phone rules for #panel and #opportunity-panel). Zero while dismissed.
+new ResizeObserver(() => {
+  const caption = $("caption");
+  document.documentElement.style.setProperty("--caption-h", caption.hidden ? "0px" : `${caption.offsetHeight + 8}px`);
+}).observe($("caption"));
+// An answer stays on screen until the next question, a reset, or this tap.
+$("caption").addEventListener("click", (event) => {
+  if (event.target.closest(".x")) return hideCaption();
+  if (event.target.closest(".result-card")) onResultCardClick(event);
+});
+
+// converse.js writes its status to #talk-status; show it as the caption while a conversation runs.
+new MutationObserver(() => {
+  const text = $("talk-status").textContent;
+  const mode = $("talk").dataset.mode;
+  if (mode === "off") {
+    if (/blocked|down|no speech/i.test(text)) showCaption("zemi", text);
+    return;
+  }
+  if (text) showCaption(/^“/.test(text) ? "you" : "zemi", text.replace(/^“|”$/g, ""));
+}).observe($("talk-status"), { childList: true, characterData: true, subtree: true });
+
+new MutationObserver(() => {
+  const mode = $("talk").dataset.mode;
+  $("voice-btn").hidden = mode !== "off";
+  $("dictate").hidden = mode !== "off";
+  if (mode === "off") captionTimer = setTimeout(hideCaption, 6000);
+}).observe($("talk"), { attributes: true, attributeFilter: ["data-mode"] });
+
+function voiceLabel() {
+  const voice = ZemiConverse.voice();
+  const name = (voice.name || "").replace(/Microsoft |Google /g, "").split(" - ")[0];
+  const code = (voice.lang || "en").toUpperCase();
+  $("voice-btn").textContent = name ? `${code} · ${name}` : code;
+}
+new MutationObserver(voiceLabel).observe($("talk-voice-name"), { childList: true, characterData: true, subtree: true });
+// The picker is re-rendered on every language or gender change; the note alone does not change for a gender switch.
+new MutationObserver(voiceLabel).observe($("talk-voice"), { childList: true });
+
+// ---------- Voice ----------
+let speaking = false;
+let speakNext = false;
+let speakToken = 0;
+let voiceStop = null;
+let audioCtx = null;
+let outAnalyser = null;
+
+function unlockAudio() {
+  const Ctx = window.AudioContext || window.webkitAudioContext;
+  if (!Ctx) return Promise.resolve();
+  if (!audioCtx) {
+    audioCtx = new Ctx();
+    outAnalyser = audioCtx.createAnalyser();
+    outAnalyser.fftSize = 512;
+    outAnalyser.connect(audioCtx.destination);
+  }
+  return audioCtx.state === "suspended" ? audioCtx.resume() : Promise.resolve();
+}
+
+function outputLevel() {
+  if (!outAnalyser) return 0;
+  const buf = new Float32Array(outAnalyser.fftSize);
+  outAnalyser.getFloatTimeDomainData(buf);
+  let sum = 0;
+  for (const value of buf) sum += value * value;
+  return Math.sqrt(sum / buf.length);
+}
+
+function haltAudio() {
+  if (voiceStop) {
+    voiceStop();
+    voiceStop = null;
+  }
+  if (window.speechSynthesis) speechSynthesis.cancel();
+}
+
+function stopSpeaking() {
+  speakToken += 1;
+  haltAudio();
+  speaking = false;
+}
+
+function speakWithBrowser(text, voice) {
+  return new Promise((resolve) => {
+    if (!window.speechSynthesis) return resolve();
+    const lang = voice.lang || "en";
+    const tag = ZemiConverse.LANG_TAGS[lang] || "en-US";
+    const match = ZemiConverse.browserVoice(voice);
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = match?.lang || tag;
+    if (match) utter.voice = match;
+    utter.rate = 0.96;
+    utter.onend = resolve;
+    utter.onerror = resolve;
+    speechSynthesis.cancel();
+    speechSynthesis.speak(utter);
+  });
+}
+
+// Resolves when the voice finishes or is stopped. Deepgram Aura first, the browser voice if it fails.
+async function speak(text, voice) {
+  const token = ++speakToken;
+  haltAudio();
+  speaking = true;
+  try {
+    if (voice.silent) return; // a language outside the menu: text only, nothing is played
+    if (voice.browser) {
+      await speakWithBrowser(text, voice);
+      return;
+    }
+    await unlockAudio();
+    const res = await fetch("/api/speak", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ text, voice: voice.id }),
+    });
+    if (!res.ok || !audioCtx) throw new Error("speak failed");
+    const audio = await audioCtx.decodeAudioData(await res.arrayBuffer());
+    if (token !== speakToken) return;
+    await new Promise((resolve) => {
+      const source = audioCtx.createBufferSource();
+      source.buffer = audio;
+      source.connect(outAnalyser);
+      voiceStop = () => {
+        try { source.stop(); } catch { /* already ended */ }
+      };
+      source.onended = () => {
+        voiceStop = null;
+        resolve();
+      };
+      source.start();
+    });
+  } catch {
+    if (token === speakToken) await speakWithBrowser(text, voice);
+  } finally {
+    if (token === speakToken) speaking = false;
+  }
+}
+
+if (window.speechSynthesis) speechSynthesis.getVoices();
+
+function narrate(data) {
+  const text = data?.speech || data?.error || "";
+  if (!text) return;
+  // Spoken answers live in the caption; the panel keeps only the list, so nothing shows twice.
+  $("town-say").hidden = true;
+  const places = data?.places || (leadNames.length
+    ? leadNames.map((name) => openPlaces.find((place) => place.name === name)).filter(Boolean)
+    : []);
+  showCaption("zemi", text, data?.evidence, places);
+  speak(data?.spoken || text, ZemiConverse.voice());
+}
+
+// ---------- Asking ----------
+const conversation = [];
+let businessFlow = false;
+let businessReferenceId = '';
+function clearJourney() {
+  journeyRequest?.abort();
+  journeyRequest = null;
+  journeyData = null;
+  $("journey-status").textContent = "";
+  updateJourney();
+}
+
+function updateJourney() {
+  $("journey-trail").hidden = !journeyData;
+  $("journey-progress").textContent = journeyData
+    ? `${journeyData.journey.artist} → Qloo taste matches → ${step === "place" ? "Explore this place" : "Choose a place"}` : "";
+  $("journey-return").hidden = !journeyData || step !== "place";
+}
+
+async function runJourney(artist) {
+  leaveOpportunity();
+  clearJourney();
+  const request = new AbortController();
+  const timeout = setTimeout(() => request.abort(), 30000);
+  let received = false;
+  journeyRequest = request;
+  $("journey-status").textContent = `Reading Qloo's taste connections for ${artist}…`;
+  try {
+    const res = await fetch("/api/ask", {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ artist, lang: ZemiConverse.voice().lang }),
+      signal: request.signal,
+    });
+    const data = await res.json();
+    if (journeyRequest !== request) return;
+    if (!res.ok) throw new Error("Qloo's connections could not load. Please try again.");
+    received = true;
+    journeyData = data.journey ? data : null;
+    showCatalog(data);
+  } catch (err) {
+    if (journeyRequest !== request && !received) return;
+    $("journey-status").textContent = received
+      ? "The places loaded, but the map could not display them. Please try again or reload the map."
+      : "Qloo's connections could not load. Please try again, or tap a town to explore.";
+  } finally {
+    clearTimeout(timeout);
+    if (journeyRequest === request) journeyRequest = null;
+  }
+}
+
+$("journey-start").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-artist]");
+  if (button) runJourney(button.dataset.artist);
+});
+$("journey-return").addEventListener("click", () => { if (journeyData) showCatalog(journeyData); });
+
+async function askTown(town, question, { pinTown = false } = {}) {
+  const referenceId = step === 'place' ? openPlaces[focusedIndex]?.id || '' : businessReferenceId;
+  const res = await fetch(pinTown ? "/api/ask" : "/api/chat", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ town, taste: currentTaste(), question, lang: ZemiConverse.voice().lang, pinTown,
+      history: pinTown ? [] : conversation.slice(-12), ...(referenceId && !pinTown ? { referenceId } : {}) }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) return { town, question, error: data.error || "places failed", speech: data.speech };
+  if (!pinTown) businessFlow = Boolean(data.business || data.kind === "business");
+  if (!pinTown) businessReferenceId = data.business ? data.business.proximity?.reference?.id || referenceId : '';
+  if (!pinTown && data.speech) {
+    conversation.push({ role: "user", content: question.slice(0, 1200) },
+      { role: "assistant", content: data.speech.slice(0, 2000) });
+    conversation.splice(0, Math.max(0, conversation.length - 12));
+  }
+  return data;
+}
+
+// A model turn with tools takes a few seconds (3 s measured, up to 30 s on a slow provider); after a
+// moment the caption says so, and gives the question back if the answer has no caption of its own.
+const WAITING = { en: "Checking Qloo's records…", es: "Revisando los registros de Qloo…" };
+let waitingTimer;
+
+// Asks the server, then moves the map to what the answer is about: a town named in the question,
+// or the restaurant taste a food question fell back to. Returns the answer with its spoken line.
+async function runQuestion(question) {
+  clearJourney();
+  lastQuestion = question;
+  // A question typed in the other language switches the voice, so the answer and the menu follow it.
+  // The guesser only knows EN/ES; a chosen French, Italian or German voice keeps its language.
+  const guessed = ZemiLang.guessLang(question);
+  const spokenNow = ZemiConverse.voice().lang;
+  if (guessed && ["en", "es"].includes(spokenNow) && guessed !== spokenNow) { ZemiConverse.choose(guessed, ZemiConverse.voice().gender); voiceLabel(); renderHero(); }
+  if (step !== "island") skeleton(3);
+  clearTimeout(waitingTimer);
+  let waiting = false;
+  waitingTimer = setTimeout(() => { waiting = true; showCaption("zemi", WAITING[ZemiConverse.voice().lang] || WAITING.en); }, 1500);
+  let data;
+  try { data = await askTown(pickedId || "", question); }
+  finally { clearTimeout(waitingTimer); if (waiting) showCaption("you", question); }
+  if (data.opportunity) {
+    await opportunityUI.show(data.opportunity.industry);
+    showCaption("zemi", data.speech, data.evidence, data.places);
+    return data;
+  }
+  leaveOpportunity();
+  if (data.agent) {
+    await applyMapActions(data.actions, data.speech);
+    if (!data.actions?.length && step !== "island") renderList();
+    // One answer, shown once: the caption carries it, the panel keeps the picks and the list.
+    $("town-say").hidden = true;
+    const agentPlaces = (data.actions || []).flatMap((action) => action.type === "show_places" ? (action.places || []) : [])
+      .filter((place, index, all) => all.findIndex((other) => (other.id || other.name) === (place.id || place.name)) === index);
+    showCaption("zemi", data.speech, data.evidence, agentPlaces);
+    return data;
+  }
+  // Conversation ("how are you", "dinner tonight"): a reply in the caption, the list left as it was.
+  if (!data.chat) {
+    resetCategory();
+    showListTitle("");
+  }
+  if (data.chat) {
+    if (step !== "island") renderList();
+    showCaption("zemi", data.speech, data.evidence, data.places);
+    return data;
+  }
+  if (data.catalog) {
+    showCatalog(data);
+    // A typed question answered by business research or the rules router: its line goes in the caption like
+    // every other answer, so the visitor is not left looking at their own question (stranger test, October 14).
+    if (data.speech) {
+      $("town-say").hidden = true;
+      showCaption("zemi", data.speech, data.evidence, data.places);
+    }
+    return data;
+  }
+  if (data.error) {
+    if (step !== "island") renderList();
+    showCaption("zemi", data.speech || "Open a town first, or ask for places, such as all malls in Puerto Rico.");
+    return data;
+  }
+  if (data.town && data.town !== pickedId && byName.has(data.town)) {
+    setTaste(data.taste);
+    await select(data.town);
+  } else if (typeof data.taste === "string" && data.taste !== currentTaste()) {
+    setTaste(data.taste);
+    const entry = byName.get(pickedId);
+    loadHeat(pickedId);
+    if (entry) await loadPlaces(entry.record).catch(() => {});
+  }
+  applyAnswer(data);
+  if (step === "place") goStep("town");
+  if (data.speech) { $("town-say").hidden = true; showCaption("zemi", data.speech, data.evidence, data.places); }
+  return data;
+}
+
+function syncAnswerCards(actions = []) {
+  const caption = $("caption");
+  if (caption.hidden) return;
+  // Only refresh cards on a Zemi answer caption — never inject into "You:" or status lines.
+  const who = caption.querySelector(".who")?.textContent?.trim();
+  if (who !== "Zemi-Aku") return;
+  const places = actions.flatMap((action) => action?.type === "show_places" && Array.isArray(action.places) ? action.places : [])
+    .filter((place, index, all) => all.findIndex((other) => (other.id || other.name) === (place.id || place.name)) === index);
+  if (!places.length) return;
+  const rows = answerPlacesForCaption(places);
+  if (!rows.length) return;
+  const lang = ZemiConverse.voice().lang;
+  const html = ZemiMarks.resultCards(rows, { from: distanceOrigin(), lang, focusedIndex });
+  const existing = caption.querySelector(".answer-cards");
+  if (existing) existing.outerHTML = html;
+  else {
+    const evidence = caption.querySelector(".evidence");
+    if (evidence) evidence.insertAdjacentHTML("beforebegin", html);
+    else caption.insertAdjacentHTML("beforeend", html);
+  }
+  wireResultLogos(caption);
+}
+
+async function applyMapActions(actions = [], speech = "") {
+    const priority = { fly_town: 0, show_places: 1, open_place: 2, show_opportunity: 3, show_weather: 4 };
+    // Several place lists in one answer become one panel: the union in first-seen order, under the
+    // first list's title, so a place the answer names from an earlier tool call is never dropped.
+    const lists = actions.filter((action) => action.type === "show_places" && Array.isArray(action.places));
+    const merged = lists.length > 1 ? [{ ...lists[0], places: lists.flatMap((list) => list.places)
+      .filter((place, index, all) => all.findIndex((other) => (other.id || other.name) === (place.id || place.name)) === index) }] : [];
+    const queue = merged.length ? [...actions.filter((action) => !lists.includes(action)), ...merged] : [...actions];
+    for (const action of queue.sort((a, b) => (priority[a.type] ?? 9) - (priority[b.type] ?? 9))) {
+      if (action.type === "show_weather") {
+        if (byName.has(action.town) && pickedId !== action.town && step === "island") await select(action.town);
+        if (await setWeatherLayer("radar", true)) { toast("Rain radar · RainViewer"); setTimeout(() => toast(""), 4000); }
+        continue;
+      }
+      if (action.type === "fly_town" && byName.has(action.town)) {
+        if (pickedId !== action.town) await select(action.town);
+        else if (step === "town") frameWholeTown(action.town);
+      }
+      if (action.type === "show_places" && Array.isArray(action.places)) {
+        const town = byName.has(action.town) ? action.town : "";
+        showCatalog({ ...action, town, speech, note: "Qloo places", cards: [] });
+      }
+      if (action.type === "open_place" && byName.has(action.town) && action.place?.id) {
+        await openFoundPlace(action.place, action.town);
+      }
+      if (action.type === "show_opportunity") await opportunityUI.show(action.industry);
+    }
+    if (typeof syncAnswerCards === "function") syncAnswerCards(actions);
+}
+
+window.ZemiApp = {
+  ask(question) {
+    showCaption("you", question);
+    return runQuestion(question);
+  },
+  say: (text) => showCaption("zemi", text),
+  speak,
+  stopSpeaking,
+  unlockAudio,
+  outputLevel,
+  applyMapActions,
+  syncAnswerCards,
+  context: () => ({ town: pickedId || "", taste: currentTaste() }),
+  voiceText(role, content) {
+    showCaption(role === "user" ? "you" : "zemi", content);
+    conversation.push({ role, content: content.slice(0, role === "user" ? 1200 : 2000) });
+    conversation.splice(0, Math.max(0, conversation.length - 12));
+  },
+};
+ZemiConverse.init();
+ZemiDictate.init();
+// The orb and dictation share the microphone: starting a conversation ends a dictation.
+$("wisp-button").addEventListener("click", () => ZemiDictate.stop(), true);
+voiceLabel();
+
+// ---------- Start ----------
+async function main() {
+  try {
+    const [geoRes, countsRes] = await Promise.all([
+      fetch("/app/data/municipios.geojson"),
+      fetch("/data/catalog-counts.json"),
+    ]);
+    if (!geoRes.ok || !countsRes.ok) throw new Error("The map data did not load. Reload the page.");
+    const geo = await geoRes.json();
+    const counts = await countsRes.json();
+    const grades = new Map(counts.towns.map((r) => [norm(r.town), r]));
+    const source = await Cesium.GeoJsonDataSource.load(geo, { clampToGround: false });
+    viewer.dataSources.add(source);
+    for (const entity of source.entities.values) {
+      const raw = entity.properties.NAME.getValue();
+      const record = grades.get(norm(raw));
+      const band = record?.band || "thin";
+      const feature = geo.features.find((f) => f.properties.NAME === raw);
+      entity.polygon.height = 0;
+      entity.polygon.outline = true;
+      entity.polygon.outlineWidth = 1;
+      entity.parentTown = record?.town || raw;
+      byName.set(record?.town || norm(raw), {
+        entity,
+        record: record || { town: raw, band, total: 0 },
+        centroid: centroid(feature.geometry),
+        radius: radiusOf(feature.geometry, centroid(feature.geometry)),
+      });
+      paint(entity, band, false, false);
+    }
+    // /app?town=Ponce opens that town (the front page's island links here).
+    // /app?ask=… asks it once the map is ready, so each shot of the demo video starts from one link.
+    // Hash state (#town=&place=&mode=) restores after refresh / back when no ?town= is set.
+    const params = new URLSearchParams(location.search);
+    const town = townKey(params.get("town"));
+    const hashTown = !town && townKey(readHash().town);
+    const ready = town ? select(town)
+      : hashTown ? restoreHash()
+      : (flyHome(reducedMotion ? 0 : 3), syncHash({ replace: true }), Promise.resolve());
+    // /app?mission=bad-bunny (and the front page's ?embed=1) offers the tour behind one tap for sound.
+    const mission = params.get("mission") || (embedded ? "bad-bunny" : "");
+    if (mission && ZemiMissions.MISSIONS.some((m) => m.id === mission)) ready.then(() => offerMission(mission, { embed: embedded }));
+    const question = params.get("ask");
+    const artist = params.get("artist");
+    const opportunity = params.get("opportunity");
+    if (opportunity) ready.then(() => opportunityUI.show(opportunity));
+    if (artist) ready.then(() => runJourney(artist.slice(0, 80)));
+    else if (question) ready.then(() => ZemiApp.ask(question));
+    // &category=food opens that part of the town's catalog (and &kind=Bakery one kind inside it).
+    const category = params.get("category");
+    if (town && category) ready.then(() => openCategory(category, params.get("kind") || ""));
+    setTimeout(() => { ensureImagery(); if (window.ZEMI_ION_TOKEN) { warmBuildings().catch(() => {}); if (window.ZEMI_PHOTOREAL_ENABLED) warmPhoto().catch(() => {}); } }, 400);
+  } catch (err) {
+    toast(err.message);
+  }
+}
+
+// Map chrome: compass rotates with heading; top-down / home / 3D tilt toggle.
+viewer.scene.postRender.addEventListener(() => {
+  const needle = $("compass-needle");
+  if (!needle) return;
+  const heading = viewer.camera.heading;
+  needle.style.transform = `rotate(${-Cesium.Math.toDegrees(heading)}deg)`;
+});
+// Pick the globe under the screen center so compass / top-down spin around what you are looking at.
+function lookAtScreenCenter() {
+  const canvas = viewer.scene.canvas;
+  const center = new Cesium.Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+  const ray = viewer.camera.getPickRay(center);
+  return ray ? viewer.scene.globe.pick(ray, viewer.scene) : undefined;
+}
+function flyAroundLookAt({ heading, pitch, duration }) {
+  const cam = viewer.camera;
+  const target = lookAtScreenCenter();
+  if (!target) {
+    const carto = cam.positionCartographic;
+    cam.flyTo({
+      destination: Cesium.Cartesian3.fromRadians(carto.longitude, carto.latitude, carto.height),
+      orientation: { heading, pitch, roll: 0 },
+      duration,
+    });
+    return;
+  }
+  const range = Cesium.Cartesian3.distance(cam.positionWC, target);
+  cam.flyToBoundingSphere(new Cesium.BoundingSphere(target, 1), {
+    offset: new Cesium.HeadingPitchRange(heading, pitch, range),
+    duration,
+  });
+}
+$("compass-btn").addEventListener("click", () => {
+  flyAroundLookAt({
+    heading: 0,
+    pitch: viewer.camera.pitch,
+    duration: reducedMotion ? 0 : 0.6,
+  });
+});
+$("topdown-btn").addEventListener("click", () => {
+  flyAroundLookAt({
+    heading: 0,
+    pitch: Cesium.Math.toRadians(-89),
+    duration: reducedMotion ? 0 : 0.8,
+  });
+});
+$("home-view-btn").addEventListener("click", () => flyHome(reducedMotion ? 0 : 1.8));
+$("tilt-btn").addEventListener("click", () => {
+  const tilt = ZemiHistory.userToggle({
+    tiltEnabled: ZemiFlight.allowTilt(),
+    mode: styleName,
+  });
+  tiltBeforeAuto = tilt.tiltBeforeAuto;
+  setTiltEnabled(tilt.tiltEnabled);
+  reframeCurrent(reducedMotion ? 0 : 0.6);
+});
+$("panel-collapse").addEventListener("click", () => {
+  const panel = $("panel");
+  const collapsed = panel.dataset.collapsed === "true";
+  panel.dataset.collapsed = collapsed ? "false" : "true";
+  $("panel-collapse").setAttribute("aria-expanded", String(collapsed));
+  $("panel-collapse").textContent = collapsed ? "‹" : "›";
+  $("panel-collapse").setAttribute("aria-label", collapsed ? "Collapse panel" : "Expand panel");
+});
+// popstate alone: hashchange also fires on the same traversal and would double-restore.
+// Every Back/Forward goes through restoreHash (including the no-town / home case).
+window.addEventListener("popstate", () => { mapHistory.onHistoryNav(); });
+
+opportunityUI = ZemiOpportunity.mount({
+  fetchJson: (url) => fetch(url).then((res) => (res.ok ? res.json() : Promise.reject(new Error(String(res.status))))),
+  lang: () => ZemiConverse.voice().lang,
+  onChange: () => {
+    const active = Boolean(opportunityUI?.active());
+    $("hero").hidden = $("suggest").hidden = active || step !== "island";
+    repaint();
+    if (step !== "island" || active === opportunityFramed) return;
+    opportunityFramed = active;
+    if (active) flyOpportunityFrame(); else if (innerWidth <= 720) flyHome(reducedMotion ? 0 : 1.6);
+  },
+  onAsk: (question) => {
+    unlockAudio();
+    keepOpportunity = true;
+    ZemiApp.ask(question).then(narrate).finally(() => { keepOpportunity = false; });
+  },
+});
+$("suggest").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-opportunity]");
+  if (button) opportunityUI.show(button.dataset.opportunity);
+});
+// ---------- Island hero: the decision question first, the artists as the on-ramp ----------
+const HERO = {
+  en: { title: "Where should I open a business in Puerto Rico?", lede: "Qloo's taste for all 78 towns, against the businesses the Census already counts. Pick an industry.", or: "Or start with an artist" },
+  es: { title: "¿Dónde abro un negocio en Puerto Rico?", lede: "El gusto de Qloo en los 78 pueblos, frente a los negocios que el Census ya cuenta. Escoja una industria.", or: "O empiece por un artista" },
+};
+function renderHero(next) {
+  const lang = (next || ZemiConverse.voice().lang) === "es" ? "es" : "en";
+  $("hero-title").textContent = HERO[lang].title;
+  $("hero-lede").textContent = HERO[lang].lede;
+  $("hero-or").textContent = HERO[lang].or;
+  $("decide-start").innerHTML = ZemiOpportunity.industryChips(lang, { attr: "data-opportunity" });
+}
+renderHero();
+// The voice menu's language pick is handled inside the voice module; the hero follows the picked value.
+$("talk-lang").addEventListener("change", (event) => renderHero(event.target.value));
+$("decide-start").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-opportunity]");
+  if (!button) return;
+  unlockAudio();
+  opportunityUI.show(button.dataset.opportunity);
+});
+coastalUI = ZemiCoastal.mount({ viewer, Cesium, onHome: goHome, onPlaces: showCatalog,
+  onMapMode: mode => { if (mode !== "places" && styleName === "eagle") setStyle("satellite"); } });
+weatherUI = ZemiWeather.mount({ viewer, Cesium,
+  fetchJson: (url) => fetch(url).then((res) => (res.ok ? res.json() : Promise.reject(new Error(String(res.status))))) });
+// ---------- Missions: a tour that plays itself and ends on a Qloo place ----------
+const missions = ZemiMissions.create({
+  select: (town) => select(town),
+  showCatalog: (data) => showCatalog(data),
+  openFoundPlace: (place, town) => openFoundPlace(place, town),
+  fetchJson: (url, body) => fetch(url, body ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) } : undefined)
+    .then((res) => (res.ok ? res.json() : Promise.reject(new Error(String(res.status))))),
+  say: async (text) => { showCaption("zemi", text); await speak(text, ZemiConverse.voice()); },
+  voiceLang: (lang) => { if (ZemiConverse.voice().lang !== lang) { ZemiConverse.choose(lang, ZemiConverse.voice().gender); renderHero(); } },
+  onStart: (mission) => {
+    for (const button of document.querySelectorAll("[data-mission]")) button.setAttribute("aria-pressed", String(button.dataset.mission === mission.id));
+    $("journey-status").textContent = "";
+  },
+  onStop: () => { stopSpeaking(); hideCaption(); for (const button of document.querySelectorAll("[data-mission]")) button.setAttribute("aria-pressed", "false"); },
+  onEnd: () => { for (const button of document.querySelectorAll("[data-mission]")) button.setAttribute("aria-pressed", "false"); captionTimer = setTimeout(hideCaption, 6000); },
+});
+$("missions").innerHTML = ZemiMissions.chips(ZemiConverse.voice().lang);
+async function playMission(id) {
+  await unlockAudio();
+  ZemiApp.stopSpeaking?.();
+  missions.play(id);
+}
+$("missions").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-mission]");
+  if (!button) return;
+  if (button.getAttribute("aria-pressed") === "true") missions.stop();
+  else playMission(button.dataset.mission);
+});
+// Any touch on the map, a key, or typing a question hands the page back to the person.
+for (const name of ["pointerdown", "wheel", "touchstart"]) viewer.container.addEventListener(name, () => missions.stop(), { capture: true, passive: true });
+window.addEventListener("keydown", () => missions.stop(), true);
+$("q").addEventListener("focus", () => missions.stop());
+$("picks-more").addEventListener("click", () => missions.stop());
+// Embedded on the front page, or opened from a shared ?mission= link: the browser allows sound
+// only after a tap, so one button starts the tour with the voice on.
+const embedded = new URLSearchParams(location.search).get("embed") === "1";
+if (embedded) document.documentElement.dataset.embed = "1";
+function offerMission(id, { embed = false } = {}) {
+  const box = $("embed-play");
+  $("embed-open").href = `/app?mission=${encodeURIComponent(id)}`;
+  $("embed-open").hidden = !embed;
+  box.hidden = false;
+  $("embed-play-btn").onclick = () => { box.hidden = true; playMission(id); };
+}
+// Active Atlantic storms near the island, from the National Hurricane Center. Usually none.
+fetch("/api/weather/storms").then((res) => (res.ok ? res.json() : null)).then((data) => weatherUI.drawStorms(data?.storms || [])).catch(() => {});
+main();
+</script>
+</body>
+</html>

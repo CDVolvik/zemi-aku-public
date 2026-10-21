@@ -1,0 +1,14 @@
+.env
+.env.*
+!.env.example
+.git
+node_modules
+tools
+voices
+docs
+test
+*.log
+.mcp.json
+cache/catalog
+cache/agent
+cache/testers

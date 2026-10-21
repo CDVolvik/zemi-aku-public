@@ -1,0 +1,13 @@
+{
+  "source": "NGA World Port Index · U.S. DOE mirror",
+  "url": "https://arcgis.netl.doe.gov/server/rest/services/Hosted/CCS_EJ_SJ_Data/FeatureServer/17",
+  "retrieved": "2026-10-08",
+  "note": "Harbor reference points, not individual passenger terminals. This snapshot is a selection, not a complete port directory.",
+  "ports": [
+    { "id": "11110", "name": "San Juan", "town": "San Juan", "unlocode": "PR SJU", "lon": -66.116667, "lat": 18.466667 },
+    { "id": "11260", "name": "Playa de Ponce", "town": "Ponce", "unlocode": "PR PSE", "lon": -66.616667, "lat": 17.983333 },
+    { "id": "11290", "name": "Mayagüez", "town": "Mayagüez", "unlocode": "PR MAZ", "lon": -67.15, "lat": 18.2 },
+    { "id": "11100", "name": "Arecibo", "town": "Arecibo", "unlocode": "PR ARE", "lon": -66.7, "lat": 18.483333 },
+    { "id": "11160", "name": "Bahía de Fajardo", "town": "Fajardo", "unlocode": "PR FAJ", "lon": -65.633333, "lat": 18.333333 }
+  ]
+}

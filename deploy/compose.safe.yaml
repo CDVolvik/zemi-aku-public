@@ -1,0 +1,27 @@
+# Public artist/map demo. Explicit overrides beat env_file, even if a dev .env is copied here.
+services:
+  app:
+    environment:
+      # In-app model agent (OpenRouter, key from the server .env): a measured turn costs about a quarter of a
+      # cent, so one dollar is roughly 400 turns a day. The key itself carries a hard total limit.
+      ZEMI_CHAT_USD_PER_DAY: "2"
+      # Full-duplex Deepgram Voice Agent (October 12): Deepgram owns listening, end of speech and
+      # interruption. The minutes cap is Deepgram credit (about $0.08 a minute, so under $20 on a day
+      # that uses all of it); ten minutes a session, so this is 24 conversations a day. Sized for a
+      # judging day on Carlos's instruction: the caps stop bots, never a judge. The dollar cap is the
+      # model's share of the chat ledger above.
+      ZEMI_VOICE_CHAT_USD_PER_DAY: "1"
+      ZEMI_VOICE_MINUTES_PER_DAY: "240"
+      # Natural voices (Aura-2): about $9 a day at most; past the cap the page uses the device voice.
+      ZEMI_SPEAK_CHARS_PER_DAY: "300000"
+      # Live transcription for browsers that cannot run the voice agent: under $3 a day at most.
+      ZEMI_LISTEN_MINUTES_PER_DAY: "360"
+      ZEMI_QLOO_CALLS_PER_DAY: "600"
+      ZEMI_PHOTOREAL_ENABLED: "0"
+      ZEMI_AIS_ENABLED: "1"
+      # Off until Qloo confirms in writing that a self-hosted MCP endpoint is allowed (Terms §5).
+      ZEMI_MCP_ENABLED: "0"
+      ZEMI_MCP_CALLS_PER_DAY: "150"
+      ZEMI_MCP_QLOO_RESERVE: "200"
+  caddy:
+    image: caddy:2@sha256:f2a1290d0463aad60660d4ec134943f183ee2a5f6c3eb7bf32dd984f2f020772

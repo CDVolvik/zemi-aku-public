@@ -1,0 +1,26 @@
+/* Places / Ships / Ports live in the map menu (plan item 1: the rail is gone, the decision is the default path). */
+#explore-nav { display: grid; gap: 2px; }
+#explore-nav button { display: flex; width: 100%; align-items: center; gap: 8px; border: 0; background: transparent; border-radius: 10px; padding: 9px 10px; text-align: left; color: var(--ink); }
+#explore-nav button span { width: 18px; font-size: 14px; line-height: 1; text-align: center; color: var(--soft); }
+#explore-nav button[aria-pressed="true"] { background: var(--wash); }
+#coastal-panel { position: absolute; z-index: 4; top: calc(12px + var(--top)); bottom: calc(12px + var(--bottom)); left: calc(12px + var(--left)); width: min(var(--panel-w, 400px), calc(100% - 24px)); display: flex; flex-direction: column; overflow: hidden; border-radius: var(--radius); background: var(--paper); box-shadow: var(--shadow); min-width: 0; }
+#coastal-panel .step { padding-top: 18px; }
+#coastal-search, #coastal-artist { box-sizing: border-box; width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--line); background: var(--field); border-radius: 12px; }
+.coast-card { border: 1px solid var(--line); padding: 12px; border-radius: 12px; text-align: left; background: var(--field); min-height: 56px; }
+.coast-card strong, .coast-card span { display: block; }
+.coast-card span { margin-top: 3px; color: var(--muted); font-size: 12px; }
+.coast-card[aria-pressed="true"] { border-color: var(--link); }
+#coastal-detail { padding: 14px; background: var(--field); border-radius: 14px; }
+#coastal-detail h3 { margin: 0 0 8px; font-size: 18px; }
+#coastal-detail p { margin: 8px 0; }
+#coastal-detail .seg { flex-wrap: wrap; margin: 12px 0; }
+#coastal-detail .seg button { min-height: 44px; }
+#coastal-detail label { display: block; margin: 12px 0 6px; font-size: 12px; color: var(--soft); }
+#coastal-go, [data-ship-port] { width: 100%; min-height: 44px; margin-top: 12px; padding: 10px 12px; border: 0; border-radius: 12px; color: var(--primary-ink); background: var(--primary); }
+#coast-return { margin: 10px 14px 0; align-self: flex-start; min-height: 44px; }
+#coastal-source a { color: var(--link); }
+@media (max-width: 720px) {
+  #panel, #coastal-panel { top: auto; left: calc(8px + var(--left)); right: calc(8px + var(--right)); width: auto; }
+  #coastal-panel { bottom: calc(16px + var(--bottom)); max-height: calc(100% - 210px - var(--top) - var(--bottom)); }
+  #coastal-search, #coastal-artist { font-size: 16px; }
+}

@@ -1,0 +1,31 @@
+{
+  "name": "qloo-local-taste",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "packageManager": "pnpm@10.14.0",
+  "engines": {
+    "node": ">=22.19"
+  },
+  "scripts": {
+    "smoke": "node scripts/smoke-qloo.mjs",
+    "coverage": "node scripts/coverage-check.mjs",
+    "eagle": "node scripts/serve-eagle.mjs",
+    "qloo": "node scripts/qloo.mjs",
+    "q": "node scripts/q.mjs",
+    "test": "node --test test/*.test.mjs"
+  },
+  "pnpm": {
+    "overrides": {
+      "undici": "8.10.2",
+      "brace-expansion": "5.0.12"
+    }
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.131.0",
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "@qloo/qloo-harness": "^0.1.26",
+    "ws": "^8.22.0"
+  }
+}

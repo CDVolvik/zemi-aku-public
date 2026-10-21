@@ -1,0 +1,15 @@
+{
+  admin off
+}
+
+{$ZEMI_HOST} {
+  header {
+    Strict-Transport-Security "max-age=31536000"
+    X-Content-Type-Options "nosniff"
+    X-Frame-Options "SAMEORIGIN"
+    Content-Security-Policy "frame-ancestors 'self'"
+    Referrer-Policy "strict-origin-when-cross-origin"
+    -Server
+  }
+  reverse_proxy app:8080
+}

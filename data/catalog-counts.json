@@ -1,0 +1,1073 @@
+{
+  "measured": "2026-10-07",
+  "source": "Qloo /v2/insights, filter.type place, filter.location.query '<town>, Puerto Rico', take 50, every page; kept when geocode.admin2_region is the town",
+  "total": 7717,
+  "towns": [
+    {
+      "town": "San Juan",
+      "total": 1353,
+      "band": "deep",
+      "categories": {
+        "food": 941,
+        "shopping": 131,
+        "stay": 95,
+        "groceries": 35,
+        "culture": 24,
+        "fun": 21,
+        "drinks": 18,
+        "outdoors": 15,
+        "health": 10,
+        "other": 63
+      }
+    },
+    {
+      "town": "Bayamón",
+      "total": 467,
+      "band": "deep",
+      "categories": {
+        "food": 321,
+        "shopping": 81,
+        "groceries": 23,
+        "fun": 8,
+        "health": 6,
+        "drinks": 5,
+        "stay": 4,
+        "outdoors": 4,
+        "culture": 1,
+        "other": 14
+      }
+    },
+    {
+      "town": "Carolina",
+      "total": 373,
+      "band": "deep",
+      "categories": {
+        "food": 229,
+        "shopping": 48,
+        "groceries": 27,
+        "stay": 25,
+        "fun": 7,
+        "drinks": 6,
+        "health": 6,
+        "outdoors": 3,
+        "culture": 2,
+        "other": 20
+      }
+    },
+    {
+      "town": "Ponce",
+      "total": 357,
+      "band": "deep",
+      "categories": {
+        "food": 240,
+        "shopping": 47,
+        "stay": 16,
+        "groceries": 16,
+        "fun": 14,
+        "culture": 9,
+        "health": 5,
+        "outdoors": 3,
+        "drinks": 2,
+        "other": 5
+      }
+    },
+    {
+      "town": "Caguas",
+      "total": 323,
+      "band": "deep",
+      "categories": {
+        "food": 237,
+        "shopping": 44,
+        "groceries": 15,
+        "health": 6,
+        "stay": 3,
+        "fun": 3,
+        "culture": 3,
+        "drinks": 2,
+        "outdoors": 2,
+        "other": 8
+      }
+    },
+    {
+      "town": "Guaynabo",
+      "total": 259,
+      "band": "deep",
+      "categories": {
+        "food": 179,
+        "shopping": 36,
+        "groceries": 9,
+        "health": 6,
+        "drinks": 5,
+        "fun": 4,
+        "outdoors": 3,
+        "stay": 1,
+        "culture": 1,
+        "other": 15
+      }
+    },
+    {
+      "town": "Mayagüez",
+      "total": 216,
+      "band": "deep",
+      "categories": {
+        "food": 147,
+        "shopping": 32,
+        "groceries": 12,
+        "stay": 6,
+        "fun": 5,
+        "health": 4,
+        "outdoors": 2,
+        "drinks": 1,
+        "culture": 1,
+        "other": 6
+      }
+    },
+    {
+      "town": "Aguadilla",
+      "total": 198,
+      "band": "broad",
+      "categories": {
+        "food": 141,
+        "stay": 15,
+        "shopping": 13,
+        "groceries": 6,
+        "drinks": 5,
+        "fun": 4,
+        "outdoors": 2,
+        "culture": 1,
+        "health": 1,
+        "other": 10
+      }
+    },
+    {
+      "town": "Arecibo",
+      "total": 175,
+      "band": "broad",
+      "categories": {
+        "food": 132,
+        "shopping": 9,
+        "stay": 7,
+        "groceries": 6,
+        "drinks": 5,
+        "fun": 4,
+        "outdoors": 1,
+        "culture": 1,
+        "other": 10
+      }
+    },
+    {
+      "town": "Cabo Rojo",
+      "total": 169,
+      "band": "broad",
+      "categories": {
+        "food": 115,
+        "stay": 24,
+        "fun": 9,
+        "groceries": 7,
+        "outdoors": 6,
+        "drinks": 3,
+        "culture": 2,
+        "shopping": 1,
+        "health": 1,
+        "other": 1
+      }
+    },
+    {
+      "town": "Fajardo",
+      "total": 140,
+      "band": "broad",
+      "categories": {
+        "food": 86,
+        "shopping": 12,
+        "fun": 12,
+        "stay": 9,
+        "groceries": 5,
+        "outdoors": 5,
+        "health": 2,
+        "drinks": 1,
+        "other": 8
+      }
+    },
+    {
+      "town": "Aguada",
+      "total": 136,
+      "band": "broad",
+      "categories": {
+        "food": 108,
+        "stay": 8,
+        "shopping": 7,
+        "groceries": 4,
+        "fun": 3,
+        "outdoors": 2,
+        "drinks": 1,
+        "culture": 1,
+        "other": 2
+      }
+    },
+    {
+      "town": "Humacao",
+      "total": 129,
+      "band": "broad",
+      "categories": {
+        "food": 91,
+        "shopping": 10,
+        "groceries": 7,
+        "stay": 6,
+        "outdoors": 5,
+        "health": 3,
+        "drinks": 2,
+        "fun": 2,
+        "culture": 1,
+        "other": 2
+      }
+    },
+    {
+      "town": "Hatillo",
+      "total": 125,
+      "band": "broad",
+      "categories": {
+        "food": 93,
+        "shopping": 18,
+        "groceries": 4,
+        "stay": 3,
+        "health": 3,
+        "fun": 2,
+        "outdoors": 1,
+        "other": 1
+      }
+    },
+    {
+      "town": "Toa Baja",
+      "total": 123,
+      "band": "broad",
+      "categories": {
+        "food": 95,
+        "groceries": 9,
+        "shopping": 7,
+        "stay": 4,
+        "fun": 1,
+        "outdoors": 1,
+        "culture": 1,
+        "other": 5
+      }
+    },
+    {
+      "town": "Isabela",
+      "total": 122,
+      "band": "broad",
+      "categories": {
+        "food": 81,
+        "stay": 14,
+        "shopping": 7,
+        "fun": 6,
+        "groceries": 4,
+        "drinks": 3,
+        "outdoors": 1,
+        "health": 1,
+        "other": 5
+      }
+    },
+    {
+      "town": "Dorado",
+      "total": 112,
+      "band": "broad",
+      "categories": {
+        "food": 77,
+        "stay": 9,
+        "shopping": 9,
+        "drinks": 4,
+        "groceries": 3,
+        "fun": 3,
+        "health": 2,
+        "outdoors": 1,
+        "other": 4
+      }
+    },
+    {
+      "town": "Rincón",
+      "total": 106,
+      "band": "broad",
+      "categories": {
+        "food": 72,
+        "stay": 22,
+        "drinks": 2,
+        "groceries": 2,
+        "fun": 2,
+        "culture": 2,
+        "outdoors": 1,
+        "other": 3
+      }
+    },
+    {
+      "town": "Cayey",
+      "total": 97,
+      "band": "some",
+      "categories": {
+        "food": 73,
+        "shopping": 11,
+        "drinks": 3,
+        "groceries": 3,
+        "fun": 2,
+        "culture": 2,
+        "stay": 1,
+        "health": 1,
+        "other": 1
+      }
+    },
+    {
+      "town": "Río Grande",
+      "total": 94,
+      "band": "some",
+      "categories": {
+        "food": 59,
+        "stay": 15,
+        "fun": 5,
+        "shopping": 4,
+        "groceries": 3,
+        "drinks": 2,
+        "outdoors": 1,
+        "other": 5
+      }
+    },
+    {
+      "town": "Vega Baja",
+      "total": 94,
+      "band": "some",
+      "categories": {
+        "food": 73,
+        "groceries": 4,
+        "fun": 4,
+        "stay": 3,
+        "drinks": 2,
+        "shopping": 1,
+        "outdoors": 1,
+        "other": 6
+      }
+    },
+    {
+      "town": "Manatí",
+      "total": 89,
+      "band": "some",
+      "categories": {
+        "food": 60,
+        "shopping": 10,
+        "stay": 4,
+        "groceries": 4,
+        "fun": 4,
+        "outdoors": 2,
+        "health": 2,
+        "drinks": 1,
+        "culture": 1,
+        "other": 1
+      }
+    },
+    {
+      "town": "Barceloneta",
+      "total": 85,
+      "band": "some",
+      "categories": {
+        "food": 52,
+        "shopping": 25,
+        "groceries": 2,
+        "fun": 2,
+        "health": 1,
+        "other": 3
+      }
+    },
+    {
+      "town": "Guayama",
+      "total": 82,
+      "band": "some",
+      "categories": {
+        "food": 57,
+        "shopping": 10,
+        "drinks": 3,
+        "groceries": 3,
+        "stay": 1,
+        "fun": 1,
+        "outdoors": 1,
+        "culture": 1,
+        "health": 1,
+        "other": 4
+      }
+    },
+    {
+      "town": "San Sebastián",
+      "total": 73,
+      "band": "some",
+      "categories": {
+        "food": 54,
+        "shopping": 6,
+        "groceries": 4,
+        "stay": 3,
+        "fun": 2,
+        "drinks": 1,
+        "outdoors": 1,
+        "culture": 1,
+        "other": 1
+      }
+    },
+    {
+      "town": "Trujillo Alto",
+      "total": 71,
+      "band": "some",
+      "categories": {
+        "food": 52,
+        "shopping": 8,
+        "groceries": 7,
+        "fun": 2,
+        "drinks": 1,
+        "stay": 1
+      }
+    },
+    {
+      "town": "Canóvanas",
+      "total": 69,
+      "band": "some",
+      "categories": {
+        "food": 45,
+        "shopping": 16,
+        "groceries": 2,
+        "drinks": 1,
+        "stay": 1,
+        "fun": 1,
+        "other": 3
+      }
+    },
+    {
+      "town": "Salinas",
+      "total": 67,
+      "band": "some",
+      "categories": {
+        "food": 50,
+        "stay": 3,
+        "groceries": 3,
+        "drinks": 2,
+        "shopping": 2,
+        "fun": 2,
+        "outdoors": 1,
+        "culture": 1,
+        "other": 3
+      }
+    },
+    {
+      "town": "Luquillo",
+      "total": 64,
+      "band": "some",
+      "categories": {
+        "food": 39,
+        "stay": 11,
+        "drinks": 4,
+        "fun": 3,
+        "groceries": 2,
+        "shopping": 1,
+        "outdoors": 1,
+        "other": 3
+      }
+    },
+    {
+      "town": "Yauco",
+      "total": 64,
+      "band": "some",
+      "categories": {
+        "food": 44,
+        "shopping": 6,
+        "groceries": 4,
+        "fun": 3,
+        "stay": 2,
+        "outdoors": 1,
+        "other": 4
+      }
+    },
+    {
+      "town": "Toa Alta",
+      "total": 63,
+      "band": "some",
+      "categories": {
+        "food": 49,
+        "drinks": 5,
+        "groceries": 5,
+        "shopping": 3,
+        "culture": 1
+      }
+    },
+    {
+      "town": "Loíza",
+      "total": 62,
+      "band": "some",
+      "categories": {
+        "food": 45,
+        "stay": 5,
+        "shopping": 3,
+        "fun": 3,
+        "drinks": 2,
+        "outdoors": 1,
+        "culture": 1,
+        "other": 2
+      }
+    },
+    {
+      "town": "Quebradillas",
+      "total": 60,
+      "band": "some",
+      "categories": {
+        "food": 45,
+        "stay": 4,
+        "shopping": 3,
+        "groceries": 2,
+        "fun": 2,
+        "outdoors": 1,
+        "other": 3
+      }
+    },
+    {
+      "town": "Vieques",
+      "total": 60,
+      "band": "some",
+      "categories": {
+        "food": 29,
+        "stay": 25,
+        "drinks": 2,
+        "fun": 2,
+        "outdoors": 2
+      }
+    },
+    {
+      "town": "Juana Díaz",
+      "total": 59,
+      "band": "some",
+      "categories": {
+        "food": 41,
+        "stay": 6,
+        "shopping": 4,
+        "groceries": 3,
+        "drinks": 2,
+        "fun": 1,
+        "culture": 1,
+        "health": 1
+      }
+    },
+    {
+      "town": "Añasco",
+      "total": 59,
+      "band": "some",
+      "categories": {
+        "food": 48,
+        "stay": 4,
+        "groceries": 3,
+        "outdoors": 2,
+        "other": 2
+      }
+    },
+    {
+      "town": "Vega Alta",
+      "total": 58,
+      "band": "some",
+      "categories": {
+        "food": 42,
+        "drinks": 4,
+        "groceries": 4,
+        "shopping": 4,
+        "stay": 1,
+        "fun": 1,
+        "outdoors": 1,
+        "other": 1
+      }
+    },
+    {
+      "town": "Naranjito",
+      "total": 57,
+      "band": "some",
+      "categories": {
+        "food": 44,
+        "drinks": 9,
+        "groceries": 2,
+        "shopping": 1,
+        "health": 1
+      }
+    },
+    {
+      "town": "San Germán",
+      "total": 55,
+      "band": "some",
+      "categories": {
+        "food": 42,
+        "stay": 3,
+        "groceries": 3,
+        "shopping": 2,
+        "fun": 2,
+        "culture": 1,
+        "health": 1,
+        "other": 1
+      }
+    },
+    {
+      "town": "Moca",
+      "total": 55,
+      "band": "some",
+      "categories": {
+        "food": 48,
+        "groceries": 2,
+        "shopping": 2,
+        "fun": 1,
+        "outdoors": 1,
+        "culture": 1
+      }
+    },
+    {
+      "town": "Cidra",
+      "total": 54,
+      "band": "some",
+      "categories": {
+        "food": 44,
+        "drinks": 2,
+        "groceries": 2,
+        "shopping": 2,
+        "stay": 1,
+        "outdoors": 1,
+        "other": 2
+      }
+    },
+    {
+      "town": "San Lorenzo",
+      "total": 53,
+      "band": "some",
+      "categories": {
+        "food": 45,
+        "groceries": 3,
+        "shopping": 2,
+        "fun": 2,
+        "drinks": 1
+      }
+    },
+    {
+      "town": "Santa Isabel",
+      "total": 53,
+      "band": "some",
+      "categories": {
+        "food": 41,
+        "shopping": 6,
+        "stay": 2,
+        "drinks": 1,
+        "groceries": 1,
+        "fun": 1,
+        "health": 1
+      }
+    },
+    {
+      "town": "Camuy",
+      "total": 52,
+      "band": "some",
+      "categories": {
+        "food": 43,
+        "groceries": 2,
+        "fun": 2,
+        "drinks": 1,
+        "stay": 1,
+        "shopping": 1,
+        "outdoors": 1,
+        "other": 1
+      }
+    },
+    {
+      "town": "Corozal",
+      "total": 49,
+      "band": "some",
+      "categories": {
+        "food": 43,
+        "drinks": 2,
+        "shopping": 2,
+        "groceries": 1,
+        "other": 1
+      }
+    },
+    {
+      "town": "Jayuya",
+      "total": 49,
+      "band": "some",
+      "categories": {
+        "food": 31,
+        "stay": 12,
+        "fun": 3,
+        "shopping": 2,
+        "other": 1
+      }
+    },
+    {
+      "town": "Las Piedras",
+      "total": 49,
+      "band": "some",
+      "categories": {
+        "food": 38,
+        "drinks": 2,
+        "groceries": 2,
+        "shopping": 2,
+        "fun": 1,
+        "health": 1,
+        "other": 3
+      }
+    },
+    {
+      "town": "Coamo",
+      "total": 47,
+      "band": "some",
+      "categories": {
+        "food": 36,
+        "groceries": 3,
+        "drinks": 2,
+        "stay": 1,
+        "shopping": 1,
+        "fun": 1,
+        "culture": 1,
+        "other": 2
+      }
+    },
+    {
+      "town": "Lajas",
+      "total": 47,
+      "band": "some",
+      "categories": {
+        "food": 30,
+        "stay": 5,
+        "groceries": 3,
+        "fun": 3,
+        "outdoors": 2,
+        "health": 1,
+        "other": 3
+      }
+    },
+    {
+      "town": "Culebra",
+      "total": 47,
+      "band": "some",
+      "categories": {
+        "food": 20,
+        "stay": 17,
+        "outdoors": 6,
+        "groceries": 2,
+        "fun": 1,
+        "other": 1
+      }
+    },
+    {
+      "town": "Gurabo",
+      "total": 45,
+      "band": "some",
+      "categories": {
+        "food": 34,
+        "groceries": 3,
+        "shopping": 3,
+        "fun": 3,
+        "other": 2
+      }
+    },
+    {
+      "town": "Lares",
+      "total": 44,
+      "band": "some",
+      "categories": {
+        "food": 34,
+        "stay": 2,
+        "groceries": 2,
+        "shopping": 2,
+        "fun": 1,
+        "culture": 1,
+        "other": 2
+      }
+    },
+    {
+      "town": "Aibonito",
+      "total": 44,
+      "band": "some",
+      "categories": {
+        "food": 34,
+        "groceries": 3,
+        "drinks": 2,
+        "stay": 2,
+        "shopping": 2,
+        "outdoors": 1
+      }
+    },
+    {
+      "town": "Barranquitas",
+      "total": 44,
+      "band": "some",
+      "categories": {
+        "food": 36,
+        "drinks": 2,
+        "stay": 2,
+        "groceries": 1,
+        "shopping": 1,
+        "outdoors": 1,
+        "other": 1
+      }
+    },
+    {
+      "town": "Utuado",
+      "total": 40,
+      "band": "some",
+      "categories": {
+        "food": 32,
+        "groceries": 3,
+        "drinks": 1,
+        "stay": 1,
+        "fun": 1,
+        "other": 2
+      }
+    },
+    {
+      "town": "Juncos",
+      "total": 40,
+      "band": "some",
+      "categories": {
+        "food": 33,
+        "groceries": 3,
+        "shopping": 3,
+        "other": 1
+      }
+    },
+    {
+      "town": "Morovis",
+      "total": 38,
+      "band": "some",
+      "categories": {
+        "food": 31,
+        "groceries": 3,
+        "drinks": 2,
+        "stay": 1,
+        "shopping": 1
+      }
+    },
+    {
+      "town": "Naguabo",
+      "total": 38,
+      "band": "some",
+      "categories": {
+        "food": 29,
+        "stay": 3,
+        "groceries": 3,
+        "fun": 2,
+        "shopping": 1
+      }
+    },
+    {
+      "town": "Guánica",
+      "total": 38,
+      "band": "some",
+      "categories": {
+        "food": 27,
+        "stay": 3,
+        "fun": 3,
+        "outdoors": 2,
+        "culture": 1,
+        "other": 2
+      }
+    },
+    {
+      "town": "Cataño",
+      "total": 36,
+      "band": "some",
+      "categories": {
+        "food": 29,
+        "groceries": 2,
+        "fun": 2,
+        "other": 3
+      }
+    },
+    {
+      "town": "Adjuntas",
+      "total": 35,
+      "band": "some",
+      "categories": {
+        "food": 26,
+        "stay": 3,
+        "fun": 2,
+        "other": 4
+      }
+    },
+    {
+      "town": "Hormigueros",
+      "total": 34,
+      "band": "some",
+      "categories": {
+        "food": 28,
+        "groceries": 3,
+        "stay": 2,
+        "drinks": 1
+      }
+    },
+    {
+      "town": "Ciales",
+      "total": 33,
+      "band": "some",
+      "categories": {
+        "food": 28,
+        "fun": 2,
+        "stay": 1,
+        "outdoors": 1,
+        "culture": 1
+      }
+    },
+    {
+      "town": "Yabucoa",
+      "total": 33,
+      "band": "some",
+      "categories": {
+        "food": 26,
+        "shopping": 3,
+        "stay": 2,
+        "groceries": 2
+      }
+    },
+    {
+      "town": "Orocovis",
+      "total": 32,
+      "band": "some",
+      "categories": {
+        "food": 26,
+        "fun": 3,
+        "drinks": 1,
+        "stay": 1,
+        "other": 1
+      }
+    },
+    {
+      "town": "Patillas",
+      "total": 30,
+      "band": "some",
+      "categories": {
+        "food": 23,
+        "stay": 4,
+        "drinks": 1,
+        "fun": 1,
+        "other": 1
+      }
+    },
+    {
+      "town": "Aguas Buenas",
+      "total": 26,
+      "band": "some",
+      "categories": {
+        "food": 23,
+        "groceries": 1,
+        "outdoors": 1,
+        "other": 1
+      }
+    },
+    {
+      "town": "Villalba",
+      "total": 23,
+      "band": "thin",
+      "categories": {
+        "food": 22,
+        "shopping": 1
+      }
+    },
+    {
+      "town": "Guayanilla",
+      "total": 22,
+      "band": "thin",
+      "categories": {
+        "food": 21,
+        "stay": 1
+      }
+    },
+    {
+      "town": "Sabana Grande",
+      "total": 21,
+      "band": "thin",
+      "categories": {
+        "food": 16,
+        "groceries": 3,
+        "outdoors": 1,
+        "other": 1
+      }
+    },
+    {
+      "town": "Arroyo",
+      "total": 21,
+      "band": "thin",
+      "categories": {
+        "food": 13,
+        "groceries": 3,
+        "drinks": 1,
+        "stay": 1,
+        "shopping": 1,
+        "fun": 1,
+        "other": 1
+      }
+    },
+    {
+      "town": "Peñuelas",
+      "total": 20,
+      "band": "thin",
+      "categories": {
+        "food": 14,
+        "groceries": 2,
+        "shopping": 2,
+        "drinks": 1,
+        "outdoors": 1
+      }
+    },
+    {
+      "town": "Comerío",
+      "total": 16,
+      "band": "thin",
+      "categories": {
+        "food": 13,
+        "stay": 1,
+        "groceries": 1,
+        "fun": 1
+      }
+    },
+    {
+      "town": "Ceiba",
+      "total": 15,
+      "band": "thin",
+      "categories": {
+        "food": 13,
+        "stay": 1,
+        "fun": 1
+      }
+    },
+    {
+      "town": "Maunabo",
+      "total": 10,
+      "band": "thin",
+      "categories": {
+        "food": 6,
+        "stay": 2,
+        "drinks": 1,
+        "outdoors": 1
+      }
+    },
+    {
+      "town": "Florida",
+      "total": 9,
+      "band": "thin",
+      "categories": {
+        "food": 6,
+        "outdoors": 2,
+        "groceries": 1
+      }
+    },
+    {
+      "town": "Las Marías",
+      "total": 6,
+      "band": "thin",
+      "categories": {
+        "food": 6
+      }
+    },
+    {
+      "town": "Maricao",
+      "total": 4,
+      "band": "thin",
+      "categories": {
+        "food": 2,
+        "stay": 1,
+        "fun": 1
+      }
+    }
+  ]
+}

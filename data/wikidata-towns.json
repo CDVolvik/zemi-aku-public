@@ -1,0 +1,474 @@
+{
+  "source": "Wikidata (CC0): population P1082; landmarks are items located in the town (P131) with coordinates (P625) and a photo (P18)",
+  "measured": "2026-10-07",
+  "towns": [
+    {
+      "town": "San Juan",
+      "qid": "Q41211",
+      "population": 342259,
+      "landmarks": 227
+    },
+    {
+      "town": "Bayamón",
+      "qid": "Q739675",
+      "population": 185187,
+      "landmarks": 16
+    },
+    {
+      "town": "Carolina",
+      "qid": "Q990293",
+      "population": 154815,
+      "landmarks": 14
+    },
+    {
+      "town": "Ponce",
+      "qid": "Q864024",
+      "population": 137491,
+      "landmarks": 135
+    },
+    {
+      "town": "Caguas",
+      "qid": "Q527268",
+      "population": 127244,
+      "landmarks": 18
+    },
+    {
+      "town": "Guaynabo",
+      "qid": "Q590060",
+      "population": 89780,
+      "landmarks": 14
+    },
+    {
+      "town": "Mayagüez",
+      "qid": "Q632727",
+      "population": 73077,
+      "landmarks": 34
+    },
+    {
+      "town": "Aguadilla",
+      "qid": "Q397826",
+      "population": 55101,
+      "landmarks": 18
+    },
+    {
+      "town": "Arecibo",
+      "qid": "Q640728",
+      "population": 87754,
+      "landmarks": 32
+    },
+    {
+      "town": "Cabo Rojo",
+      "qid": "Q1019607",
+      "population": 47158,
+      "landmarks": 8
+    },
+    {
+      "town": "Fajardo",
+      "qid": "Q542833",
+      "population": 32124,
+      "landmarks": 6
+    },
+    {
+      "town": "Aguada",
+      "qid": "Q397789",
+      "population": 38136,
+      "landmarks": 9
+    },
+    {
+      "town": "Humacao",
+      "qid": "Q2307535",
+      "population": 50896,
+      "landmarks": 11
+    },
+    {
+      "town": "Hatillo",
+      "qid": "Q2412723",
+      "population": 38486,
+      "landmarks": 4
+    },
+    {
+      "town": "Toa Baja",
+      "qid": "Q2238070",
+      "population": 75293,
+      "landmarks": 11
+    },
+    {
+      "town": "Isabela",
+      "qid": "Q2307520",
+      "population": 42943,
+      "landmarks": 7
+    },
+    {
+      "town": "Dorado",
+      "qid": "Q2217567",
+      "population": 35879,
+      "landmarks": 10
+    },
+    {
+      "town": "Rincón",
+      "qid": "Q1815896",
+      "population": 15187,
+      "landmarks": 3
+    },
+    {
+      "town": "Cayey",
+      "qid": "Q2307508",
+      "population": 41652,
+      "landmarks": 8
+    },
+    {
+      "town": "Río Grande",
+      "qid": "Q979996",
+      "population": 47060,
+      "landmarks": 5
+    },
+    {
+      "town": "Vega Baja",
+      "qid": "Q2179051",
+      "population": 54414,
+      "landmarks": 12
+    },
+    {
+      "town": "Manatí",
+      "qid": "Q674599",
+      "population": 39492,
+      "landmarks": 12
+    },
+    {
+      "town": "Barceloneta",
+      "qid": "Q2025087",
+      "population": 22657,
+      "landmarks": 3
+    },
+    {
+      "town": "Guayama",
+      "qid": "Q1870997",
+      "population": 36614,
+      "landmarks": 10
+    },
+    {
+      "town": "San Sebastián",
+      "qid": "Q2413209",
+      "population": 39345,
+      "landmarks": 11
+    },
+    {
+      "town": "Trujillo Alto",
+      "qid": "Q1150895",
+      "population": 67740,
+      "landmarks": 2
+    },
+    {
+      "town": "Canóvanas",
+      "qid": "Q2361552",
+      "population": 42337,
+      "landmarks": 3
+    },
+    {
+      "town": "Salinas",
+      "qid": "Q637330",
+      "population": 25789,
+      "landmarks": 8
+    },
+    {
+      "town": "Luquillo",
+      "qid": "Q1984618",
+      "population": 17781,
+      "landmarks": 6
+    },
+    {
+      "town": "Yauco",
+      "qid": "Q368526",
+      "population": 34172,
+      "landmarks": 11
+    },
+    {
+      "town": "Toa Alta",
+      "qid": "Q2485509",
+      "population": 66852,
+      "landmarks": 8
+    },
+    {
+      "town": "Loíza",
+      "qid": "Q1853983",
+      "population": 23693,
+      "landmarks": 4
+    },
+    {
+      "town": "Quebradillas",
+      "qid": "Q2057872",
+      "population": 23638,
+      "landmarks": 2
+    },
+    {
+      "town": "Vieques",
+      "qid": "Q737624",
+      "population": 8249,
+      "landmarks": 14
+    },
+    {
+      "town": "Juana Díaz",
+      "qid": "Q2361577",
+      "population": 46538,
+      "landmarks": 6
+    },
+    {
+      "town": "Añasco",
+      "qid": "Q2390910",
+      "population": 25596,
+      "landmarks": 1
+    },
+    {
+      "town": "Vega Alta",
+      "qid": "Q2640843",
+      "population": 35395,
+      "landmarks": 9
+    },
+    {
+      "town": "Naranjito",
+      "qid": "Q2623972",
+      "population": 29241,
+      "landmarks": 8
+    },
+    {
+      "town": "San Germán",
+      "qid": "Q1598808",
+      "population": 31879,
+      "landmarks": 11
+    },
+    {
+      "town": "Moca",
+      "qid": "Q2288079",
+      "population": 37460,
+      "landmarks": 5
+    },
+    {
+      "town": "Cidra",
+      "qid": "Q2485552",
+      "population": 39970,
+      "landmarks": 1
+    },
+    {
+      "town": "San Lorenzo",
+      "qid": "Q788749",
+      "population": 37693,
+      "landmarks": 3
+    },
+    {
+      "town": "Santa Isabel",
+      "qid": "Q2485604",
+      "population": 20281,
+      "landmarks": 2
+    },
+    {
+      "town": "Camuy",
+      "qid": "Q2380860",
+      "population": 32827,
+      "landmarks": 10
+    },
+    {
+      "town": "Corozal",
+      "qid": "Q1884385",
+      "population": 34571,
+      "landmarks": 25
+    },
+    {
+      "town": "Jayuya",
+      "qid": "Q2095818",
+      "population": 14779,
+      "landmarks": 2
+    },
+    {
+      "town": "Las Piedras",
+      "qid": "Q969918",
+      "population": 35180,
+      "landmarks": 2
+    },
+    {
+      "town": "Coamo",
+      "qid": "Q1942303",
+      "population": 34668,
+      "landmarks": 13
+    },
+    {
+      "town": "Lajas",
+      "qid": "Q1832296",
+      "population": 23334,
+      "landmarks": 7
+    },
+    {
+      "town": "Culebra",
+      "qid": "Q130298273",
+      "population": 1792,
+      "landmarks": 11
+    },
+    {
+      "town": "Gurabo",
+      "qid": "Q2159630",
+      "population": 40622,
+      "landmarks": 3
+    },
+    {
+      "town": "Lares",
+      "qid": "Q1026894",
+      "population": 28105,
+      "landmarks": 12
+    },
+    {
+      "town": "Aibonito",
+      "qid": "Q2485628",
+      "population": 24637,
+      "landmarks": 7
+    },
+    {
+      "town": "Barranquitas",
+      "qid": "Q2485615",
+      "population": 28983,
+      "landmarks": 8
+    },
+    {
+      "town": "Utuado",
+      "qid": "Q617096",
+      "population": 28287,
+      "landmarks": 10
+    },
+    {
+      "town": "Juncos",
+      "qid": "Q2347667",
+      "population": 37012,
+      "landmarks": 4
+    },
+    {
+      "town": "Morovis",
+      "qid": "Q2623982",
+      "population": 28727,
+      "landmarks": 5
+    },
+    {
+      "town": "Naguabo",
+      "qid": "Q2659720",
+      "population": 23386,
+      "landmarks": 7
+    },
+    {
+      "town": "Guánica",
+      "qid": "Q1019645",
+      "population": 13787,
+      "landmarks": 5
+    },
+    {
+      "town": "Cataño",
+      "qid": "Q768483",
+      "population": 23155,
+      "landmarks": 3
+    },
+    {
+      "town": "Adjuntas",
+      "qid": "Q1864884",
+      "population": 18020,
+      "landmarks": 10
+    },
+    {
+      "town": "Hormigueros",
+      "qid": "Q2361536",
+      "population": 15654,
+      "landmarks": 3
+    },
+    {
+      "town": "Ciales",
+      "qid": "Q2485522",
+      "population": 16984,
+      "landmarks": 4
+    },
+    {
+      "town": "Yabucoa",
+      "qid": "Q2361097",
+      "population": 30426,
+      "landmarks": 5
+    },
+    {
+      "town": "Orocovis",
+      "qid": "Q2624345",
+      "population": 21434,
+      "landmarks": 8
+    },
+    {
+      "town": "Patillas",
+      "qid": "Q2485638",
+      "population": 15985,
+      "landmarks": 5
+    },
+    {
+      "town": "Aguas Buenas",
+      "qid": "Q2361568",
+      "population": 24223,
+      "landmarks": 4
+    },
+    {
+      "town": "Villalba",
+      "qid": "Q2192472",
+      "population": 22093,
+      "landmarks": 2
+    },
+    {
+      "town": "Guayanilla",
+      "qid": "Q2333093",
+      "population": 17784,
+      "landmarks": 6
+    },
+    {
+      "town": "Sabana Grande",
+      "qid": "Q2413183",
+      "population": 22729,
+      "landmarks": 8
+    },
+    {
+      "town": "Arroyo",
+      "qid": "Q425678",
+      "population": 15843,
+      "landmarks": 2
+    },
+    {
+      "town": "Peñuelas",
+      "qid": "Q369880",
+      "population": 20399,
+      "landmarks": 2
+    },
+    {
+      "town": "Comerío",
+      "qid": "Q2222328",
+      "population": 18883,
+      "landmarks": 6
+    },
+    {
+      "town": "Ceiba",
+      "qid": "Q2307548",
+      "population": 11307,
+      "landmarks": 2
+    },
+    {
+      "town": "Maunabo",
+      "qid": "Q967149",
+      "population": 10589,
+      "landmarks": 3
+    },
+    {
+      "town": "Florida",
+      "qid": "Q2271950",
+      "population": 11692,
+      "landmarks": 2
+    },
+    {
+      "town": "Las Marías",
+      "qid": "Q2485590",
+      "population": 8874,
+      "landmarks": 2
+    },
+    {
+      "town": "Maricao",
+      "qid": "Q2624359",
+      "population": 4755,
+      "landmarks": 3
+    }
+  ]
+}

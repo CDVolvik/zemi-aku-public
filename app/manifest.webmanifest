@@ -1,0 +1,16 @@
+{
+  "name": "Zemi-Aku — ask Puerto Rico",
+  "short_name": "Zemi-Aku",
+  "description": "Ask about any of Puerto Rico's 78 towns and get the places Qloo knows there, who likes them, and where that taste gathers.",
+  "id": "/app",
+  "start_url": "/app",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#12374d",
+  "theme_color": "#12374d",
+  "icons": [
+    { "src": "/app/assets/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/app/assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/app/assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

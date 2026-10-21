@@ -1,0 +1,497 @@
+# Run Zemi-Aku
+
+Canonical hosting state and launch checks: [DEPLOYMENT.md](DEPLOYMENT.md).
+Oracle is approved as an isolated Always Free demo exception. Carlos handles DNS.
+The paid Lightsail plan is retired; do not create paid hosting resources.
+
+## Local
+
+Use Node 22.19+ and pnpm 10.14.0:
+
+```sh
+npm install --global pnpm@10.14.0
+pnpm install --frozen-lockfile --ignore-scripts
+cp .env.example .env
+# Fill project keys privately, then:
+pnpm eagle
+```
+
+Or populate .env and run `docker compose up --build`, then open http://localhost:8080/app.
+The image uses the pnpm lock and security overrides. Use pnpm for installs: the Qloo
+harness's npm shrinkwrap bypasses the needed npm root overrides.
+
+A clean checkout builds with empty optional ground-data directories. Qloo catalogs populate
+at runtime; source caches are not bundled in Git. To include ground data, install Python
+DuckDB and run `python scripts/overture.py`, `node scripts/wikidata.mjs` and
+`node scripts/census.mjs` (Census needs its free key). Generate before starting the process;
+restart after adding previously missing cache files. Rebuilding all Qloo catalogs can
+consume about 600 API calls; reuse the existing private cache for the demo.
+
+Run `pnpm test`, `pnpm audit --prod` and `node scripts/check-demo.mjs URL` before release.
+Add `--journeys` for three real Qloo artist checks; no paid model or microphone is invoked.
+
+Optional: set `TESTFLIGHT_PUBLIC_URL` to an App Store Connect public link
+(`https://testflight.apple.com/join/...`). When valid, `GET /api/config` returns it as
+`betaUrl` and the front page `#iphone` section shows "Get the beta on TestFlight" instead of
+the email request form. Public links usually cap around 10 testers; leave unset to keep the
+form (and `TESTER_WEBHOOK_*` delivery) as the fallback.
+
+## Natural voices (2026-10-11)
+
+The public overlay `deploy/compose.safe.yaml` no longer blanks `DEEPGRAM_API_KEY` and caps speech at
+`ZEMI_SPEAK_CHARS_PER_DAY: "40000"` (about $1.20 a day at most). The key itself lives only in the
+VM's `/opt/zemi-aku/.env` (mode 600). **Added October 11, 2026 (evening) by the agent on Carlos's
+explicit instruction** ("get it done"); backup `/opt/zemi-aku/.env.before-deepgram-20261011`.
+
+```sh
+# on the VM, as ubuntu: open the file in an editor (keeps the key out of shell history) and add
+# one line, DEEPGRAM_API_KEY=..., on its own line at the end; the file stays mode 600.
+nano /opt/zemi-aku/.env
+# The live project is zemi-aku-demo on the deploy files. Never use the root compose.yaml (dev file).
+cd /opt/zemi-aku && sudo docker compose -p zemi-aku-demo -f deploy/compose.yaml -f deploy/compose.safe.yaml -f compose.image.yaml --env-file /opt/zemi-aku/.env up -d --no-build --no-deps app
+curl -s https://zemi.r21digital.com/api/voices   # "speechEnabled":true and four voices
+```
+
+Without the key `/api/voices` reports `speechEnabled:false`, the menu still shows Female / Male and
+the page plays the device voice. Listening, the voice agent and the model stay off (caps `"0"`).
+
+## Model agent (2026-10-11, evening)
+
+`deploy/compose.safe.yaml` no longer blanks `OPENROUTER_API_KEY` and sets `ZEMI_CHAT_USD_PER_DAY: "1"`.
+The key lives only in the VM's `/opt/zemi-aku/.env` (placed October 11 on Carlos's instruction; backup
+`.env.before-agent-20261011`; replaced October 12 with a key valid to January 10 2027, backup
+`.env.before-agentkey-20261012`). The server pins `deepseek/deepseek-v4.1-flash`; `ZEMI_MODEL` in the env
+overrides it. One visitor gets forty model turns a day (`CHAT_TURNS_PER_VISITOR` in
+`scripts/serve-eagle.mjs`); the daily dollar ledger is `cache/agent/spend.json` on the mounted volume.
+Fallback reasons are counted in the app log: `sudo docker logs zemi-aku-demo-app-1 2>&1 | grep "agent fallback" | sort | uniq -c`.
+Release pattern: a layered image (`FROM` the previous tag, `COPY app data server scripts/…`), built on the
+VM from an archive of the committed tree, then an app-only recreate on the `zemi-aku-demo` project.
+Rollback set: `/opt/zemi-aku/agent-rollback-20261011` (README has the restore command).
+
+Lessons from the October 11 placement: a Windows PowerShell pipe prefixes its first line with a
+UTF-8 byte-order mark, which Compose rejects ("unexpected character ﻿") and, worse, echoes the
+whole line including the value into its error output. Send the line through a script that strips
+`\r` and the BOM (`sed -i 's/^\xEF\xBB\xBF//'`), or type it in an editor on the VM. Quoted strings
+inside an `ssh` command line lose their quotes under PowerShell; put remote steps in a script file.
+
+## Wow release (2026-10-12)
+
+Carlos asked for a fluent voice conversation, a landing view that is not "a blue island", and places
+that tell restaurants from hotels from shops, and said to spend the Deepgram credit on it. Live as
+`zemi-aku:wow-20261012` (layered `FROM zemi-aku:agent-20261011`, built on the VM from a `git archive`
+of `e3118fc`: `app data server scripts/serve-eagle.mjs scripts/qloo.mjs deploy`). Rollback set
+`/opt/zemi-aku/wow-rollback-20261012` (README has the restore command; previous overlay and image file kept there).
+
+`deploy/compose.safe.yaml` now funds the paid voice paths, all with daily caps that persist on the volume:
+`ZEMI_VOICE_MINUTES_PER_DAY: "240"` (Deepgram Voice Agent, about $0.08 a minute; ten minutes a session,
+`maxSeconds: 600` in `scripts/serve-eagle.mjs`, so 24 conversations a day), `ZEMI_LISTEN_MINUTES_PER_DAY: "360"`,
+`ZEMI_SPEAK_CHARS_PER_DAY: "300000"`, `ZEMI_CHAT_USD_PER_DAY: "2"` with `ZEMI_VOICE_CHAT_USD_PER_DAY: "1"`
+as the voice model's share. The agent needs `ZEMI_PUBLIC_URL` (set from `ZEMI_HOST` in `deploy/compose.yaml`);
+`/api/voice/status` reports `{"enabled":true}` when the caps and both keys allow a session.
+
+Checks after the recreate: `/app` 200, `/app/marks.js` 200, `/api/voice/status` enabled, `/api/voices` four
+voices, `/api/places?town=Ponce` rows carry `category`, and the caps read back inside the container. A
+same-origin WebSocket probe (the server rejects upgrades without the page's Origin) got `SettingsApplied`,
+the greeting as `ConversationText`, and 338 KB of Aura-2 audio within four seconds.
+
+## Weather release (2026-10-12, evening)
+
+Live as `zemi-aku:weather-20261012` (layered `FROM zemi-aku:wow-20261012`, same archive recipe, source `826f5a2`).
+Rollback set `/opt/zemi-aku/weather-rollback-20261012`. No new keys and no new caps: the National Weather Service,
+the National Hurricane Center and RainViewer are free, fetched server-side with a Zemi User-Agent and cached in memory
+(`server/weather.mjs`). New routes `/api/weather?town=`, `/api/weather/radar`, `/api/weather/storms` (30 a minute per IP).
+The agent tool `town_weather` only registers when the server has a weather client. Checks after the recreate: `/app` 200,
+`/app/weather.js` 200, the three routes answer, `/api/voice/status` still enabled, and one EN and one ES model answer
+used the forecast to pick covered Qloo places. Note for shells: a town name with an accent typed through Git Bash curl
+arrives mangled and the route answers 400; the browser sends proper UTF-8.
+
+## Missions release (2026-10-12, night)
+
+Live as `zemi-aku:missions-20261012` (layered `FROM zemi-aku:weather-20261012`, same archive recipe; built twice the same
+night, first from `f9a5837`, then rebuilt under the same tag from `3204adc` after a live check). Rollback set
+`/opt/zemi-aku/missions-rollback-20261012` (previous image `weather-20261012`). No new keys, no new caps, overlay unchanged.
+New file `app/missions.js`; `/app?embed=1` (front page figure 1, chrome hidden, one play button) and `/app?mission=<id>`
+(shareable). Checks after the recreate: `/` and `/app?embed=1` 200, `/app/missions.js` 200, `/api/voice/status` still
+enabled, container file hashes equal the commit's. Logged-out Chromium: the Bad Bunny tour flew to Vega Alta, opened
+Club Cumpliendo Metas, spoke the place line, ended on the "ask me anything" line and released the page.
+
+## Picks release (2026-10-12, late night)
+
+Live as `zemi-aku:picks-20261012` (layered `FROM zemi-aku:missions-20261012`, same archive recipe; built three times the
+same night under one tag, last from `1e85839`). Rollback set `/opt/zemi-aku/picks-rollback-20261012` (previous image
+`missions-20261012`). No new keys, no new caps, overlay unchanged. Step 3 of the "be more wow" plan: the places an answer
+names become three photo cards above the list (`ZemiMarks.picks`, `pickCards` in `app/marks.js`), those pins carry their
+name on the map on three sides, and the answer shows once, in the caption. Two things the live checks caught: several
+`show_places` actions in one answer now merge into one list (the named place was being dropped), and a town's late
+loaders (stats, profile, directory, weather line) no longer draw over an answer panel (`townView` flag). Checks after
+the recreate: `/app` 200, `/app/marks.js` 200, `/api/voice/status` enabled, container hashes equal the commit's;
+logged-out Chromium, "Where do Bad Bunny fans eat in Ponce?": Melao Coffee Shop, Plaza Las Delicias and Teatro La Perla
+as picks and as labeled pins, town blocks hidden, one caption.
+
+## Alike release (2026-10-12, after midnight)
+
+Live as `zemi-aku:alike-20261012` (layered `FROM zemi-aku:picks-20261012`, same archive recipe, from `6afaea0`; the
+remote steps ran from a script, `deploy-alike.sh`, left in `/opt/zemi-aku`). Rollback set
+`/opt/zemi-aku/alike-rollback-20261012` (previous image `picks-20261012`). No new keys, no new caps; one new route,
+`/api/places/like` (20 a minute), which is Qloo-only plus three OpenStreetMap lookups. Three things shipped:
+
+- Brand logos. A chain without a photo of its own shows its brand logo: OpenStreetMap's `brand:wikidata` names the
+  brand, the brand's Wikidata record carries the logo (P154 on Commons), and it sits whole on a plain tile in the picks,
+  the list and the dossier, credited "Brand logo · Wikimedia Commons". A real photo still wins; the aerial is last.
+  Only enriched lists get it (`/api/places` without `fast=1`, and the first three of a "more like these" answer);
+  catalog and artist answers are not enriched, so their chains keep the aerial. Seen live: Hilton Ponce, Romano's
+  Macaroni Grill. Google Business Profile banners were ruled out (key, 403s, terms).
+- "More like these" under the picks: the picked Qloo ids go to `/v2/insights` together as `signal.interests.entities`,
+  the seeds drop out, the first three get photos, and the spoken line names seeds and picks in the page language.
+  The button stops a running tour so the answer stays on screen (a live check caught the tour drawing over it).
+- Fig. 8 redrawn: every source the server joins (Overture, Census PRCS and CBP, NWS, NHC, RainViewer, Esri, with
+  OpenStreetMap, Wikidata, Wikipedia, Commons) and the loop drawn honestly. Qloo's hackathon API is read-only, so
+  nothing is sent back to Qloo; open data shapes the signals we send, Qloo's ids and tags drive what we look up.
+
+Checks after the recreate: `/`, `/app`, `/app/marks.js`, `/api/voice/status` 200; container hashes of the six changed
+files equal the commit's; `/api/places/like` live in Spanish for two Ponce places ("Qloo conecta estos con … y …: …");
+the new Fig. 8 markup is in the served front page. Logged-out Chromium on the live tour reached the picks with the
+"More like these" button showing; the click itself was verified locally on the same commit (the preview tooling
+dropped its connection on the live run), so a human should tap it once on the live site.
+
+## Polish release (2026-10-13, early morning)
+
+Live as `zemi-aku:polish-20261013` (layered `FROM zemi-aku:alike-20261012`, same archive recipe, from `8a3a68e`; remote
+steps in `deploy-polish.sh`, left in `/opt/zemi-aku`). Rollback set `/opt/zemi-aku/polish-rollback-20261013` (previous
+image `alike-20261012`). No new keys, no new caps, no new routes; one new outbound dependency for the app page, Google
+Fonts (the front page already used it). Step 4 of the "be more wow" plan:
+
+- One type system. The app loads the front page's Newsreader and IBM Plex Mono: serif for the headline, the town title,
+  the spoken answer (`.say`) and the caption; mono for the small labels, kickers, the "watch a tour" label and the weather
+  line. Buttons and lists stay in the system sans. The paper theme now uses the front page's paper, wash and teal link.
+- The camera drifts at rest on the island view, not only over a town: `swayFor(eye)` in `app/flight.js` gives about 3°
+  over fifty seconds up high and keeps the 7° over thirty seconds over a town; `flyHome` no longer passes `noOrbit`.
+  Same halt on any touch, wheel or key; same motion switch; reduced motion still means no drift.
+- The town profile's three taste rows fold: `profileRow` renders each as a `details` section with its count, the first
+  ("The feel of its places") open, Music and On TV closed. Ponce went from a 22-chip wall to three headings.
+
+Checks after the recreate: `/`, `/app`, `/app/flight.js`, `/api/voice/status` 200; container hashes of the five
+copied files equal the commit's; the served page carries the font link, `profileRow` and `swayFor`. Logged-out Chromium
+on the live site: Ponce shows "The feel of its places 8" open, "Music 8" and "On TV 6" closed, both faces report
+loaded, and with motion on the camera heading changed over 2.5 seconds at the island view.
+
+## First-screen release (2026-10-13, early morning)
+
+Live as `zemi-aku:firstscreen-20261013` (layered `FROM zemi-aku:polish-20261013`, same archive recipe, from `a1d6323`; remote
+steps in `deploy-firstscreen-20261013.sh`, left in `/opt/zemi-aku`). Rollback set `/opt/zemi-aku/firstscreen-20261013-rollback`
+(previous image `polish-20261013`, previous `Caddyfile`; README has both restore commands). No new keys, no new caps, no new
+routes; one new static file, `app/lang.js`. Three first-impression failures found by the October 13 full test:
+
+- The edge sent `X-Frame-Options: DENY` for every URL, so the front page's Fig. 1 (the live map in an iframe, since the
+  missions release) drew as a dead box in every browser. `deploy/Caddyfile` now sends `SAMEORIGIN` and
+  `Content-Security-Policy: frame-ancestors 'self'`. The caddy container was recreated (`up -d --no-deps --force-recreate caddy`,
+  a few seconds of downtime; certificates live on the `caddy_data` volume) because a bind-mounted file does not follow a
+  replaced inode until the container restarts. `admin off` in the Caddyfile means `caddy reload` is not available.
+- A Spanish question typed with the voice on English got an English answer. `app/lang.js` (`ZemiLang.guessLang`) tells
+  English from Spanish by marks, accents and common words; `runQuestion` switches the voice to the guessed language before
+  asking, so the answer, the voice and the menu follow the question. A bare name ("Ponce", "mofongo") decides nothing.
+- A typed answer hid itself after 4 s + 45 ms a character (the panel copy stays hidden by design), so nobody could read it
+  twice. It now stays until the next question, a reset, or its new × button. With the panel open on a desktop
+  (≥ 1024 px) the ask bar and caption centre on the free map area beside the panel, clear of the camera-motion pill.
+
+Checks after the recreate: `/`, `/app`, `/app?embed=1`, `/app/lang.js`, `/api/voice/status` 200; `check-demo` 13/13;
+container hashes of `app/index.html`, `app/lang.js`, `app/home.html` and the host `deploy/Caddyfile` equal the commit's;
+the live headers read `X-Frame-Options: SAMEORIGIN` + `frame-ancestors 'self'`. Logged-out Chromium on the live site: the
+front page's iframe reports the globe canvas and the "Play with sound" button inside it; on `/app`,
+"¿Dónde comer mofongo en Mayagüez?" switched the button to "ES · Selena" and answered in Spanish, and the caption with its
+× was still on screen 40 s later with the ask bar at x 492–1108 beside the panel (100–460) at 1280 px.
+
+## Design-pass release (2026-10-13, morning)
+
+Live as `zemi-aku:design-20261013` (layered `FROM zemi-aku:firstscreen-20261013`, same archive recipe, from `b0c81a3`; remote
+steps in `deploy-design-20261013.sh`, left in `/opt/zemi-aku`). Rollback set `/opt/zemi-aku/design-20261013-rollback`
+(previous image `firstscreen-20261013`). No new keys, caps, routes or files. Carlos asked for a design/animation pass
+("a lot of minor imperfections"); the motion code was read against the review-animations standards (findings in
+`NEXT-SESSION.md`) and the visual notes from the October 13 full test were worked:
+
+- Picks: `ZemiMarks.picks` folds accents, case, "&" and punctuation and lets a long name match on its first two words
+  (three after an article), so "Campioni Pizza Birra and Tapas" in an answer finds "Campioni Pizza Birra & Tapas".
+- A question's list folds the town directory to one line ("Browse all 216 places in Mayagüez ›"); a tap opens it; a town
+  opened from the map keeps it open. The flag is set before `resetCategory()`, which already draws the directory.
+- List titles take a capital ("Food in Mayagüez"); the typed agent is told to end with the answer rather than an offer or
+  a yes/no question (the voice agent keeps its own prompt); a phone shows two "Try one" chips; crumb and search-hit
+  hovers are gated to fine pointers; back on the island the hero and chips fade in over 220 ms.
+
+Checks after the recreate: `/app`, `/app/marks.js`, `/api/voice/status` 200; `check-demo` 13/13; container hashes of
+`app/index.html`, `app/marks.js`, `server/agent.mjs` equal the commit's; served `marks.js` hash equals origin's. Logged-out
+Chromium on the live site at 1280 px: "¿Dónde comer mofongo en Mayagüez?" → title "Food in Mayagüez", directory folded to
+"Browse all 216 places in Mayagüez ›", Spanish answer. Locally on the same commit: the Ponce Bad Bunny answer showed
+Campioni as a pick from the shortened name, the unfold tap listed 11 categories, the island return raised no error, and
+the iPhone 12 Pro viewport showed two chips.
+
+
+## Definitions release (2026-10-13, night)
+
+Live as `zemi-aku:definitions-20261013` (layered `FROM zemi-aku:design-20261013`, same archive recipe, from `8c98c50`; remote
+steps in `deploy-definitions-20261013.sh`, left in `/opt/zemi-aku`). Rollback set `/opt/zemi-aku/definitions-20261013-rollback`
+(previous image `design-20261013`). No new keys, caps, routes or files. Item 7 of `FIRST-PLACE-PLAN-2026-10-13.md`, the first
+item Carlos approved for build (plan approved as written, October 13 night):
+
+- A folded "Definitions" block under the opportunity map's legend and inside a town's "Sources and limits"
+  (`ZemiOpportunity.definitionsHtml`, built client-side from the saved build's `sources`, so no rebuild and no new call):
+  the industry as its Census NAICS code with the official title in plain words plus the Qloo tag; County Business Patterns as
+  a March count from tax records with no margin of error that leaves out the self-employed; the Community Survey as a
+  five-year estimate whose margin the per-10,000 figure does not show; the 0–2 suppression; municipio boundary versus the
+  3 km straight-line peer circle; and "a screening, not demand". EN and ES.
+- `server/business.mjs` adds the saved build's `sources` to the town's opportunity evidence so the readout can name the codes.
+
+Checks after the recreate: container healthy; container hashes of `app/index.html`, `app/opportunity.js`, `app/opportunity.css`,
+`server/business.mjs`, `scripts/serve-eagle.mjs` equal the commit's; served `opportunity.js` hash equals the commit's;
+`check-demo --journeys` 19/19. Logged-out Chromium on the live site: `/app?opportunity=restaurant` shows the block with both
+restaurant codes; tapping Maunabo opens the readout with the same six definitions under "Sources and limits". Locally on the
+same commit at 390 px the block fits with no horizontal overflow (12 px body).
+
+## Decision release (2026-10-13, late night)
+
+Live as `zemi-aku:decision-20261013` (layered `FROM zemi-aku:definitions-20261013`, same archive recipe, from `f9b4760`; remote
+steps in `deploy-decision-20261013.sh`, left in `/opt/zemi-aku`). Rollback set `/opt/zemi-aku/decision-20261013-rollback`
+(previous image `definitions-20261013`). No new keys, caps, routes or files; markup, CSS and two client helpers. Item 1 of
+`FIRST-PLACE-PLAN-2026-10-13.md`; spec `SPEC-2026-10-13-hero-decision-journey.md`:
+
+- The island hero asks "Where should I open a business in Puerto Rico?" with six industry chips that open the opportunity
+  map; the artists sit under "Or start with an artist", the tours under them; the copy follows the voice language
+  (`renderHero`, re-run on the question's guessed language, a tour's language and the voice menu's pick).
+- Ships and Ports moved from the left rail into the map menu under "Explore" (the pick closes the menu). The detail, coastal
+  and opportunity panels now sit at the 16 px edge; the ask bar's free-map centring constants moved by the same 84 px.
+- A town readout reached through the decision shows "Change the question": the six industries (current one pressed; a tap
+  re-asks the same town through `ZemiOpportunity.townQuestion`) and "Compare towns on the map" (`goHome()` then
+  `opportunityUI.show(industry)`); the older four-type row hides while that row shows. "Try one" leads with the two decision chips.
+
+Checks after the recreate: container healthy; container hashes of `app/index.html`, `app/opportunity.js`, `app/opportunity.css`,
+`app/coastal.css`, `server/business.mjs` equal the commit's; served `index.html` and `coastal.css` hashes equal the commit's;
+`check-demo --journeys` 19/19. Logged-out Chromium on the live site at 1280 px, zero console entries: hero → Bakeries → Río Grande
+(taste #2, Bakeries pressed, four-type row hidden) → Restaurants re-ask (taste #9) → "Compare towns on the map" opens
+"Where should I open a restaurant?" with Restaurants pressed → Back to the island → map menu "Explore" → Ships opens the coastal
+panel and the menu closes → Places restores the hero. Locally on the same commit: 390 px shows the headline, six chips in two
+rows, the artists, the tours and two "Try one" chips with no overlap (hero bottom 518, chips at 721); the voice menu's
+Español pick turns the hero Spanish ("¿Dónde abro un negocio en Puerto Rico?", "O empiece por un artista", Spanish chips).
+
+## Evidence release (2026-10-14, morning)
+
+Live as `zemi-aku:evidence-20261014` (layered `FROM zemi-aku:decision-20261013`, same archive recipe, from `948dac9`; remote
+steps in `deploy-evidence-20261014.sh`, left in `/opt/zemi-aku`). Rollback set `/opt/zemi-aku/evidence-20261014-rollback`
+(previous image `decision-20261013`). No new keys, caps or routes; one new client file (`app/evidence.js`). Item 2 of
+`FIRST-PLACE-PLAN-2026-10-13.md`; spec `SPEC-2026-10-14-evidence-drawer.md`:
+
+- `/api/chat` model answers carry `evidence`: mode, model id, rounds, elapsed, answered-at, and one row per tool call
+  (validated arguments, ok, source, count, resolved Qloo IDs, catalog day, size drop or refusal). Fallbacks carry
+  `{ mode: "rules", reason }` with the fixed code `onFallback` already logged; the visitor cap sets `visitor-cap`.
+- `opportunity_map` adds the heatmap's `retrievedAt`.
+- The caption appends a folded "Evidence · live model · N tool calls · N s" drawer (EN/ES; "rules router · no model turn
+  (reason)" for fallbacks; `replay` mode reserved for item 10). IDs shortened, capped at eight, tool output escaped.
+
+Checks after the recreate: container healthy; container hashes of `app/index.html`, `app/evidence.js`, `server/agent.mjs`,
+`server/agent-tools.mjs`, `scripts/serve-eagle.mjs` equal the commit's; served `evidence.js` hash equals the commit's;
+`check-demo --journeys` 0 failed. Logged-out incognito Chromium on the live site: "Where do Bad Bunny fans eat in Bayamón?"
+→ drawer reads `artist_places Bayamón, Bad Bunny → Qloo · 8 places · 0.7 s`, `map_town Bayamón → done`, the model line and
+eight shortened Qloo IDs. Locally on the same commit: "cafés in Ponce" at 1280 px (four calls incl. a 0-place strict taste
+search shown honestly), "¿Dónde comer mofongo en Ponce?" at 390 px in Spanish ("Evidencia · modelo en vivo · 3 llamadas ·
+4,3 s"), the drawer scrolling inside the caption's 38vh cap. Voice-agent (Deepgram) turns are not covered: noted in the spec.
+
+## Compare release (2026-10-14, late morning)
+
+Live as `zemi-aku:compare-20261014` (layered `FROM zemi-aku:evidence-20261014`, same recipe, from `acdea2c`; remote steps in
+`deploy-compare-20261014.sh`). Rollback set `/opt/zemi-aku/compare-20261014-rollback` (previous image `evidence-20261014`).
+Item 3 of `FIRST-PLACE-PLAN-2026-10-13.md`; spec `SPEC-2026-10-14-with-and-without-qloo.md`:
+
+- `/compare` → `app/compare.html`: six frozen prompts asked twice of the same model and settings, once with the Qloo tools and
+  once with only `map_town`, `town_weather`, `landmarks`, `town_history` (`withoutQloo` in `agent-tools.mjs`). The runs are
+  committed in `data/compare-qloo.json` (made by `scripts/compare-qloo.mjs` against a local server under `ZEMI_COMPARE=1`,
+  12 model turns, all first attempt) with both answers, their evidence and `server/compare.mjs`'s diff. Result: Qloo changed
+  all six answers (named catalog places only the Qloo run gave); the without run says it will not invent places and labels
+  general knowledge. Linked from the front page nav and `#qloo` section and the README. `check-demo` probes `/compare` and the JSON.
+- The public `/api/chat` ignores `tools: "no-qloo"` (verified live: the flag yields the normal agent path). Only a server
+  started with `ZEMI_COMPARE=1` builds the bare agent; `compose.safe.yaml` never sets it.
+
+Checks: container healthy; six file hashes equal the commit's; `check-demo --journeys` 0 failed (now 7 + 2 routes). Locally at
+1280 px the page renders the six pairs with the catalog places bold and the verdict line; at 390 px one column, no overflow.
+
+## Rounds fix (2026-10-14, late morning)
+
+Live as `zemi-aku:rounds-20261014` (layered `FROM zemi-aku:compare-20261014`, from `e3520c9`; `deploy-rounds-20261014.sh`).
+Rollback set `/opt/zemi-aku/rounds-20261014-rollback` (previous image `compare-20261014`). Found by the new drawer: "What is
+there to do in Maricao?" made the model ask for six tools in one round and the text agent dropped the turn (`too-many-calls`),
+twice in a row on the live site, so a judge would have read "rules router · no model turn". Now a round runs the first four
+calls and returns "Too many tool calls in one round; ask for this one next." for the rest (twelve and up still fail); the
+drawer records the refused calls. Verified live twice after the recreate: model answers with `town_history!`/`map_town!`
+marked refused. The voice agent keeps its own four-call close (`voice-agent.mjs`), unchanged. 337 tests.
+
+## Five voices release (2026-10-14, midday)
+
+Live as `zemi-aku:voices5-20261014` (layered `FROM zemi-aku:rounds-20261014`, from `9115820`; `deploy-voices5-20261014.sh`).
+Rollback set `/opt/zemi-aku/voices5-20261014-rollback` (previous image `rounds-20261014`). Item 6 of
+`FIRST-PLACE-PLAN-2026-10-13.md`; spec `SPEC-2026-10-14-five-spoken-languages.md`. No new key, cap or route: the same Deepgram
+key and the same 40,000-character daily cap now serve ten Aura-2 voices (Agathe/Hector fr, Melia/Elio it, Elara/Julius de added
+to the four). `app/converse.js` speaks every menu language and carries the menu copy in each; the rules router's one-line
+fr/it/de note was reworded. Audition set for Carlos: `node scripts/voice-audition.mjs fr it de` → `tmp/voice-audition/index.html`
+(16 candidates, 3,168 characters, all accepted by Deepgram on 10/14).
+
+Checks: container healthy; six file hashes equal the commit's; `/api/voices` lists ten voices with speech on; `/api/speak` with
+`aura-2-agathe-fr` returned audio with the voice header; a French `/api/chat` question answered by the model in French;
+`check-demo --journeys` 0 failed. Locally: French, Italian and German model answers read in the asked language (spec has the
+three); the voice menu in Français shows "Voix féminine / Voix masculine" and the Deepgram note with Agathe selected.
+
+## Samples release (2026-10-14, afternoon)
+
+Live as `zemi-aku:samples-20261014` (layered `FROM zemi-aku:voices5-20261014`, from `c10052c`; `deploy-samples-20261014.sh`).
+Rollback set `/opt/zemi-aku/samples-20261014-rollback` (previous image `voices5-20261014`). Item 10 of
+`FIRST-PLACE-PLAN-2026-10-13.md`; spec `SPEC-2026-10-14-instant-samples.md`. No new key, cap or route. Three saved model runs in
+`data/samples/` (Bad Bunny in Bayamón, Maricao, mofongo in Ponce in Spanish; `scripts/save-samples.mjs`, three local model turns)
+are served by `/api/chat` only after the model agent fell back and before the rules router, with the map actions intact and the
+evidence drawer labeled "saved replay" with the read time on every call.
+
+Checks: container healthy; five file hashes equal the commit's; the three JSON files present in the container; the Bad Bunny
+question on the live site still answers from the model (`mode: model`, no replay: the live budget is untouched);
+`check-demo --journeys` 0 failed. The replay path was exercised locally on the same commit with `ZEMI_CHAT_USD_PER_DAY=0`: the
+saved question returned the replay, the page flew to Bayamón and listed "Bad Bunny fans in Bayamón", the drawer read
+"Evidence · saved replay · 2 tool calls" with "read 2026-10-14 17:29 UTC"; "cafés in Ponce" still went to the rules router. 341 tests.
+
+## Phone release (2026-10-14, late afternoon)
+
+Live as `zemi-aku:phone-20261014` (layered `FROM zemi-aku:samples-20261014`, from `07f10d4`; `deploy-phone-20261014.sh`).
+Rollback set `/opt/zemi-aku/phone-20261014-rollback` (previous image `samples-20261014`). The emulated half of item 9 of
+`FIRST-PLACE-PLAN-2026-10-13.md` (the real iPhone and Android pass stays on 10/17). No new key, cap or route; three files:
+`app/opportunity.css`, `app/index.html`, `app/home.html`. At 390 px the opportunity panel took three quarters of the screen,
+ran under the dock bar, and hid the island it asks you to tap. Now: the panel uses the town readout's geometry (clears the
+dock, 48% cap); opening the opportunity view on a phone flies to a frame measured at 390 px that puts all 78 towns in the
+upper half (`flyOpportunityFrame`, eye 340 km aimed south-west of the island), closing it flies home, switching industry keeps
+the frame. Home masthead: the five links wrap as a row under the brand, one line each.
+
+Checks: container healthy; three file hashes equal the commit's; on the live site at 390x844 the panel spans y 355–761 above
+the dock at 769, the island's west and east tips project to x 41 and 383 at y 175–291, no terrain toast (the local one is
+the ion token's origin restriction, not a live condition), the five nav links are 12 px tall each; `check-demo --journeys`
+0 failed. 341 tests.
+
+## Credits release (2026-10-21, morning)
+
+Live as `zemi-aku:credits-20261021` (layered `FROM zemi-aku:review2-20261017`, `COPY app` only, from `6f214e1`;
+`deploy-credits-20261021.sh`). Rollback set `/opt/zemi-aku/credits-20261021-rollback`. Carlos approved it October 21
+("yes proceed"). Release audit item 2: Cesium ion terms 2.2.3 require the ion logo on the main window, and the docked left
+panels (`#panel`, `#opportunity-panel`, `#coastal-panel`) covered it on desktop while the ask bar covered it on phones.
+Cesium sets the credit row's position inline, so `app/index.html` overrides it with `!important`: on desktop the row starts
+right of an open panel (76 px from the edge when it is collapsed); on phones the ask bar rises 6 px and the row sits under it.
+Also: Esri's credit now matches the service ("Esri, Vantor, Earthstar Geographics, and the GIS User Community"), RainViewer's
+reads "Weather data by RainViewer" with a link (`app/weather.js`), and the front-page footer links OSM's copyright page
+(`app/home.html`).
+
+Checks: container up; the three served file hashes equal the commit's; `check-demo --journeys` 0 failed; `/`, `/app/`,
+`/compare`, `/api/voices` 200, `/mcp` 404. Logged-out Chromium at 1600 × 900 and 390 × 844: `elementFromPoint` on the
+ion logo and the "Data attribution" link returns the credit row with the opportunity panel, the details panel and the
+phone first screen open. 415 tests. The live credit row now also shows Cesium's "Upgrade for commercial use." (audit item 4).
+
+## Public snapshot repository (2026-10-17, late afternoon)
+
+`github.com/CDVolvik/zemi-aku-public` is PUBLIC since October 17 (Carlos: "proceed"), as one commit `0f86f3b` holding the code of
+`cd4fd44` (the review-2 release): README, LICENSE, `app/`, `server/`, `scripts/`, `test/`, `data/`, `deploy/`, `cache/*/.gitkeep`,
+the Docker and compose files, and the judge-facing docs (walkthrough, tester kit, both Codex reviews, this file, the judge dry
+run, the stranger test, the video script, the submission draft, the public release records, the specs, the Devpost
+screenshots). Left in the private working repo on purpose: `HANDOFF.md`, `DEPLOYMENT.md`, `NEXT-SESSION.md`, `DECISIONS.md`,
+the competitor analysis and first-place plan, `docs/evidence/`, `docs/plans/`, the human-test notes (they carry the VM address,
+local paths, `_secrets` references or internal strategy). A fresh clone of the snapshot installs and passes 414 tests with the
+Census-cache test skipped. Scanned before the push for the VM address, local paths, `_secrets`, key prefixes and the Gmail id.
+
+Re-export after any code change that ships: `git archive HEAD <the list above> | tar -x -C <empty dir>`, copy over a clone of
+the public repo, one commit, push. The front page's Code and GitHub links and the submission draft point at the public repo.
+
+## Review-2 release (2026-10-17, afternoon)
+
+Live as `zemi-aku:review2-20261017` (layered `FROM zemi-aku:integrate-20261017`, from `cd4fd44`; `deploy-review2-20261017.sh`).
+Rollback set `/opt/zemi-aku/review2-20261017-rollback` (previous image `integrate-20261017`). Seven files: `server/listen-relay.mjs`
+(same-origin only, session reserved before the upgrade and settled on close, one live session per visitor, eight overall),
+`server/voice-agent.mjs` (`fitContent` shortens a long tool result instead of refusing it), `server/samples.mjs` (replays drop
+day-specific hours), `server/tester-delivery.mjs` (batch of pending rows), `scripts/serve-eagle.mjs` (listen wiring),
+`app/index.html` (island history primed at boot; fr/it/de voices keep their language), `data/samples/maricao.json` (timeless
+sentence). The seven fixed findings of the Codex adversarial review round 2 (`CODEX-REVIEW-2026-10-17.md`).
+
+Checks: container healthy; all seven served file hashes equal the commit's; `check-demo --journeys` 0 failed; live
+`/api/listen` upgrade with a foreign Origin → 403, with no Origin → 403, with the page's origin → 101. 415 tests.
+
+## Integration release (2026-10-17, midday)
+
+Live as `zemi-aku:integrate-20261017` (layered `FROM zemi-aku:sources-20261014`, from `c6b19b0`; `deploy-integrate-20261017.sh`).
+Rollback set `/opt/zemi-aku/integrate-20261017-rollback` (previous image `sources-20261014`). The whole 10/16 human-test stack
+(PRs #2–#17, built by the Cursor lane overnight) merged as PR #18 with two fixes found in the integration check: on phones the
+new camera controls (reset north, 2D, home, 3D) sat inside any open bottom sheet and now park as a row under the style
+button (`app/index.html`), and a place whose website is a Facebook or Instagram page no longer gets the platform's logo as
+its "site icon" (`server/lib.mjs`, `app/dossier.js`; letter tile instead). What the stack brings: Qloo-style palette
+(Inter / periwinkle, shared grid), business-story hero by default (`?story=traveler` keeps the old one), docked left panel on
+desktops and a bottom sheet on phones, map history and tilt helpers (`app/history.js`), logos and richer result cards,
+`/api/config` with `TESTFLIGHT_PUBLIC_URL` (unset on the VM, so the request form stays), `server/limits.mjs` shared rate gate.
+
+Checks: container healthy; nine file hashes equal the commit's (`app/index.html`, `app/home.html`, `app/dossier.js`,
+`app/history.js`, `app/coastal.css`, `server/lib.mjs`, `server/beta.mjs`, `server/limits.mjs`, `scripts/serve-eagle.mjs`);
+`check-demo --journeys` 0 failed; `/`, `/app`, `/compare`, `/api/config`, `/api/voices` 200; logged-out incognito at 1280 px
+and 390 px (front page, app landing, café sheet with the controls clear of it). 406 tests. ⚠️ The front page's Code and
+GitHub links now point at `github.com/CDVolvik/zemi-aku-public`, which exists but is still private (a 404 for judges until
+Carlos flips it; the old link was the private `qloo-local-taste`, so nothing got worse).
+
+## Sources release (2026-10-14, late night, after the stranger-test release)
+
+Live as `zemi-aku:sources-20261014` (layered `FROM zemi-aku:stranger-20261014`, from `43fc050`; `deploy-sources-20261014.sh`).
+Rollback set `/opt/zemi-aku/sources-20261014-rollback` (previous image `stranger-20261014`). Three files: `server/business.mjs`
+(business and opportunity answers carry `evidence: { mode: "sources", kind, calls, at }`), `app/evidence.js` (the drawer reads
+"Evidence · business research · no model turn · 4 sources" and lists Qloo catalog, Overture, Census PRCS and the opportunity map),
+`app/index.html` (the opportunity caption passes its evidence). Carlos chose this option on October 14 from the stranger test.
+349 tests. Hashes of five files verified against `HEAD`; live probe shows `mode: "sources"` on both answers.
+
+## Stranger-test release (2026-10-14, late night, after the review release)
+
+Live as `zemi-aku:stranger-20261014` (layered `FROM zemi-aku:review-20261014`, from `3af8fe3`; `deploy-stranger-20261014.sh`).
+Rollback set `/opt/zemi-aku/stranger-20261014-rollback` (previous image `review-20261014`). Two files: `app/home.html` (hero
+leads with the business decision) and `app/index.html` (typed business and rules answers show in the caption). From the
+stranger test (`STRANGER-TEST-2026-10-14.md`). Hashes of five files verified against `HEAD`; journeys probe 0 failures.
+
+## Review release (2026-10-14, late night)
+
+Live as `zemi-aku:review-20261014` (layered `FROM zemi-aku:music-20261014`, from `2938a3c`; `deploy-review-20261014.sh`).
+Rollback set `/opt/zemi-aku/review-20261014-rollback` (previous image `music-20261014`). Six files: `server/lib.mjs`,
+`server/agent.mjs`, `server/agent-tools.mjs`, `server/qloo-mcp.mjs`, `scripts/serve-eagle.mjs`, `app/evidence.js`. The eight
+findings of the Codex adversarial review (`CODEX-REVIEW-2026-10-14.md`): music routing tightened and its caveat spoken, Qloo
+allowance charged per upstream call, harness error envelopes as error results, fallback evidence keeps the rounds it ran
+("model did not finish"), `/api/ask` validates its body, docs match the deployed caps, workflow export scrubbed.
+
+Checks: container healthy; all six file hashes equal the commit's; live `/api/ask`: `null` and a non-array history answer
+400; "I listen to Bad Bunny" and "hear the ocean in Rincón" route as before, "hear live salsa" to 12 live music venues with
+the caveat in the speech; a live model turn (Maricao) answered in 2 rounds, 4 calls; `check-demo --journeys` 0 failed.
+347 tests.
+
+## Music release (2026-10-14, night)
+
+Live as `zemi-aku:music-20261014` (layered `FROM zemi-aku:caption-20261014`, from `83201a2`; `deploy-music-20261014.sh`).
+Rollback set `/opt/zemi-aku/music-20261014-rollback` (previous image `caption-20261014`). Two files: `server/lib.mjs`,
+`scripts/serve-eagle.mjs`. The rules router's last known weak answer: past the model cap, "Where can I hear live salsa?"
+name-matched a restaurant called Salsa y Pique. `musicAsk` recognises hear/dance/live-music questions and the genre; the
+router asks Qloo's live music venue tag first (strict, in the named town or across the island) and the note says the genre
+itself is not on Qloo's place records.
+
+Checks: container healthy; both file hashes equal the commit's; live `/api/ask` (the rules path, no model) answers the
+English salsa question with 12 live music venues and the Spanish bomba-in-Loíza question with the island's 12 after saying
+Loíza lists none; `check-demo --journeys` 0 failed. 344 tests.
+
+## Caption release (2026-10-14, evening)
+
+Live as `zemi-aku:caption-20261014` (layered `FROM zemi-aku:closing-20261014`, from `74a3a9d`; `deploy-caption-20261014.sh`).
+Rollback set `/opt/zemi-aku/caption-20261014-rollback` (previous image `closing-20261014`). Two files: `app/index.html`,
+`app/opportunity.css`. The phone nit left by the phone release: the spoken caption rose from the dock over the last lines of the
+town readout and the opportunity panel. A ResizeObserver on `#caption` sets `--caption-h` (height plus the 8 px gap; 0 while
+dismissed) and the phone rules add it to both panels' bottom, so the readout lifts above the caption and drops back on dismiss.
+
+Checks: container healthy; both file hashes equal the commit's; on the live site at 390x844 the Río Grande readout spans y
+237–643 above the 110 px caption at 651–761 and the dock at 769, and returns to 355–761 once the caption is dismissed; no
+terrain toast; `check-demo --journeys` 0 failed. 342 tests.
+
+## Closing-round release (2026-10-14, evening)
+
+Live as `zemi-aku:closing-20261014` (layered `FROM zemi-aku:phone-20261014`, from `1f8d9da`; `deploy-closing-20261014.sh`).
+Rollback set `/opt/zemi-aku/closing-20261014-rollback` (previous image `phone-20261014`). One file: `server/agent.mjs`. Found by
+the judge dry run (`JUDGE-DRYRUN-2026-10-14.md`): "Where can I hear live salsa?" used all four tool rounds and fell to the rules
+router, which named a Mexican restaurant. The model now gets a fifth round with no tools, told to answer from what it read; the
+fallback stays for a fifth round with no text. No new key, cap or route; one more model call only on turns that used to fall back.
+
+Checks: container healthy; `server/agent.mjs` hash equals the commit's; live, the English and Spanish salsa questions answered
+from the model with real venues (rounds 4 and 3); `check-demo --journeys` 0 failed. 342 tests.
