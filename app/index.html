@@ -438,6 +438,9 @@ try {
   #caption .evidence ul { margin: 6px 0 0; padding-left: 14px; }
   #caption .evidence li { margin: 2px 0; overflow-wrap: anywhere; }
   #caption .evidence p { margin: 6px 0 0; overflow-wrap: anywhere; }
+  #caption .control-run { font: 12px/1.2 var(--mono); padding: 5px 10px; border-radius: 10px; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; }
+  #caption .control-run:disabled { opacity: .6; cursor: default; }
+  #caption .control-pair { margin: 4px 0 0; }
   #caption .evidence code { font: inherit; color: var(--ink); }
   /* With the panel open on a desktop, the ask bar centres on the free map area right of the ~400px dock. */
   @media (min-width: 1024px) {
@@ -552,10 +555,11 @@ try {
     #voice-btn { padding: 8px 10px; }
     #caption { bottom: calc(100% + 8px); max-width: calc(100vw - 24px); }
     #map-chrome { bottom: calc(100px + var(--bottom)); right: calc(8px + var(--right)); }
-    /* With a sheet open the chrome would sit over its legend; park it under the style button instead. */
+    /* With a sheet open there is no map to steer and the chrome sat on the sheet's title (judge panel
+       10/23, 390 px); it returns when the sheet is collapsed or closed. */
     body:has(#panel:not([hidden]):not([data-collapsed="true"])) #map-chrome,
     body:has(#opportunity-panel:not([hidden])) #map-chrome,
-    body:has(#coastal-panel:not([hidden])) #map-chrome { top: calc(62px + var(--top)); bottom: auto; flex-direction: row; }
+    body:has(#coastal-panel:not([hidden])) #map-chrome { display: none; }
     #decide-start, #journey-start, #missions { max-width: 100%; }
     #decide-start button, #journey-start button, #missions button { max-width: 100%; white-space: normal; }
     .chips, .dir, .badges, .tools { max-width: 100%; }
@@ -588,7 +592,7 @@ try {
 <body>
 <div id="globe"></div>
 
-<a id="brand" href="/">Zemi-Aku<span>Puerto Rico, through Qloo's taste data</span></a>
+<a id="brand" href="/">Zemi-Aku<span id="brand-tagline">Puerto Rico, through Qloo's taste data</span></a>
 <aside id="coastal-panel" aria-label="Coastal discovery" hidden>
   <div class="step">
     <div><p class="small">PUERTO RICO · COASTAL DISCOVERY</p><h2 id="coastal-title">Ports</h2></div>
@@ -1188,7 +1192,7 @@ function goStep(next) {
 
 function placeholder() {
   const name = step === "place" ? openPlaces[focusedIndex]?.name : step === "town" ? (pickedId || listTitle) : "";
-  $("q").placeholder = name ? `Ask about ${name}…` : "Ask about any town, or search a place";
+  $("q").placeholder = name ? (ZemiConverse.voice().lang === "es" ? `Pregunte por ${name}…` : `Ask about ${name}…`) : CHROME[ZemiConverse.voice().lang === "es" ? "es" : "en"].placeholder;
 }
 
 $("crumbs").addEventListener("click", (event) => {
@@ -2624,8 +2628,36 @@ new ResizeObserver(() => {
 // An answer stays on screen until the next question, a reset, or this tap.
 $("caption").addEventListener("click", (event) => {
   if (event.target.closest(".x")) return hideCaption();
+  if (event.target.closest("[data-control-run]")) return runControl(event.target.closest("[data-control-run]"));
   if (event.target.closest(".result-card")) onResultCardClick(event);
 });
+
+// "Ask again without Qloo": the last typed question, same model and settings, Qloo tools removed, shown
+// under the answer it controls for. The map stays where the Qloo answer put it.
+let lastAgentAnswer = null;
+const CONTROL = { en: { with: "With Qloo", without: "Without Qloo", waiting: "Asking again without Qloo…", failed: "The control run could not answer." },
+  es: { with: "Con Qloo", without: "Sin Qloo", waiting: "Preguntando otra vez sin Qloo…", failed: "La corrida de control no pudo responder." } };
+async function runControl(button) {
+  if (!lastAgentAnswer?.question) return;
+  const lang = ZemiConverse.voice().lang;
+  const t = CONTROL[lang] || CONTROL.en;
+  button.disabled = true;
+  button.textContent = t.waiting;
+  const asked = lastAgentAnswer;
+  const data = await askTown(asked.town, asked.question, { control: asked });
+  if (data.error || !data.speech) { button.disabled = false; button.textContent = t.failed; return; }
+  showControl(asked.speech, data);
+}
+function showControl(withText, data) {
+  clearTimeout(captionTimer);
+  const caption = $("caption");
+  const lang = ZemiConverse.voice().lang;
+  const t = CONTROL[lang] || CONTROL.en;
+  caption.innerHTML = `<span class="who">Zemi-Aku</span><p class="control-pair"><b>${t.with}:</b> ${esc(withText)}</p>`
+    + `<p class="control-pair"><b>${t.without}:</b> ${esc(data.speech)}</p><button type="button" class="x" aria-label="Dismiss">×</button>`
+    + ZemiEvidence.answerBody(lang, data.evidence, "");
+  caption.hidden = false;
+}
 
 // converse.js writes its status to #talk-status; show it as the caption while a conversation runs.
 new MutationObserver(() => {
@@ -2825,16 +2857,25 @@ $("journey-start").addEventListener("click", (event) => {
 });
 $("journey-return").addEventListener("click", () => { if (journeyData) showCatalog(journeyData); });
 
-async function askTown(town, question, { pinTown = false } = {}) {
+// The control run repeats the exact request the Qloo answer got (town, taste, language, the history
+// before the question, no reference place), so the two runs differ in tools only.
+let lastRequest = null;
+async function askTown(town, question, { pinTown = false, control = null } = {}) {
   const referenceId = step === 'place' ? openPlaces[focusedIndex]?.id || '' : businessReferenceId;
+  const request = control
+    ? { town: control.town, taste: control.taste, question: control.question, lang: control.lang, pinTown: false, history: control.history, tools: "no-qloo" }
+    : { town, taste: currentTaste(), question, lang: ZemiConverse.voice().lang, pinTown,
+      history: pinTown ? [] : conversation.slice(-12), ...(referenceId && !pinTown ? { referenceId } : {}) };
+  if (!pinTown && !control) lastRequest = { town: request.town, taste: request.taste, question, lang: request.lang, history: request.history };
   const res = await fetch(pinTown ? "/api/ask" : "/api/chat", {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ town, taste: currentTaste(), question, lang: ZemiConverse.voice().lang, pinTown,
-      history: pinTown ? [] : conversation.slice(-12), ...(referenceId && !pinTown ? { referenceId } : {}) }),
+    body: JSON.stringify(request),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) return { town, question, error: data.error || "places failed", speech: data.speech };
+  // A control run is read, not continued: it stays out of the conversation and the business flow.
+  if (control) return data;
   if (!pinTown) businessFlow = Boolean(data.business || data.kind === "business");
   if (!pinTown) businessReferenceId = data.business ? data.business.proximity?.reference?.id || referenceId : '';
   if (!pinTown && data.speech) {
@@ -2874,6 +2915,7 @@ async function runQuestion(question) {
   }
   leaveOpportunity();
   if (data.agent) {
+    lastAgentAnswer = { ...lastRequest, speech: data.speech };
     await applyMapActions(data.actions, data.speech);
     if (!data.actions?.length && step !== "island") renderList();
     // One answer, shown once: the caption carries it, the panel keeps the picks and the list.
@@ -3152,12 +3194,30 @@ const HERO = {
   en: { title: "Where should I open a business in Puerto Rico?", lede: "Qloo's taste for all 78 towns, against the businesses the Census already counts. Pick an industry.", or: "Or start with an artist" },
   es: { title: "¿Dónde abro un negocio en Puerto Rico?", lede: "El gusto de Qloo en los 78 pueblos, frente a los negocios que el Census ya cuenta. Escoja una industria.", or: "O empiece por un artista" },
 };
+// Everything on the first screen follows the picked language (judge panel 10/23: after Español the tours,
+// the example questions, the search placeholder and the voice preview still read in English).
+const CHROME = {
+  en: { tagline: "Puerto Rico, through Qloo's taste data", placeholder: "Ask about any town, or search a place", preview: "Hear this voice",
+    jobs: { bakery: "Where to open a bakery", ponce: "Open a restaurant in Ponce", surf: "Surf spots in Rincón", mofongo: "Where to eat mofongo" } },
+  es: { tagline: "Puerto Rico, a través del gusto de Qloo", placeholder: "Pregunte por un pueblo o busque un lugar", preview: "Escuchar esta voz",
+    jobs: { bakery: "Dónde abrir una panadería", ponce: "Abrir un restaurante en Ponce", surf: "Dónde surfear en Rincón", mofongo: "Dónde comer mofongo" } },
+};
 function renderHero(next) {
   const lang = (next || ZemiConverse.voice().lang) === "es" ? "es" : "en";
+  const t = CHROME[lang];
+  document.documentElement.lang = lang;
   $("hero-title").textContent = HERO[lang].title;
   $("hero-lede").textContent = HERO[lang].lede;
   $("hero-or").textContent = HERO[lang].or;
   $("decide-start").innerHTML = ZemiOpportunity.industryChips(lang, { attr: "data-opportunity" });
+  if (typeof ZemiMissions !== "undefined" && $("missions").children.length) $("missions").innerHTML = ZemiMissions.chips(lang);
+  $("brand-tagline").textContent = t.tagline;
+  $("talk-preview").textContent = t.preview;
+  for (const button of document.querySelectorAll("#suggest [data-job], #suggest [data-opportunity]")) {
+    const key = button.dataset.job || button.dataset.opportunity;
+    if (t.jobs[key]) button.textContent = t.jobs[key];
+  }
+  if (!pickedId) $("q").placeholder = t.placeholder;
 }
 renderHero();
 // The voice menu's language pick is handled inside the voice module; the hero follows the picked value.

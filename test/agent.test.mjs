@@ -363,3 +363,77 @@ test("a fallback after a round ran keeps the rounds and tool traces; one before 
   assert.equal(out.calls[0].ok, true);
   assert.deepEqual(await createAgent({ tools, ledger: ledger(t) })({ question: "hi" }), { fallback: true, reason: "no-key" });
 });
+
+
+test('an eating question keeps only food and drink places on the map action, whatever the tool returned', async t => {
+  const places = [{ id: '1', name: 'La Victoria', category: 'food' }, { id: '2', name: 'A school', category: 'other' }, { id: '3', name: 'A bar', category: 'drinks' },
+    { id: '4', name: 'A hotel', genreId: 'urn:tag:genre:place:hotel', genre: 'Hotel' }];
+  const listing = [{ name: 'artist_places', description: 'x', parameters: { type: 'object', properties: { town: { type: 'string' } }, required: ['town'], additionalProperties: false },
+    run: async () => ({ data: { places }, action: { type: 'show_places', town: 'San Juan', places, focus: 'fans' } }) }];
+  let count = 0;
+  const agent = createAgent({ key: 'test', tools: listing, ledger: ledger(t), fetchImpl: async () => {
+    count++;
+    return count === 1 ? reply({ content: null, tool_calls: [call('artist_places', { town: 'San Juan' })] }) : reply({ content: 'Try La Victoria.' });
+  } });
+  const eat = await agent({ question: 'Where do Bad Bunny fans eat in San Juan?' });
+  assert.deepEqual(eat.actions[0].places.map(p => p.name), ['La Victoria', 'A bar']);
+  count = 0;
+  const any = await agent({ question: 'What do Bad Bunny fans like in San Juan?' });
+  assert.equal(any.actions[0].places.length, 4);
+  count = 0;
+  const comer = await agent({ question: '¿Dónde cenan los fans de Bad Bunny en San Juan?' });
+  assert.equal(comer.actions[0].places.length, 2);
+  // Nothing edible in the result: no cards at all, never the school and the hotel back.
+  const nothing = [{ name: 'artist_places', description: 'x', parameters: listing[0].parameters,
+    run: async () => ({ data: { places: places.slice(1, 2) }, action: { type: 'show_places', town: 'San Juan', places: places.slice(1, 2), focus: 'fans' } }) }];
+  count = 0;
+  const bare = createAgent({ key: 'test', tools: nothing, ledger: ledger(t), fetchImpl: async () => {
+    count++;
+    return count === 1 ? reply({ content: null, tool_calls: [call('artist_places', { town: 'San Juan' })] }) : reply({ content: 'Nothing to eat there.' });
+  } });
+  assert.deepEqual((await bare({ question: 'Where do fans eat?' })).actions, []);
+});
+
+test('an eating question adds category food to artist_places when the model left it out, so evidence and cards agree', async t => {
+  let got;
+  const withCategory = [{ name: 'artist_places', description: 'x', parameters: { type: 'object', properties: { town: { type: 'string' }, category: { type: 'string', enum: ['food', 'other'] } }, required: ['town'], additionalProperties: false },
+    run: async (args) => { got = args; return { data: { places: [] } }; } }];
+  let count = 0;
+  const agent = createAgent({ key: 'test', tools: withCategory, ledger: ledger(t), fetchImpl: async () => {
+    count++;
+    return count === 1 ? reply({ content: null, tool_calls: [call('artist_places', { town: 'San Juan' })] }) : reply({ content: 'ok' });
+  } });
+  await agent({ question: 'Where do Bad Bunny fans eat in San Juan?' });
+  assert.deepEqual(got, { town: 'San Juan', category: 'food' });
+  count = 0;
+  await agent({ question: 'What do Bad Bunny fans like in San Juan?' });
+  assert.deepEqual(got, { town: 'San Juan' });
+});
+
+test('two large tool results that overrun the request drop the largest one and the model still answers', async t => {
+  const big = { name: 'town_catalog', description: 'x'.repeat(14000), parameters: { type: 'object', properties: { town: { type: 'string' } }, required: ['town'], additionalProperties: false },
+    run: async ({ town }) => ({ data: { town, places: Array.from({ length: 40 }, (_, i) => ({ name: `${town} place ${i}`, description: 'd'.repeat(400) })) } }) };
+  let count = 0; let seen;
+  const agent = createAgent({ key: 'test', tools: [big], ledger: ledger(t), fetchImpl: async (_, opts) => {
+    count++;
+    assert.ok(Buffer.byteLength(opts.body) <= 48000, 'every request fits');
+    if (count === 1) return reply({ content: null, tool_calls: [{ ...call('town_catalog', { town: 'Caguas' }), id: 'c1' }, { ...call('town_catalog', { town: 'Río Grande' }), id: 'c2' }] });
+    seen = JSON.parse(opts.body).messages.filter(m => m.role === 'tool').map(m => m.content);
+    return reply({ content: 'Río Grande before Caguas.' });
+  } });
+  const result = await agent({ question: 'Caguas or Río Grande for a bakery?' });
+  assert.equal(result.agent, true);
+  assert.equal(seen.length, 2);
+  assert.ok(seen.some(c => c.includes('Result dropped to fit the request')), 'the largest result was replaced');
+  assert.ok(seen.some(c => c.includes('place 39')), 'the other result survived');
+  const dropped = result.evidence.calls.filter(c => c.error === 'dropped to fit the request');
+  assert.equal(dropped.length, 1, 'the drawer marks the dropped call');
+  assert.equal(dropped[0].ok, false);
+  assert.equal(dropped[0].count, undefined);
+});
+
+test('the prompt tells the model how to answer a siting or comparison question and when to pass a category', () => {
+  assert.match(PROMPT, /opportunity_map with the industry and each town/);
+  assert.match(PROMPT, /never say few when its figure is above the island/i);
+  assert.match(PROMPT, /category food/);
+});

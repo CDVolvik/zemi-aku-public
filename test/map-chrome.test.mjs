@@ -159,8 +159,10 @@ test("narrow phones wrap chips and avoid horizontal scroll", () => {
   assert.match(app, /--panel-w: 400px/);
 });
 
-test("phone: camera controls move above the open bottom sheet instead of over its text", () => {
-  // Every sheet rises to 48% from 84px up; the chrome sat at 100px up, inside it (seen at 390x844 on the café map).
+test("phone: camera controls hide under an open sheet instead of sitting on its title", () => {
+  // Parked at 62px from the top, the chrome sat on the sheet title once a tall caption pushed the sheet up
+  // (judge panel 10/23 at 390x844: controls over "Business research · San Juan"). No map is visible under an
+  // open sheet, so the chrome hides and returns when the sheet is collapsed or closed.
   const phone = app.slice(app.indexOf("@media (max-width: 720px)"));
-  assert.match(phone, /body:has\(#panel:not\(\[hidden\]\):not\(\[data-collapsed="true"\]\)\) #map-chrome,\s*body:has\(#opportunity-panel:not\(\[hidden\]\)\) #map-chrome,\s*body:has\(#coastal-panel:not\(\[hidden\]\)\) #map-chrome \{ top: calc\(62px \+ var\(--top\)\); bottom: auto; flex-direction: row; \}/);
+  assert.match(phone, /body:has\(#panel:not\(\[hidden\]\):not\(\[data-collapsed="true"\]\)\) #map-chrome,\s*body:has\(#opportunity-panel:not\(\[hidden\]\)\) #map-chrome,\s*body:has\(#coastal-panel:not\(\[hidden\]\)\) #map-chrome \{ display: none; \}/);
 });

@@ -26,7 +26,7 @@ test('roughCount and roughThousands round the way a person talks', () => {
 
 test('the Maunabo readout matches the spec target line', () => {
   assert.equal(spoken('business', { town: 'Maunabo', mode: 'research', available: true, count: 6, supplyCount: 24, category: 'food', label: 'restaurants', topic: null, metric: null, taste: null, proximity: null }, 'en'),
-    'Maunabo’s a small one. A handful of restaurants show up in Qloo, and other map data counts a couple dozen across town. Want to see who’s nearby?');
+    'Maunabo’s a small one. 6 restaurants show up in Qloo, and other map data counts 24 across town. Want to see who’s nearby?');
 });
 
 test('every kind in both languages passes the rules on sample data', () => {
@@ -66,12 +66,12 @@ test('counts of zero, one, two and many read as grammatical sentences in both la
   assert.match(en(0), /^Lajas’s a small one\. No shops show up in Qloo\./);
   assert.match(en(1), /Just one entry under shops shows up in Qloo\./);
   assert.match(en(2), /A couple of shops show up in Qloo\./);
-  assert.match(en(24), /A couple dozen shops show up in Qloo\./);
+  assert.match(en(24), /24 shops show up in Qloo\./);
   assert.match(es(0), /En Qloo no aparecen tiendas\./);
   assert.match(es(1), /En Qloo aparece una sola entrada de tiendas\./);
   assert.match(es(2), /En Qloo aparecen un par de tiendas\./);
-  assert.match(es(5), /En Qloo aparecen un puñado de tiendas\./);
-  assert.match(es(24), /En Qloo aparecen un par de docenas de tiendas\./);
+  assert.match(es(5), /En Qloo aparecen 5 tiendas\./);
+  assert.match(es(24), /En Qloo aparecen 24 tiendas\./);
   for (const line of [en(0), en(1), es(0), es(1), es(24)]) assert.deepEqual(spokenIssues(line, /Qloo aparece/.test(line) ? 'es' : 'en'), []);
   assert.match(spoken('business', { ...base, mode: 'buy', town: 'Lajas', count: 1, label: 'shops' }, 'en'), /Qloo has one entry under shops to explore\./);
   assert.match(spoken('business', { ...base, mode: 'buy', town: 'Lajas', count: 0, label: 'tiendas' }, 'es'), /Qloo no tiene tiendas aquí\./);
@@ -82,6 +82,55 @@ test('a nearby slice is not judged as the town’s size, and zero in Qloo still 
   assert.doesNotMatch(near, /small one/);
   assert.match(near, /within 3 kilometers of Coffee from 2/);
   const none = spoken('business', { town: 'Culebra', mode: 'research', available: true, count: 0, supplyCount: 3, category: 'food', label: 'bakeries', topic: null, metric: null, taste: null, proximity: null }, 'en');
-  assert.match(none, /No bakeries show up in Qloo, but other map data counts a handful across town\./);
+  assert.match(none, /No bakeries show up in Qloo, but other map data counts 3 across town\./);
   assert.match(spoken('business', { town: 'Bayamón', mode: 'research', available: true, count: 15, category: 'food', label: 'cafés', topic: 'population', metric: { kind: 'population', estimate: 185996 } }, 'es'), /unas 186 mil personas/);
+});
+
+// Judge panel 10/23: the panel said "Gap: few businesses" while the bubble said "San Juan's busy". When the
+// opportunity row exists, speech leads with that verdict and the exact figures, never with a size clause.
+const sanJuan = { town: 'San Juan', mode: 'research', available: true, count: 35, supplyCount: 64, category: 'food', label: 'bakeries', topic: null, metric: null, taste: null, proximity: null,
+  opportunity: { group: 'gap', tasteRank: 5, ranked: 78, establishments: 16, establishmentsMax: 16, suppressed: false, perTenThousand: 0.476, perTenThousandMax: 0.476, islandPerTenThousand: 0.8 } };
+test('a town with an opportunity verdict is spoken as that verdict with exact counts, in both languages', () => {
+  const en = spoken('business', sanJuan, 'en');
+  assert.equal(en, 'San Juan is a gap for bakeries: strong taste, rank 5 of 78, and few businesses, 16 establishments or about 5 per hundred thousand residents against 8 island-wide. Qloo lists 35 and other map data 64. A lead to go visit, not proof of demand.');
+  assert.doesNotMatch(en, /busy|some options|small one|about fifty|couple dozen/);
+  assert.deepEqual(spokenIssues(en, 'en'), []);
+  const es = spoken('business', { ...sanJuan, label: 'panaderías' }, 'es');
+  assert.equal(es, 'San Juan es una brecha para panaderías: mucha afinidad, puesto 5 de 78, y pocos negocios, 16 establecimientos o unos 5 por cada cien mil residentes frente a 8 en la isla. Qloo registra 35 y otros datos del mapa 64. Es una pista para visitar, no prueba de demanda.');
+  assert.deepEqual(spokenIssues(es, 'es'), []);
+});
+
+test('the four other verdicts and a suppressed count each read as their own sentence', () => {
+  const line = (patch, lang = 'en') => spoken('business', { ...sanJuan, town: 'Adjuntas', opportunity: { ...sanJuan.opportunity, ...patch } }, lang);
+  assert.match(line({ group: 'competitive', tasteRank: 32, establishments: 5, perTenThousand: 2.8 }), /^Adjuntas is competitive for bakeries: strong taste, rank 32 of 78, but many businesses, 5 establishments or about 28 per hundred thousand residents against 8 island-wide\./);
+  assert.match(line({ group: 'competitive', tasteRank: 32, establishments: 5, perTenThousand: 2.8 }), /Strong taste already served; expect to compete\.$/);
+  assert.match(line({ group: 'quiet', tasteRank: 50 }), /^Adjuntas is quiet for bakeries: less taste, rank 50 of 78, and few businesses/);
+  assert.match(line({ group: 'crowded', tasteRank: 60, establishments: 9, perTenThousand: 3.1 }), /^Adjuntas is crowded for bakeries: less taste, rank 60 of 78, and many businesses/);
+  const unknown = line({ group: 'unknown', tasteRank: 37, establishments: 0, establishmentsMax: 2, suppressed: true, perTenThousand: 0, perTenThousandMax: 1.1 });
+  assert.equal(unknown, 'Not enough data for bakeries in Adjuntas: no published count, 0 to 2 establishments, and taste rank 37 of 78. Qloo lists 35 and other map data 64. Visit before you decide.');
+  const unknownEs = line({ group: 'unknown', tasteRank: 37, establishments: 0, establishmentsMax: 2, suppressed: true, perTenThousand: 0, perTenThousandMax: 1.1 }, 'es');
+  assert.match(unknownEs, /^No hay datos suficientes para bakeries en Adjuntas: sin cifra publicada, de 0 a 2 establecimientos, y afinidad puesto 37 de 78\./);
+  for (const l of [unknown, unknownEs]) assert.deepEqual(spokenIssues(l, l === unknownEs ? 'es' : 'en'), []);
+  // Unknown for lack of taste data keeps the published count and says what is missing instead of inventing a suppression.
+  assert.equal(line({ group: 'unknown', tasteRank: null, establishments: 12, establishmentsMax: 12, suppressed: false, perTenThousand: 2.1 }),
+    'Not enough data for bakeries in Adjuntas: 12 establishments, and no taste data. Qloo lists 35 and other map data 64. Visit before you decide.');
+  // A grouped row with its numbers missing falls back to the plain readout rather than saying "undefined".
+  const partial = line({ group: 'gap', establishments: undefined, perTenThousand: undefined, islandPerTenThousand: undefined });
+  assert.doesNotMatch(partial, /undefined|NaN|is a gap/);
+  assert.match(partial, /35 bakeries show up in Qloo/);
+});
+
+test('a suppressed Census count in a grouped town is spoken as a range, and zero in Qloo reads naturally in Spanish', () => {
+  const loiza = { ...sanJuan, town: 'Loíza', count: 0, supplyCount: 7, label: 'salones de belleza',
+    opportunity: { ...sanJuan.opportunity, establishments: 0, establishmentsMax: 4, suppressed: true, perTenThousand: 0, perTenThousandMax: 1.6, islandPerTenThousand: 1.0 } };
+  const es = spoken('business', loiza, 'es');
+  assert.equal(es, 'Loíza es una brecha para salones de belleza: mucha afinidad, puesto 5 de 78, y pocos negocios, sin cifra publicada, de 0 a 4 establecimientos. Qloo no registra ninguno y otros datos del mapa 7. Es una pista para visitar, no prueba de demanda.');
+  assert.deepEqual(spokenIssues(es, 'es'), []);
+  assert.match(spoken('business', { ...loiza, label: 'salons' }, 'en'), /few businesses, no published count, 0 to 4 establishments\. Qloo lists none and other map data 7\. A lead to go visit/);
+});
+
+test('a topic question or a nearby slice keeps its own line even when a verdict exists', () => {
+  assert.match(spoken('business', { ...sanJuan, topic: 'income', metric: { kind: 'income', estimate: 27992 } }, 'en'), /about 28 thousand dollars/);
+  assert.match(spoken('business', { ...sanJuan, proximity: { reference: 'Pan Café' } }, 'en'), /within 3 kilometers of Pan Café/);
+  assert.doesNotMatch(spoken('business', { ...sanJuan, proximity: { reference: 'Pan Café' } }, 'en'), /is a gap/);
 });

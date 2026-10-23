@@ -89,3 +89,41 @@ test('compact fills why from a real affinity signal and never invents one',async
   assert.equal(out.data.places[2].why,'');
   assert.equal(out.data.places[3].why,'');
 });
+
+
+// Judge panel 10/23: "where do fans eat" showed a school and a hotel as strong matches, and the evidence
+// line said 8 places while 14 cards were on screen.
+test('artist_places can keep one category and the map action lists the same places as the evidence', async () => {
+  const places = [
+    { id: 'a', name: 'La Victoria', genreId: 'urn:tag:genre:place:restaurant', genre: 'Restaurant', category: 'food' },
+    { id: 'b', name: 'Colegio San Ignacio', genreId: 'urn:tag:genre:place:school', genre: 'School', category: 'other' },
+    { id: 'c', name: 'Old San Juan Hotel', genreId: 'urn:tag:genre:place:hotel', genre: 'Hotel', category: 'stay' },
+    ...Array.from({ length: 11 }, (_, i) => ({ id: `f${i}`, name: `Food ${i}`, genreId: 'urn:tag:genre:place:restaurant', genre: 'Restaurant', category: 'food' })),
+  ];
+  const registry = agentTools({ towns: ['San Juan'], categories: [], artistAnswer: async () => ({ places, note: 'affinities' }) });
+  const tool = registry.find(t => t.name === 'artist_places');
+  assert.deepEqual(tool.parameters.properties.category.enum, ['food', 'drinks', 'stay', 'groceries', 'shopping', 'fun', 'outdoors', 'culture', 'health', 'other']);
+  const all = await tool.run({ town: 'San Juan', artist: 'Bad Bunny' });
+  assert.equal(all.data.places.length, 8);
+  assert.equal(all.action.places.length, 8, 'the cards on screen are the places in the evidence line');
+  const food = await tool.run({ town: 'San Juan', artist: 'Bad Bunny', category: 'food' });
+  assert.ok(food.data.places.every(p => p.category === 'food'));
+  assert.ok(!food.action.places.some(p => p.name === 'Colegio San Ignacio'));
+  assert.equal(food.data.category, 'food');
+});
+
+test('opportunity_map with a town returns that town’s row beside the island figure', async () => {
+  const file = { ...bakeryFile, towns: bakeryFile.towns.map(row => ({ ...row, population: 100000, establishments: row.town === 'San Juan' ? 16 : 5 })) };
+  const tool = agentTools({ towns: ['San Juan'], categories: [], opportunityFor: id => id === 'bakery' ? file : null }).find(t => t.name === 'opportunity_map');
+  const out = await tool.run({ industry: 'bakery', town: 'San Juan' });
+  assert.equal(out.data.town.town, 'San Juan');
+  assert.equal(out.data.town.group, 'gap');
+  assert.equal(out.data.town.establishments, 16);
+  assert.equal(out.data.town.perTenThousand, 0.5);
+  assert.ok(Math.abs(out.data.town.islandPerTenThousand - 41 / 600000 * 10000) < 1e-9);
+  assert.equal(out.data.town.ranked, 5);
+  assert.match(out.data.town.reading, /^San Juan is a gap for bakery: taste rank 5 of 5; 16 establishments, 0\.5 per 10,000 residents against 0\.68 island-wide\./);
+  assert.deepEqual(out.action, { type: 'show_opportunity', industry: 'bakery' });
+  const missing = await tool.run({ industry: 'bakery', town: 'Lares' });
+  assert.equal(missing.data.town, null);
+});

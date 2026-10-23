@@ -1481,6 +1481,14 @@ async function qlooHeat(town) {
 }
 
 
+// True without an Origin header (scripts, curl) or when the browser's Origin is this site itself.
+function sameOrigin(req) {
+  const origin = String(req.headers.origin || "");
+  if (!origin) return true;
+  const own = [process.env.ZEMI_PUBLIC_URL || "https://zemi.r21digital.com", `http://${req.headers.host || ""}`, `https://${req.headers.host || ""}`];
+  return own.some((candidate) => candidate.replace(/\/$/, "").toLowerCase() === origin.replace(/\/$/, "").toLowerCase());
+}
+
 async function patternAnswer(body) {
   const question = String(body.question || "").slice(0, 240);
   const lang = String(body.lang || "en");
@@ -1488,7 +1496,7 @@ async function patternAnswer(body) {
   const facts = { places: catalogTotal };
   if (body.greet) return ({ chat: true, kind: "greet", speech: chatReply(lang, "greet", facts) });
   const talk = smallTalkKind(question);
-  const business = await businessAnswer(body);
+  const business = await businessAnswer(body, { force: true });
   if (business) return business;
   if (talk) return ({ chat: true, kind: talk, question, speech: chatReply(lang, talk, facts) });
   // A plan with no town yet ("dinner tonight", "I want to buy a business"): ask which town.
@@ -1599,9 +1607,10 @@ const registry = agentTools({ towns: townNames, weather,
   });
 const textAgent = createAgent({ key: routerKey, ledger: modelLedger, tools: registry, model: process.env.ZEMI_MODEL || MODEL,
   onFallback: (reason) => console.warn(`agent fallback: ${reason}`) });
-// The control run for /compare: same model, prompt and settings, no Qloo tools. Local only (ZEMI_COMPARE=1).
-const bareAgent = process.env.ZEMI_COMPARE === "1" ? createAgent({ key: routerKey, ledger: modelLedger, tools: withoutQloo(registry),
-  model: process.env.ZEMI_MODEL || MODEL, onFallback: (reason) => console.warn(`bare agent fallback: ${reason}`) }) : null;
+// The control run: same model, prompt and settings, no Qloo tools. Built for /compare under ZEMI_COMPARE=1 and,
+// since October 23, for the public "Ask again without Qloo" button, under the same ledger and visitor cap.
+const bareAgent = createAgent({ key: routerKey, ledger: modelLedger, tools: withoutQloo(registry),
+  model: process.env.ZEMI_MODEL || MODEL, onFallback: (reason) => console.warn(`bare agent fallback: ${reason}`) });
 // Three saved model runs, served when the model cannot answer (budget, provider, a refused round).
 const samples = createSamples({ dir: path.join(root, "data", "samples") });
 // Off unless ZEMI_MCP_ENABLED=1: then /mcp is a plain 404, like any unknown path.
@@ -1853,13 +1862,21 @@ window.ZEMI_PHOTOREAL_ENABLED = ${process.env.ZEMI_PHOTOREAL_ENABLED === "1"};
       if (!checked.ok || (checked.value.town && !knownTown(checked.value.town))) {
         return sendJson(res, 400, { error: "Check your question, language and conversation history." });
       }
-      if (process.env.ZEMI_COMPARE === "1" && body.tools === "no-qloo") {
+      const ip = limiter.visitorIp(req, TRUST_PROXY);
+      if (body.tools === "no-qloo") {
+        // The live control (judge panel 10/23: a recorded comparison is not one a judge can fire). One
+        // visitor turn and one model reservation, like any model answer; a failed run is a plain 503.
+        // It always reaches the model, so a cross-origin page must not be able to fire it: JSON only
+        // (so browsers preflight) and, when a browser sends Origin, only this site's own.
+        if (!/^application\/json\b/i.test(String(req.headers["content-type"] || ""))) return sendJson(res, 415, { error: "Send JSON." });
+        if (!sameOrigin(req)) return sendJson(res, 403, { error: "The control run answers this site only." });
+        if (!limiter.spend(`chat-turns:${ip}`, 1, CHAT_TURNS_PER_VISITOR)) return sendJson(res, 429, { error: "Your model turns for today are used." });
         const bare = await bareAgent(checked.value);
-        return sendJson(res, bare.fallback ? 503 : 200, bare);
+        if (bare.fallback) return sendJson(res, 503, { error: "The control run could not answer.", reason: bare.reason });
+        return sendJson(res, 200, { ...bare, control: "no-qloo", evidence: { ...bare.evidence, control: "no-qloo" } });
       }
       const business = await businessAnswer(checked.value);
       if (business) return sendJson(res, 200, business);
-      const ip = limiter.visitorIp(req, TRUST_PROXY);
       let answer;
       if (limiter.spend(`chat-turns:${ip}`, 1, CHAT_TURNS_PER_VISITOR)) answer = await textAgent(checked.value);
       else { console.warn("agent fallback: visitor-cap"); answer = { fallback: true, reason: "visitor-cap" }; }
@@ -1891,7 +1908,7 @@ window.ZEMI_PHOTOREAL_ENABLED = ${process.env.ZEMI_PHOTOREAL_ENABLED === "1"};
   let rel;
   try {
     // / is the front page, /app the live map.
-    const pretty = { "/": "/app/home.html", "/app": "/app/index.html", "/app/": "/app/index.html", "/compare": "/app/compare.html" };
+    const pretty = { "/": "/app/home.html", "/app": "/app/index.html", "/app/": "/app/index.html", "/compare": "/app/compare.html", "/notes-for-qloo": "/app/qloo-notes.html" };
     rel = decodeURIComponent(pretty[url.pathname] || url.pathname);
   } catch {
     res.writeHead(400).end("bad path");

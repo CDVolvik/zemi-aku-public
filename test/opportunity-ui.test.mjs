@@ -52,8 +52,8 @@ test('the legend uses the group labels and honesty lines in the chosen language'
   for(const text of ['Gap: strong taste, few businesses','Competitive: strong taste, many businesses','Quiet: less taste, few businesses',
     'Crowded: less taste, many businesses','Not enough data','Not a measure of demand']) assert.ok(en.includes(text),text);
   const es=Z.legendHtml('es',notes.es);
-  for(const text of ['Brecha: mucho gusto, pocos negocios','Competido: mucho gusto, muchos negocios','Tranquilo: menos gusto, pocos negocios',
-    'Saturado: menos gusto, muchos negocios','Datos insuficientes','No mide demanda']) assert.ok(es.includes(text),text);
+  for(const text of ['Brecha: mucha afinidad, pocos negocios','Competido: mucha afinidad, muchos negocios','Tranquilo: poca afinidad, pocos negocios',
+    'Saturado: poca afinidad, muchos negocios','Datos insuficientes','No mide demanda']) assert.ok(es.includes(text),text);
 });
 
 test('tapping a town asks the town question in the current language',async()=>{

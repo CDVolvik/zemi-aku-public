@@ -1,10 +1,32 @@
 import { fold, affinityWhy } from "./lib.mjs";
 import { INDUSTRIES } from "./opportunity.mjs";
+import { CATEGORIES, categoryOf } from "./catalog.mjs";
 // One read-only tool registry shared by the text agent and future voice/MCP transports.
 // The with-and-without-Qloo control runs the same prompt against this registry minus every tool
-// that reads Qloo. Only local runs under ZEMI_COMPARE=1 use it; see docs/SPEC-2026-10-14-with-and-without-qloo.md.
+// that reads Qloo: the saved /compare runs (local, ZEMI_COMPARE=1) and, since October 23, the public
+// "Ask again without Qloo" control under the same caps; see docs/SPEC-2026-10-14-with-and-without-qloo.md.
 export const NON_QLOO_TOOLS = ["map_town", "town_weather", "landmarks", "town_history"];
 export function withoutQloo(tools) { return tools.filter((tool) => NON_QLOO_TOOLS.includes(tool.name)); }
+const GROUP_WORDS = { gap: "a gap", competitive: "competitive", quiet: "quiet", crowded: "crowded", unknown: "not enough data" };
+function townReading(file, industry, town) {
+  const row = file.towns.find((r) => r.town === town);
+  if (!row) return null;
+  const counted = file.towns.filter((r) => r.population > 0);
+  const people = counted.reduce((sum, r) => sum + r.population, 0);
+  const businesses = counted.reduce((sum, r) => sum + (r.establishments || 0), 0);
+  const island = people > 0 ? businesses / people * 10000 : null;
+  const ranked = file.towns.filter((r) => Number.isInteger(r.tasteRank)).length;
+  const figure = (n) => (Number.isFinite(n) ? Math.round(n * 100) / 100 : null);
+  const density = row.suppressed
+    ? `no published count below 3, so 0 to ${row.establishmentsMax ?? 2} establishments`
+    : `${row.establishments} establishments, ${figure(row.perTenThousand)} per 10,000 residents against ${figure(island)} island-wide`;
+  const reading = `${town} is ${GROUP_WORDS[row.group] || row.group} for ${industry}: taste rank ${row.tasteRank ?? "unranked"} of ${ranked}; ${density}. `
+    + (row.group === "gap" ? "Strong taste, few businesses: a lead to visit, not demand." : row.group === "competitive" ? "Strong taste, many businesses: the figure is above the island's, so never call it few."
+      : row.group === "quiet" ? "Less taste, few businesses." : row.group === "crowded" ? "Less taste, many businesses." : "Not enough data to group.");
+  return { town, group: row.group, tasteRank: row.tasteRank ?? null, ranked, establishments: row.establishments ?? null, establishmentsMax: row.establishmentsMax ?? null,
+    suppressed: Boolean(row.suppressed), perTenThousand: figure(row.perTenThousand), perTenThousandMax: figure(row.perTenThousandMax), islandPerTenThousand: island, reading };
+}
+
 export function agentTools(api) {
   const text = { type: "string", maxLength: 100 };
   const town = { type: "string", enum: api.towns };
@@ -26,10 +48,14 @@ export function agentTools(api) {
     price: place.price, rating: place.rating ?? null, hours: place.hours || "",
     facts: place.facts?.slice(0, 6),
   });
+  // The cards on screen are the places in the evidence line: the same eight (judge panel 10/23 saw
+  // "8 places" beside fourteen cards).
   const list = (town, places, focus, extra = {}) => ({
     data: { source: "Qloo", town, places: places.slice(0, 8).map(compact), ...extra },
-    ...(places.length ? { action: { type: "show_places", town, places: places.slice(0, 20), focus } } : {}),
+    ...(places.length ? { action: { type: "show_places", town, places: places.slice(0, 8), focus } } : {}),
   });
+  const category = { type: "string", enum: CATEGORIES.map((row) => row.id) };
+  const inCategory = (place, id) => (place.category || categoryOf(place.genreId, place.genre)) === id;
   const kit = async (name, args) => {
     const result = await api.callQloo(name, args);
     if (result?.status !== "ok" && result?.status !== "empty") return { error: "Qloo could not answer this request. Do not guess." };
@@ -82,10 +108,12 @@ export function agentTools(api) {
         const [artists, trips] = await Promise.all([api.qlooAlsoLike(id, "artist"), api.qlooAlsoLike(id, "destination")]);
         return { source: "Qloo cross-domain affinities", artists, trips };
       }),
-    tool("artist_places", "Places an artist's fans like in a town, using Qloo cross-domain taste data.", { town, artist: text }, ["town", "artist"], async ({ town, artist }) => {
-      const answer = await api.artistAnswer({ town, query: artist }, artist, "en");
-      return list(town, answer?.places || [], `${artist} fans in ${town}`, { note: answer?.note || "No verified artist affinities found." });
-    }),
+    tool("artist_places", "Places an artist's fans like in a town, using Qloo cross-domain taste data. Pass category food when the question is where fans eat, drinks for where they go out; leave it out for a general question.",
+      { town, artist: text, category }, ["town", "artist"], async ({ town, artist, category: only }) => {
+        const answer = await api.artistAnswer({ town, query: artist }, artist, "en");
+        const places = (answer?.places || []).filter((place) => !only || inCategory(place, only));
+        return list(town, places, `${artist} fans in ${town}`, { note: answer?.note || "No verified artist affinities found.", ...(only ? { category: only } : {}) });
+      }),
     tool("town_profile", "Town cultural tastes, observed supply and Census PRCS demographics with survey period and margins of error. Qloo affinity is not business demand.", { town }, ["town"], async ({ town }) => ({
       source: "Qloo locality · Overture · Wikidata · Census PRCS", town, profile: await api.townProfile(town), ...api.townStats(town),
     })),
@@ -113,13 +141,17 @@ export function agentTools(api) {
         return kit("qloo_trends", { entities: [entity], entity_type: type, start_date, end_date, limit: 6 });
       }),
     tool("opportunity_map", "Where in Puerto Rico a taste is strong and businesses are few, for one industry: Qloo heatmap taste against Census businesses per 10,000 residents, in four groups. Not demand or profit.",
-      { industry: { type: "string", enum: INDUSTRIES.map((industry) => industry.id) } }, ["industry"], async ({ industry }) => {
+      { industry: { type: "string", enum: INDUSTRIES.map((industry) => industry.id) }, town }, ["industry"], async ({ industry, town: asked }) => {
         const file = api.opportunityFor?.(industry);
         if (!file) return { error: "Opportunity data is unavailable for this industry." };
+        // One town's row beside the island figure, read as a sentence the model can repeat without
+        // contradicting it (judge panel 10/23: "pocos negocios por habitante" at 2.8 against 0.8).
+        const townRow = asked ? townReading(file, industry, asked) : undefined;
         const byRank = [...file.towns].sort((a, b) => (a.tasteRank ?? Infinity) - (b.tasteRank ?? Infinity) || a.town.localeCompare(b.town));
         const groups = Object.fromEntries(["gap", "competitive", "quiet", "crowded", "unknown"].map((group) => [group,
           byRank.filter((row) => row.group === group).map((row) => row.town)]));
         return { data: { source: "Qloo heatmap · Census County Business Patterns 2023 · Census PRCS 2020–2024", industry,
+          ...(asked ? { town: townRow } : {}),
           ...(file.sources?.qloo?.retrievedAt ? { retrievedAt: file.sources.qloo.retrievedAt } : {}),
           medians: file.medians, notes: file.notes.en, groups,
           topGaps: byRank.filter((row) => row.group === "gap").slice(0, 5).map(({ town, tasteRank, suppressed, perTenThousand, perTenThousandMax }) =>

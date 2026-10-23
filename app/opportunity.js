@@ -10,8 +10,8 @@
   const LABELS = {
     en: { gap: "Gap: strong taste, few businesses", competitive: "Competitive: strong taste, many businesses",
       quiet: "Quiet: less taste, few businesses", crowded: "Crowded: less taste, many businesses", unknown: "Not enough data" },
-    es: { gap: "Brecha: mucho gusto, pocos negocios", competitive: "Competido: mucho gusto, muchos negocios",
-      quiet: "Tranquilo: menos gusto, pocos negocios", crowded: "Saturado: menos gusto, muchos negocios", unknown: "Datos insuficientes" },
+    es: { gap: "Brecha: mucha afinidad, pocos negocios", competitive: "Competido: mucha afinidad, muchos negocios",
+      quiet: "Tranquilo: poca afinidad, pocos negocios", crowded: "Saturado: poca afinidad, muchos negocios", unknown: "Datos insuficientes" },
   };
   const INDUSTRIES = [
     ["cafe", "café", "una cafetería", "Cafés", "Cafeterías"], ["bakery", "bakery", "una panadería", "Bakeries", "Panaderías"],

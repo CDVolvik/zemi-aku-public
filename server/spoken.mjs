@@ -58,29 +58,24 @@ export function roughThousands(n, lang) {
   return lang === "es" ? `unos ${k} mil` : `about ${k} thousand`;
 }
 
-// Quantifiers that read well before a plural noun ("a handful of cafés", "un par de tiendas").
-const QUANTITY = [
-  [2, "a couple of", "un par de"], [6, "a handful of", "un puñado de"], [15, "about a dozen", "como una docena de"],
-  [35, "a couple dozen", "un par de docenas de"], [75, "about fifty", "como cincuenta"], [150, "about a hundred", "como cien"],
-  [400, "a few hundred", "unos cientos de"], [Infinity, "hundreds of", "cientos de"],
-];
-function quantity(n, lang) {
-  const count = Math.max(2, Math.round(Number(n) || 0));
-  const band = QUANTITY.find(([top]) => count <= top);
-  return lang === "es" ? band[2] : band[1];
-}
 
 // What Qloo shows for the type: a whole clause, so zero and one read as sentences in both languages.
+// Counts are spoken exactly from three up. The October 23 judge panel read "about fifty" for 64 and
+// "a couple dozen" for 35 as wrong numbers, not as a spoken style; zero, one and two keep their words.
+function exactCount(n, lang) {
+  const count = Math.max(0, Math.round(Number(n) || 0));
+  return count <= 2 ? roughCount(count, lang) : String(count);
+}
 function qlooClause(n, label, lang) {
   const count = Math.round(Number(n) || 0);
   if (lang === "es") {
     if (count === 0) return `En Qloo no aparecen ${label}`;
     if (count === 1) return `En Qloo aparece una sola entrada de ${label}`;
-    return `En Qloo aparecen ${quantity(count, "es")} ${label}`;
+    return `En Qloo aparecen ${count === 2 ? "un par de" : count} ${label}`;
   }
   if (count === 0) return `No ${label} show up in Qloo`;
   if (count === 1) return `Just one entry under ${label} shows up in Qloo`;
-  return `${cap(quantity(count, "en"))} ${label} show up in Qloo`;
+  return `${count === 2 ? "A couple of" : count} ${label} show up in Qloo`;
 }
 
 function buyClause(n, label, lang) {
@@ -88,11 +83,11 @@ function buyClause(n, label, lang) {
   if (lang === "es") {
     if (count === 0) return `Qloo no tiene ${label} aquí.`;
     if (count === 1) return `Qloo tiene una sola entrada de ${label} para explorar.`;
-    return `Qloo tiene ${quantity(count, "es")} ${label} para explorar la zona.`;
+    return `Qloo tiene ${count === 2 ? "un par de" : count} ${label} para explorar la zona.`;
   }
   if (count === 0) return `Qloo has no ${label} here.`;
   if (count === 1) return `Qloo has one entry under ${label} to explore.`;
-  return `Qloo has ${quantity(count, "en")} ${label} to explore the area.`;
+  return `Qloo has ${count === 2 ? "a couple of" : count} ${label} to explore the area.`;
 }
 
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
@@ -234,6 +229,57 @@ function catalogLine(brief, lang) {
 
 // ---------- business research ----------
 
+// Businesses per hundred thousand residents, as a whole number a person can say ("about 5").
+const perLakh = (perTenThousand) => Math.round((Number(perTenThousand) || 0) * 10);
+
+function verdictBits(d, lang) {
+  const es = lang === "es";
+  const o = d.opportunity;
+  const town = d.town;
+  const label = d.label || (es ? "negocios" : "businesses");
+  const rank = Number.isInteger(o.tasteRank) && o.ranked ? (es ? `puesto ${o.tasteRank} de ${o.ranked}` : `rank ${o.tasteRank} of ${o.ranked}`) : "";
+  const counts = (es ? (Number(d.count) > 0 ? `Qloo registra ${exactCount(d.count, "es")}` : "Qloo no registra ninguno") : `Qloo lists ${exactCount(d.count, "en")}`)
+    + (d.supplyCount > 0 ? (es ? ` y otros datos del mapa ${exactCount(d.supplyCount, "es")}.` : ` and other map data ${exactCount(d.supplyCount, "en")}.`) : ".");
+  const whole = (n) => Number.isFinite(n);
+  if (!["gap", "competitive", "quiet", "crowded"].includes(o.group)) {
+    // "unknown" has three causes (server/opportunity.mjs): a suppressed count whose bounds straddle the
+    // median, no taste data, or both. Say the one that applies; never invent a suppression.
+    const max = whole(o.establishmentsMax) ? o.establishmentsMax : 2;
+    const supply = o.suppressed
+      ? (es ? `sin cifra publicada, de 0 a ${max} establecimientos` : `no published count, 0 to ${max} establishments`)
+      : whole(o.establishments) ? (es ? `${o.establishments} establecimientos` : `${o.establishments} establishments`) : "";
+    const tasteBit = rank ? (es ? `afinidad ${rank}` : `taste ${rank}`) : (es ? "sin datos de afinidad" : "no taste data");
+    const parts = [supply, tasteBit].filter(Boolean).join(es ? ", y " : ", and ");
+    return es
+      ? [`No hay datos suficientes para ${label} en ${town}: ${parts}.`, counts, "Visite antes de decidir."]
+      : [`Not enough data for ${label} in ${town}: ${parts}.`, counts, "Visit before you decide."];
+  }
+  if (!whole(o.islandPerTenThousand) || !(o.suppressed ? whole(o.establishmentsMax) : whole(o.establishments) && whole(o.perTenThousand))) return null;
+  const strong = o.group === "gap" || o.group === "competitive";
+  const many = o.group === "competitive" || o.group === "crowded";
+  const max = Number.isFinite(o.establishmentsMax) ? o.establishmentsMax : 2;
+  const density = o.suppressed
+    ? (es ? `sin cifra publicada, de 0 a ${max} establecimientos` : `no published count, 0 to ${max} establishments`)
+    : es
+      ? `${o.establishments} establecimientos o unos ${perLakh(o.perTenThousand)} por cada cien mil residentes frente a ${perLakh(o.islandPerTenThousand)} en la isla`
+      : `${o.establishments} establishments or about ${perLakh(o.perTenThousand)} per hundred thousand residents against ${perLakh(o.islandPerTenThousand)} island-wide`;
+  const names = es
+    ? { gap: "una brecha", competitive: "competido", quiet: "tranquilo", crowded: "saturado" }
+    : { gap: "a gap", competitive: "competitive", quiet: "quiet", crowded: "crowded" };
+  const closing = es
+    ? { gap: "Es una pista para visitar, no prueba de demanda.", competitive: "La afinidad ya está atendida; cuente con competencia.",
+        quiet: "Pocos rivales, pero poca señal de gusto.", crowded: "Terreno difícil: poca señal de gusto y muchos rivales." }
+    : { gap: "A lead to go visit, not proof of demand.", competitive: "Strong taste already served; expect to compete.",
+        quiet: "Few rivals, but little taste signal.", crowded: "Hard ground: little taste signal and many rivals." };
+  const taste = es ? (strong ? "mucha afinidad" : "poca afinidad") : (strong ? "strong taste" : "less taste");
+  const joiner = es ? (strong && many ? "pero" : "y") : (strong && many ? "but" : "and");
+  const supply = es ? (many ? "muchos negocios" : "pocos negocios") : (many ? "many businesses" : "few businesses");
+  const head = es
+    ? `${town} es ${names[o.group]} para ${label}: ${taste}${rank ? `, ${rank}` : ""}, ${joiner} ${supply}, ${density}.`
+    : `${town} is ${names[o.group]} for ${label}: ${taste}${rank ? `, ${rank}` : ""}, ${joiner} ${supply}, ${density}.`;
+  return [head, counts, closing[o.group]];
+}
+
 function businessLine(d, lang) {
   const es = lang === "es";
   const town = d.town;
@@ -248,6 +294,10 @@ function businessLine(d, lang) {
     bits.push(all
       ? (es ? "¿Qué tipo de negocio le interesa: comida, tiendas o servicios?" : "What kind of business interests you: food, shops or services?")
       : (es ? "No sabemos cuáles están en venta." : "We don’t know which ones are for sale."));
+  } else if (d.opportunity && d.available && !d.proximity && !d.topic && verdictBits(d, lang)) {
+    // The saved opportunity row is the verdict the panel shows; speech must say the same thing (judge
+    // panel 10/23 heard "San Juan's busy" under a panel that read "Gap: few businesses").
+    bits.push(...verdictBits(d, lang));
   } else {
     const n = Number(d.count) || 0;
     // The town's size is judged by the whole type, not by a 3 km slice around one place.
@@ -255,7 +305,7 @@ function businessLine(d, lang) {
       : n <= 30 ? (es ? `${town} tiene opciones.` : `${town} has some options.`) : (es ? `${town} está movido.` : `${town}’s busy.`);
     bits.push(size);
     // supplyCount is a town-wide count from other map data, shown as text on screen, not pins.
-    const other = d.supplyCount > 0 ? roughCount(d.supplyCount, lang) : "";
+    const other = d.supplyCount > 0 ? exactCount(d.supplyCount, lang) : "";
     if (d.available) {
       const joiner = n === 0 ? (es ? ", pero" : ", but") : (es ? ", y" : ", and");
       const more = other ? (es ? `${joiner} otros datos del mapa cuentan ${other} en todo el pueblo.` : `${joiner} other map data counts ${other} across town.`) : ".";
@@ -298,6 +348,8 @@ export function spoken(kind, data = {}, lang = "en") {
     case "opportunity": return es ? `Aquí el gusto por ${data.label} es fuerte y hay pocos negocios. Toque un pueblo para ver más.`
       : `Here’s where ${data.label} taste runs strong and businesses are few. Tap a town to look closer.`;
     case "businessTown": return es ? "Vamos a investigar. ¿En qué pueblo está pensando?" : "Let’s research it. Which town are you thinking about?";
+    case "outside": return es ? `Zemi-Aku cubre solo los 78 pueblos de Puerto Rico, y ${data.place} no está en este mapa. Dígame un pueblo de aquí y lo busco.`
+      : `Zemi-Aku covers Puerto Rico’s 78 towns only, and ${data.place} is not on this map. Name a town here and I’ll look.`;
     case "chat": return chatReply(lang, data.kind, { places: data.places });
     case "error": return catalogLine({ error: true }, lang);
     case "noTown": return catalogLine({ noTown: true }, lang);

@@ -11,7 +11,8 @@
       reasons: { budget: "daily model budget spent", "visitor-cap": "your model turns for today are used", "no-key": "no model configured" },
       failed: (code) => `the model did not answer: ${code}`, decimal: ".",
       sources: (n) => `${n} source${n === 1 ? "" : "s"}`, kinds: { business: "business research", opportunity: "opportunity map" },
-      sourcesBody: "Answered from these sources without a model turn" },
+      sourcesBody: "Answered from these sources without a model turn",
+      control: "without Qloo tools", again: "Ask again without Qloo" },
     es: { evidence: "Evidencia", model: "modelo en vivo", rules: "reglas", replay: "repetición guardada", call: (n) => `${n} llamada${n === 1 ? "" : "s"}`,
       noTurn: "sin turno del modelo", unfinished: "el modelo no terminó", place: (n) => `${n} lugar${n === 1 ? "" : "es"}`, measured: "catálogo medido", read: "leído", refused: "rechazada",
       done: "hecho", more: (n) => `+${n} más`, modelLine: (m) => `Modelo ${m} vía OpenRouter`, rounds: (n) => `${n} ronda${n === 1 ? "" : "s"}`, answered: "respondió", ids: "IDs de Qloo",
@@ -19,7 +20,8 @@
       reasons: { budget: "presupuesto diario del modelo agotado", "visitor-cap": "sus turnos del modelo de hoy se usaron", "no-key": "sin modelo configurado" },
       failed: (code) => `el modelo no respondió: ${code}`, decimal: ",",
       sources: (n) => `${n} fuente${n === 1 ? "" : "s"}`, kinds: { business: "investigación de negocio", opportunity: "mapa de oportunidad" },
-      sourcesBody: "Respondido desde estas fuentes, sin turno del modelo" },
+      sourcesBody: "Respondido desde estas fuentes, sin turno del modelo",
+      control: "sin las herramientas de Qloo", again: "Preguntar otra vez sin Qloo" },
   };
   const short = (id) => (/^[0-9a-fA-F-]{36}$/.test(id) ? `${id.slice(0, 4)}…${id.slice(-4)}` : id);
   const utc = (iso) => {
@@ -67,8 +69,11 @@
       const ids = [...new Set(calls.flatMap((call) => call.ids || []))].map(short);
       const list = calls.length ? `<ul>${calls.map((call) => callLine(call, t)).join("")}</ul>` : "";
       if (evidence.mode === "model") {
-        summary = `${t.evidence} · ${t.model} · ${t.call(calls.length)} · ${seconds(evidence.ms || 0, t)}`;
-        body = `${list}<p>${t.modelLine(esc(evidence.model || "?"))} · ${t.rounds(evidence.rounds || 1)}${when ? ` · ${t.answered} ${when}` : ""}</p>`;
+        // A control run says so in the folded line; a normal run offers the same question without Qloo.
+        const control = evidence.control === "no-qloo";
+        summary = `${t.evidence} · ${t.model}${control ? ` · ${t.control}` : ""} · ${t.call(calls.length)} · ${seconds(evidence.ms || 0, t)}`;
+        body = `${list}<p>${t.modelLine(esc(evidence.model || "?"))} · ${t.rounds(evidence.rounds || 1)}${when ? ` · ${t.answered} ${when}` : ""}</p>`
+          + (control ? "" : `<p><button type="button" class="control-run" data-control-run>${t.again}</button></p>`);
       } else {
         summary = `${t.evidence} · ${t.replay} · ${t.call(calls.length)}`;
         body = `${list}<p>${t.replayBody}${when ? ` · ${when}` : ""}</p>`;

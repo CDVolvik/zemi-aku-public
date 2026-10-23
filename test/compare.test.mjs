@@ -66,7 +66,19 @@ test('the page exists, reads the committed JSON and the front page and README li
   assert.match(readme, /\/compare/);
   const server = fs.readFileSync(new URL('../scripts/serve-eagle.mjs', import.meta.url), 'utf8');
   assert.match(server, /"\/compare": "\/app\/compare\.html"/);
-  assert.match(server, /process\.env\.ZEMI_COMPARE === "1" && body\.tools === "no-qloo"/, 'the no-Qloo agent is reachable only under the local env flag');
+  // October 23: the control run is public ("Ask again without Qloo"), one visitor turn and one reservation like any answer.
+  assert.match(server, /if \(body\.tools === "no-qloo"\) \{/);
+  assert.ok(server.indexOf('const ip = limiter.visitorIp(req, TRUST_PROXY);') < server.indexOf('if (body.tools === "no-qloo") {'), 'the visitor is known before the control runs');
+  assert.match(server, /limiter\.spend\(`chat-turns:\$\{ip\}`, 1, CHAT_TURNS_PER_VISITOR\)\) return sendJson\(res, 429/);
+  assert.match(server, /control: "no-qloo", evidence: \{ \.\.\.bare\.evidence, control: "no-qloo" \}/);
+  assert.match(server, /if \(!\/\^application\\\/json\\b\/i\.test\(String\(req\.headers\["content-type"\] \|\| ""\)\)\) return sendJson\(res, 415/, 'JSON only, so a cross-origin page preflights');
+  assert.match(server, /if \(!sameOrigin\(req\)\) return sendJson\(res, 403/);
+  const same = new Function('process', 'return ' + server.match(/function sameOrigin\(req\) \{[^]*?\n\}/)[0] + '; sameOrigin;')({ env: {} });
+  assert.equal(same({ headers: {} }), true, 'scripts without Origin keep working');
+  assert.equal(same({ headers: { origin: 'https://zemi.r21digital.com', host: 'zemi.r21digital.com' } }), true);
+  assert.equal(same({ headers: { origin: 'http://127.0.0.1:4199', host: '127.0.0.1:4199' } }), true);
+  assert.equal(same({ headers: { origin: 'https://evil.example', host: 'zemi.r21digital.com' } }), false);
+  assert.doesNotMatch(server, /ZEMI_COMPARE === "1" \? createAgent/, 'the bare agent is always built');
   const safe = fs.readFileSync(new URL('../deploy/compose.safe.yaml', import.meta.url), 'utf8');
   assert.doesNotMatch(safe, /ZEMI_COMPARE/);
 });

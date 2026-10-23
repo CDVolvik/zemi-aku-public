@@ -31,7 +31,8 @@ general knowledge and label it as such.
 `scripts/compare-qloo.mjs <origin>` posts each prompt twice to `/api/chat` on a local server
 started with `ZEMI_COMPARE=1`; the second post carries `tools: "no-qloo"`. The server honors that
 field only under that variable, which `deploy/compose.safe.yaml` never sets, so the public site
-has no such switch. The script writes `data/compare-qloo.json`: `ranAt`, `model`, `settings`, and
+had no such switch. **Superseded October 23:** the flag is public; every live model answer offers
+"Ask again without Qloo", one visitor turn and one model reservation like any answer (`JUDGE-PANEL-2026-10-23.md`). The script writes `data/compare-qloo.json`: `ranAt`, `model`, `settings`, and
 per prompt the two answers with their `evidence` (the item 2 drawer), the places each run put on
 the map, and the comparison from `server/compare.mjs`:
 

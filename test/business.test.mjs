@@ -136,3 +136,49 @@ test('the spoken count names the researched kind in the visitor language', async
   const any = await discover({ question: 'Open a business in Ponce' });
   assert.match(any.speech, /places/);
 });
+
+
+// Judge panel 10/23: the owner's first answer must agree with the panel's verdict, and a question that
+// names two towns, asks which is better, or names a place off the island must not get a one-town template.
+test('a town opening question speaks the opportunity verdict with exact counts', async () => {
+  const data = await withMap({ question: 'Should I open a café in Bayamón?', lang: 'en' });
+  assert.match(data.speech, /^Bayamón is a gap for cafés: strong taste, rank 3 of 2, and few businesses, 10 establishments/);
+  assert.doesNotMatch(data.speech, /busy|some options|small one/);
+  const es = await withMap({ question: '¿Conviene abrir una cafetería en Bayamón?', lang: 'es' });
+  assert.match(es.speech, /^Bayamón es una brecha para cafeterías: mucha afinidad, puesto 3 de 2, y pocos negocios, 10 establecimientos/);
+  assert.equal(data.business.evidence.opportunity.ranked, 2);
+});
+
+test('two towns, a which-is-better question, or a comparison leave the template so the model answers', async () => {
+  for (const question of ['Vivo en Bayamón. ¿Me conviene abrir una panadería allí o en Ponce?', 'Should I open a bakery in Bayamón or Ponce?',
+    'Compare Ponce and Bayamón for opening a café', 'Which town is better for a bakery, Ponce or Bayamón?', '¿Qué pueblo me conviene para una panadería?']) {
+    assert.equal(await withMap({ question, lang: 'es' }), null, question);
+  }
+  // A which-is-better follow-up compares once two towns are in play; alone it is one-town research.
+  const history = [{ role: 'user', content: 'Should I open a bakery in Bayamón?' }, { role: 'assistant', content: 'x' }, { role: 'user', content: 'And Ponce?' }];
+  assert.equal(await withMap({ question: '¿Y cuál es mejor para una panadería?', lang: 'es', history }), null);
+  assert.equal((await withMap({ question: 'Where is it best to open a bakery in Ponce?', lang: 'en' })).town, 'Ponce', 'standalone best stays on the template');
+  assert.equal((await withMap({ question: '¿Cuál es el mejor sitio para abrir una panadería en Ponce?', lang: 'es' })).town, 'Ponce');
+  // The rules router (model down) still gets an answer when it asks for one.
+  const forced = await withMap({ question: 'Should I open a bakery in Bayamón or Ponce?', lang: 'en' }, { force: true });
+  assert.equal(forced.town, 'Bayamón');
+});
+
+test('a business question about a place outside Puerto Rico says so instead of answering the open town', async () => {
+  const data = await withMap({ question: 'Where should I open a bakery in Miami?', lang: 'en', town: 'Ponce' });
+  assert.equal(data.kind, 'outside');
+  assert.equal(data.speech, 'Zemi-Aku covers Puerto Rico’s 78 towns only, and Miami is not on this map. Name a town here and I’ll look.');
+  const es = await withMap({ question: '¿Dónde abro una panadería en Orlando?', lang: 'es', town: 'Ponce' });
+  assert.equal(es.speech, 'Zemi-Aku cubre solo los 78 pueblos de Puerto Rico, y Orlando no está en este mapa. Dígame un pueblo de aquí y lo busco.');
+  // Lowercase, a mixed pair, and a town inside a longer name.
+  assert.equal((await withMap({ question: 'Where should I open a bakery in miami?', lang: 'en', town: 'Ponce' })).kind, 'outside');
+  assert.equal((await withMap({ question: 'Should I open a bakery in Ponce or Miami?', lang: 'en' })).kind, 'outside');
+  assert.equal((await withMap({ question: 'Should I open a bakery in Old Ponce?', lang: 'en' })).town, 'Ponce');
+  // A known town, "Puerto Rico" itself, a generic place word, a determiner or a source keeps the normal flow.
+  assert.equal((await withMap({ question: 'Where should I open a bakery in Ponce?', lang: 'en' })).town, 'Ponce');
+  assert.equal((await withMap({ question: 'Where should I open a bakery in Puerto Rico?', lang: 'en' })).kind, 'opportunity');
+  for (const question of ['Where should I open a bakery in Qloo data?', 'Where should I open a bakery in a small town?', 'Where should I open a bakery in downtown?',
+    '¿Dónde abro una panadería en la isla?', '¿Dónde abro una panadería en el centro?', 'Vivo en Ponce. ¿Me conviene abrir una panadería allí?']) {
+    assert.notEqual((await withMap({ question, lang: 'es' }))?.kind, 'outside', question);
+  }
+});

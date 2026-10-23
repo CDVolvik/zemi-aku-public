@@ -305,8 +305,8 @@ Item 3 of `FIRST-PLACE-PLAN-2026-10-13.md`; spec `SPEC-2026-10-14-with-and-witho
   12 model turns, all first attempt) with both answers, their evidence and `server/compare.mjs`'s diff. Result: Qloo changed
   all six answers (named catalog places only the Qloo run gave); the without run says it will not invent places and labels
   general knowledge. Linked from the front page nav and `#qloo` section and the README. `check-demo` probes `/compare` and the JSON.
-- The public `/api/chat` ignores `tools: "no-qloo"` (verified live: the flag yields the normal agent path). Only a server
-  started with `ZEMI_COMPARE=1` builds the bare agent; `compose.safe.yaml` never sets it.
+- The public `/api/chat` ignored `tools: "no-qloo"` until October 23; see the Verdict release below, which made the control
+  run public under the same caps ("Ask again without Qloo").
 
 Checks: container healthy; six file hashes equal the commit's; `check-demo --journeys` 0 failed (now 7 + 2 routes). Locally at
 1280 px the page renders the six pairs with the catalog places bold and the verdict line; at 390 px one column, no overflow.
@@ -367,6 +367,12 @@ the dock at 769, the island's west and east tips project to x 41 and 383 at y 17
 the ion token's origin restriction, not a live condition), the five nav links are 12 px tall each; `check-demo --journeys`
 0 failed. 341 tests.
 
+## Courtesy notes release (2026-10-21)
+
+Live as `zemi-aku:notes-20261021`, source `e4e85c8`, layered on `credits-20261021` with only three production files: `app/home.html`, `app/qloo-notes.html` and `scripts/serve-eagle.mjs`. Carlos approved the personal report and asked to leave it on the public website "super less intrusive." A12px muted footer link opens `/notes-for-qloo`; no hero/nav/app entry point. The new static page retains Carlos Jimenez's attribution, a back link and `noindex,nofollow`. This narrowly authorizes the document/footer change during the freeze.
+
+App-only recreate; original image override retained at `/opt/zemi-aku/notes-20261021-rollback`. Caddy, production env, safe overlay, caps and caches untouched. Container SHA-256 hashes for all three files match committed source; external homepage and notes bodies match too. `/notes-for-qloo`200, existing demo smoke probes0 failed, private paths404. Full isolated suite417 pass/1 cache-dependent skip. Browser1440/390: no horizontal overflow, all four notes toggles work; live footer has exactly one link. Local composited contrast1440/768/390:0 failing, font-source check clear. Real phones not tested. Functional audit categories have a documented structure-probe exception. Details: [QLOO-NOTES-2026-10-21.md](QLOO-NOTES-2026-10-21.md).
+
 ## Credits release (2026-10-21, morning)
 
 Live as `zemi-aku:credits-20261021` (layered `FROM zemi-aku:review2-20261017`, `COPY app` only, from `6f214e1`;
@@ -397,6 +403,22 @@ Census-cache test skipped. Scanned before the push for the VM address, local pat
 
 Re-export after any code change that ships: `git archive HEAD <the list above> | tar -x -C <empty dir>`, copy over a clone of
 the public repo, one commit, push. The front page's Code and GitHub links and the submission draft point at the public repo.
+
+**Republished October 21 (Carlos: "yes proceed").** Qloo's hackathon developer guide says not to store Qloo response
+data in a public repository, and `0f86f3b` carried `data/samples/*` (with business contact fields), `data/compare-qloo.json`
+and each town's top Qloo record in `data/municipio-survey-2026-10-06.json` (release audit item 1). `main` now holds the two
+placeholder commits, `61011dd` (the snapshot of `306dad8`, the code of the live `credits-20261021`) and `d1805aa` (its
+`.gitleaksignore` fingerprint); force-pushed with a lease on `0f86f3b`, no forks existed. Built by
+`tmp/public-snapshot-20261021.py` (local, ignored like the deploy scripts; args: private repo, public clone, commit): the same file set minus the three samples, the compare runs and the root
+`SUBMISSION-DRAFT.md` duplicate; the survey keeps its counts and grades without `top`; `docs/SUBMISSION-DRAFT.md` keeps
+its public version with only the test line corrected (the private draft links Devpost/video folders the public repo lacks).
+Checks: gitleaks over the public history finds only the ignored empty `.env.example` placeholder; no VM address, local
+path, `_secrets` or key prefix; a fresh clone installs and passes 411 tests with four skips (Census cache, the three
+tests that read saved Qloo results), boots, and `/compare` reports that the runs could not be loaded. Logged out:
+README, walkthrough and LICENSE 200 (MIT detected); `data/samples/maricao.json`, `data/compare-qloo.json` and the root
+draft 404. ⚠️ GitHub still serves the old commit page by its full SHA until GitHub purges unreferenced commits.
+Re-exporting from now on: run the same script against a new private commit, then commit and push with `gh`'s credential
+helper (`git -c credential.helper= -c "credential.helper=!gh auth git-credential" push`).
 
 ## Review-2 release (2026-10-17, afternoon)
 

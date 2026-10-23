@@ -60,6 +60,61 @@ export function businessRequest(body, towns) {
 }
 
 const topicOf = text => topics.find(([, pattern]) => pattern.test(text))?.[0] || '';
+
+// A decision between towns ("Caguas or Ponce?", "which is better", "compare") needs the model with the
+// opportunity rows in context; the one-town template answered the first town and dropped the rest
+// (judge panel 10/23). The rules router can still force the template when the model is down.
+const namedTowns = (text, towns) => towns.filter(town => new RegExp(`\\b${fold(town)}\\b`).test(fold(text)));
+// An explicit town comparison ("compare Ponce and Mayagüez", "which town", "mejor pueblo"), or a
+// which-is-better follow-up once two towns are in play. A standalone "best" or "mejor" ("the best bakery
+// to open in Ponce") is one-town research and stays on the template.
+const comparing = /\b(?:compare|comparing|comparison|comparar|compara|comparacion|versus|vs|which town|what town|better town|best town|cual pueblo|que pueblo|mejor pueblo|cual municipio|que municipio|o en|or in)\b/;
+const choosing = /\b(?:which|better|best|cual|cuales|mejor|conviene mas)\b/;
+export function comparesTowns(text, towns, history = []) {
+  const folded = fold(text);
+  const named = namedTowns(folded, towns);
+  if (named.length >= 2 || comparing.test(folded)) return true;
+  if (!choosing.test(folded)) return false;
+  const recent = history.filter(row => row.role === 'user').slice(-6).map(row => fold(row.content || '')).join(' ');
+  return new Set([...named, ...namedTowns(recent, towns)]).size >= 2;
+}
+
+// "a bakery in Miami", "en miami", "Ponce or Miami": a place after in/en that is none of the 78 towns.
+// Case does not decide (phones lowercase everything); determiners, generic words and the data sources do.
+const AFTER_IN = /\b(?:in|en|or|o|and|y|vs|versus)\s+([a-z]+(?:\s+(?!(?:in|en|or|o|and|y|vs|versus)\b)[a-z]+)?)/g;
+const NOT_PLACES = new Set(['puerto rico', 'puerto', 'qloo', 'overture', 'census', 'pr', 'english', 'spanish', 'espanol', 'ingles',
+  'a', 'an', 'the', 'this', 'that', 'my', 'our', 'your', 'el', 'la', 'los', 'las', 'un', 'una', 'mi', 'su', 'nuestro', 'este', 'esta', 'ese', 'esa',
+  'town', 'towns', 'pueblo', 'pueblos', 'municipio', 'city', 'ciudad', 'downtown', 'center', 'centro', 'casco', 'plaza', 'zona', 'area', 'campo',
+  'playa', 'beach', 'island', 'isla', 'general', 'particular', 'total', 'qloo data', 'the island', 'la isla', 'el centro', 'el casco',
+  // conjunction, question and verb words that follow "or", "o", "and", "y" in ordinary sentences
+  'or', 'o', 'and', 'y', 'cual', 'cuales', 'que', 'donde', 'como', 'cuanto', 'cuanta', 'cuantos', 'cuantas', 'which', 'what', 'where', 'how', 'should',
+  'do', 'does', 'can', 'is', 'are', 'not', 'no', 'si', 'yes', 'maybe', 'quizas', 'tal', 'otro', 'otra', 'other', 'another', 'both', 'ambos', 'neither',
+  'open', 'opening', 'abrir', 'abro', 'buy', 'comprar', 'start', 'launch', 'montar', 'poner', 'invest', 'invertir', 'rent', 'alquilar', 'work', 'trabajar',
+  'live', 'living', 'vivo', 'vivir', 'sell', 'vender', 'make', 'hacer', 'be', 'ser', 'estar', 'tener', 'have']);
+export function outsidePlace(question, towns) {
+  // Clause by clause, so "Vivo en Caguas. ¿Me conviene...?" never reads "Caguas Me" as a place.
+  for (const clause of String(question || '').split(/[.?!,;:()]+/)) {
+    const folded = fold(clause);
+    const place = outsideIn(folded, towns);
+    if (place) return place;
+  }
+  return '';
+}
+function outsideIn(folded, towns) {
+  for (const match of folded.matchAll(AFTER_IN)) {
+    const words = match[1].split(' ');
+    // The candidate is the longest run of words that is not a determiner, generic word or source.
+    const first = NOT_PLACES.has(words[0]) ? '' : NOT_PLACES.has(words.join(' ')) ? '' : words[0];
+    if (!first) continue;
+    const candidate = NOT_PLACES.has(words[1] || '') || !words[1] ? first : words.join(' ');
+    if (NOT_PLACES.has(candidate)) continue;
+    // A known town at or right after the candidate ("in Old San Juan", "en el viejo San Juan") is that town.
+    const ahead = folded.slice(match.index, match.index + 48);
+    if (towns.some(town => ahead.includes(fold(town)))) continue;
+    return candidate.replace(/\b\w/g, (c) => c.toUpperCase());
+  }
+  return '';
+}
 function typeOf(text) {
   const narrow = subtypes.find(([, , pattern]) => pattern.test(text));
   if (narrow) return { type: narrow[0], category: narrow[1] };
@@ -119,7 +174,7 @@ function opportunityEvidence(file, town, es) {
   const counted = file.towns.filter(r => r.population > 0);
   const people = counted.reduce((sum, r) => sum + r.population, 0);
   const businesses = counted.reduce((sum, r) => sum + r.establishments, 0);
-  return { industry: file.industry, group: row.group, tasteRank: row.tasteRank, suppressed: row.suppressed,
+  return { industry: file.industry, group: row.group, tasteRank: row.tasteRank, ranked: file.towns.filter(r => Number.isInteger(r.tasteRank)).length, suppressed: row.suppressed,
     establishments: row.establishments, establishmentsMax: row.establishmentsMax, employees: row.employees,
     perTenThousand: row.perTenThousand, perTenThousandMax: row.perTenThousandMax,
     islandPerTenThousand: people > 0 ? businesses / people * 10000 : null, notes: file.notes?.[es ? 'es' : 'en'] || [], sources: file.sources || null };
@@ -136,10 +191,16 @@ function labelFor(request, es) {
 }
 
 export function createBusinessDiscovery({ towns, catalog, context = async () => ({}), culture, publish = p => p, opportunity }) {
-  return async body => {
+  return async (body, { force = false } = {}) => {
     const request = businessRequest(body, towns);
     if (!request) return null;
     const es = body.lang === 'es';
+    if (request.mode === 'research') {
+      const text = String(body.question || '');
+      const outside = outsidePlace(text, towns);
+      if (outside) return { chat: true, kind: 'outside', speech: spoken('outside', { place: outside }, es ? 'es' : 'en') };
+      if (!force && comparesTowns(text, towns, body.history || [])) return null;
+    }
     const { town, category } = request;
     const industry = industryOf(request);
     const saved = industry ? opportunity?.get(industry) || null : null;
@@ -183,7 +244,8 @@ export function createBusinessDiscovery({ towns, catalog, context = async () => 
     const metric = request.topic === 'income' ? demographics?.medianHouseholdIncome : request.topic === 'population' ? demographics?.population : null;
     // What is said out loud: short and rounded (server/spoken.mjs). The sourced figures stay on screen below.
     const speech = spoken('business', { town, mode: request.mode, available, count: rows.length,
-      supplyCount: evidence.supply ? evidence.supply.count : null, category, label: labelFor(request, es), topic: request.topic || null,
+      supplyCount: evidence.supply ? evidence.supply.count : null, category, label: labelFor(request, es), topic: request.topic === 'overview' ? null : request.topic || null,
+      opportunity: evidence.opportunity || null,
       metric: metric ? { kind: request.topic, estimate: metric.estimate } : null, taste: evidence.taste?.status || null,
       proximity: proximity ? { reference: proximity.reference?.name || null } : null }, es ? 'es' : 'en');
     // What the drawer under the caption shows: the sources this answer was read from, no model turn.

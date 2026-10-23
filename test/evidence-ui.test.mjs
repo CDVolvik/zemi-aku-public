@@ -115,3 +115,27 @@ test('a deterministic business or opportunity answer lists its sources and says 
   assert.match(map, /<summary>Evidencia · mapa de oportunidad · sin turno del modelo · 1 fuente<\/summary>/);
   assert.match(map, /Respondido desde estas fuentes, sin turno del modelo/);
 });
+
+
+// October 23: a judge can fire the control from any model answer; the control's own drawer says what it is.
+test('a model answer offers the control run and a control run is labeled instead', () => {
+  const Z = load();
+  const out = Z.html('en', modelRun);
+  assert.match(out, /<p><button type="button" class="control-run" data-control-run>Ask again without Qloo<\/button><\/p>/);
+  assert.match(Z.html('es', modelRun), /Preguntar otra vez sin Qloo/);
+  const control = Z.html('en', { ...modelRun, control: 'no-qloo', calls: [] });
+  assert.match(control, /<summary>Evidence · live model · without Qloo tools · 0 tool calls · 3\.1 s<\/summary>/);
+  assert.doesNotMatch(control, /data-control-run/);
+  assert.match(Z.html('es', { ...modelRun, control: 'no-qloo' }), /sin las herramientas de Qloo/);
+  for (const mode of ['rules', 'replay', 'sources']) assert.doesNotMatch(Z.html('en', { ...modelRun, mode, reason: 'budget', kind: 'business' }), /data-control-run/);
+  const ask = html.match(/async function askTown\([^]*?\n}\n/)[0];
+  assert.match(ask, /\{ town: control\.town, taste: control\.taste, question: control\.question, lang: control\.lang, pinTown: false, history: control\.history, tools: "no-qloo" \}/,
+    'the control repeats the snapshot of the original request, not the current UI state or the grown history');
+  assert.match(ask, /if \(control\) return data;/, 'a control run never enters the conversation history');
+  assert.match(ask, /lastRequest = \{ town: request\.town, taste: request\.taste, question, lang: request\.lang, history: request\.history \}/);
+  assert.match(html, /if \(event\.target\.closest\("\[data-control-run\]"\)\) return runControl/);
+  const run = html.match(/async function runControl\([^]*?\n}\n/)[0];
+  assert.match(run, /askTown\(asked\.town, asked\.question, \{ control: asked \}\)/);
+  assert.match(html.match(/function showControl\([^]*?\n}\n/)[0], /ZemiEvidence\.answerBody\(lang, data\.evidence, ""\)/);
+  assert.match(html.match(/async function runQuestion\([^]*?\n}\n/)[0], /lastAgentAnswer = \{ \.\.\.lastRequest, speech: data\.speech \};/);
+});

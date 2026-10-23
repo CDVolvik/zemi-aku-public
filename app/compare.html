@@ -55,7 +55,7 @@
   <div id="runs"></div>
 </main>
 <footer>
-  <span>The runs are saved in <a href="/data/compare-qloo.json">compare-qloo.json</a> and made by <code>scripts/compare-qloo.mjs</code> against a local server; the public site has no "without Qloo" switch. Catalog places are matched by name against what the Qloo run put on the map; a place the second run names from general knowledge is not verified.</span>
+  <span>The runs are saved in <a href="/data/compare-qloo.json">compare-qloo.json</a> and made by <code>scripts/compare-qloo.mjs</code> against a local server. Since October 23 every live model answer in the app offers <em>Ask again without Qloo</em>, the same control run on demand. Catalog places are matched by name against what the Qloo run put on the map; a place the second run names from general knowledge is not verified.</span>
 </footer>
 <script>
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
