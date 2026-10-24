@@ -5,21 +5,33 @@
 
   // Same order and names as the town directory.
   const KINDS = {
-    food: { label: "Food", color: "#e4573d" },
-    drinks: { label: "Bars and nightlife", color: "#b65fd8" },
-    stay: { label: "Places to stay", color: "#3d8fe3" },
-    groceries: { label: "Groceries and pharmacies", color: "#8fbb4a" },
-    shopping: { label: "Shopping", color: "#eaa83a" },
-    fun: { label: "Things to do", color: "#2bb5a9" },
-    outdoors: { label: "Beaches and outdoors", color: "#3cae5e" },
-    culture: { label: "History and culture", color: "#c9804e" },
-    health: { label: "Health and fitness", color: "#ec6fa0" },
-    other: { label: "Services and more", color: "#8e97a8" },
+    food: { label: "Food", es: "Comida", color: "#e4573d" },
+    drinks: { label: "Bars and nightlife", es: "Barras y vida nocturna", color: "#b65fd8" },
+    stay: { label: "Places to stay", es: "Hospedajes", color: "#3d8fe3" },
+    groceries: { label: "Groceries and pharmacies", es: "Colmados y farmacias", color: "#8fbb4a" },
+    shopping: { label: "Shopping", es: "Compras", color: "#eaa83a" },
+    fun: { label: "Things to do", es: "Qué hacer", color: "#2bb5a9" },
+    outdoors: { label: "Beaches and outdoors", es: "Playas y aire libre", color: "#3cae5e" },
+    culture: { label: "History and culture", es: "Historia y cultura", color: "#c9804e" },
+    health: { label: "Health and fitness", es: "Salud y ejercicio", color: "#ec6fa0" },
+    other: { label: "Services and more", es: "Servicios y más", color: "#8e97a8" },
   };
 
   function kindOf(place) {
     const id = place?.category;
     return Object.hasOwn(KINDS, id) ? id : "other";
+  }
+
+  // The page language (renderHero sets <html lang>), so chips, legend and hours follow a Spanish answer
+  // (judge panel 10/24: "Food", "Today", "Closed today" stayed English under a Spanish question).
+  const pageLang = () => (typeof document !== "undefined" && document.documentElement?.lang === "es" ? "es" : "en");
+  const kindLabel = (kind, lang = pageLang()) => (lang === "es" ? kind.es : kind.label);
+  // Qloo's hours line is English ("Today 5:00 pm–12:00 am", "Closed today", "Open 24 hours").
+  function hoursText(hours, lang = pageLang()) {
+    const text = String(hours || "");
+    if (lang !== "es" || !text) return text;
+    return text.replace(/^Closed today$/i, "Cerrado hoy").replace(/^Open 24 hours$/i, "Abierto 24 horas").replace(/^Today\b/, "Hoy")
+      .replace(/\bClosed\b/, "Cerrado");
   }
 
   function legend(places) {
@@ -30,7 +42,7 @@
     }
     return Object.entries(KINDS)
       .filter(([id]) => counts.has(id))
-      .map(([id, kind]) => `<span class="legend-chip"><i style="background:${kind.color}"></i>${esc(kind.label)}<b>${counts.get(id)}</b></span>`)
+      .map(([id, kind]) => `<span class="legend-chip"><i style="background:${kind.color}"></i>${esc(kindLabel(kind))}<b>${counts.get(id)}</b></span>`)
       .join("");
   }
 
@@ -59,7 +71,7 @@
       .filter(Boolean).map((text) => `<span>${esc(text)}</span>`).join("");
     return shotOf(place)
       + `<strong>${esc(place.name)}</strong>`
-      + `<p class="kind"><i style="background:${kind.color}"></i>${esc(kind.label)}</p>`
+      + `<p class="kind"><i style="background:${kind.color}"></i>${esc(kindLabel(kind))}</p>`
       + (where ? `<p>${esc(where)}</p>` : "")
       + (badges ? `<p class="badges">${badges}</p>` : "")
       + (touch ? `<p class="hint">Tap again for the full record</p>` : "");
@@ -146,7 +158,7 @@
       const metaBits = [
         Number.isFinite(km) ? `${km.toFixed(1)} km` : "",
         place.rating != null ? `★ ${place.rating}` : "",
-        place.hours || "",
+        hoursText(place.hours, lang),
       ].filter(Boolean).map((text) => esc(text)).join(" · ");
       const meta = metaBits ? `<p class="result-meta" id="${metaId}">${metaBits}</p>` : "";
       const describedBy = [whyText ? whyId : "", metaBits ? metaId : ""].filter(Boolean).join(" ");
@@ -161,7 +173,7 @@
       return `<li><article class="result-card"${dataIndex} data-name="${esc(place.name)}" data-id="${esc(place.id || "")}" data-tone="${esc(tone)}">`
         + `<div class="result-top">${media}<div class="result-text">`
         + `<button type="button" class="result-name" data-open-place aria-current="${current ? "true" : "false"}"${describedBy ? ` aria-describedby="${describedBy}"` : ""}>${esc(place.name)}</button>`
-        + `<span class="cat-chip" style="--chip:var(--${tone})">${esc(kind.label)}</span>${credit}${why}${meta}`
+        + `<span class="cat-chip" style="--chip:var(--${tone})">${esc(kindLabel(kind, lang))}</span>${credit}${why}${meta}`
         + `<div class="result-actions">`
         + directions
         + `<button type="button" class="result-act" data-ask-more aria-label="${esc(labels.ask)}: ${esc(place.name)}">${labels.ask}</button>`
@@ -169,5 +181,5 @@
     }).join("")}</ul>`;
   }
 
-  window.ZemiMarks = { KINDS, kindOf, legend, card, picks, pickCards, resultCards, haversineKm, shotOf };
+  window.ZemiMarks = { KINDS, kindOf, kindLabel, hoursText, legend, card, picks, pickCards, resultCards, haversineKm, shotOf };
 })();

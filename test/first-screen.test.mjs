@@ -25,7 +25,7 @@ test("a question's list folds the town directory to one line, a town opens it", 
   assert.match(app, /const focus = data\.focus \|\| data\.query \|\| "Places";\n\s*listTitle = focus\.charAt\(0\)\.toUpperCase\(\) \+ focus\.slice\(1\);/);
   assert.match(app, /\$\("directory"\)\.dataset\.folded = "true";/);
   assert.match(app, /\$\("town-title"\)\.textContent = record\.town;\n\s*delete \$\("directory"\)\.dataset\.folded;/);
-  assert.match(app, /data-unfold>Browse all \$\{directory\.total\.toLocaleString\("en-US"\)\} places/);
+  assert.match(app, /data-unfold>\$\{esDir \? "Ver los" : "Browse all"\} \$\{directory\.total\.toLocaleString\("en-US"\)\} \$\{esDir \? "lugares" : "places"\}/);
   assert.match(app, /#directory\.folded \.dir-head \.seg, #directory\.folded \.dir, #directory\.folded \.dir-ask \{ display: none; \}/);
 });
 

@@ -81,7 +81,7 @@ export function comparesTowns(text, towns, history = []) {
 
 // "a bakery in Miami", "en miami", "Ponce or Miami": a place after in/en that is none of the 78 towns.
 // Case does not decide (phones lowercase everything); determiners, generic words and the data sources do.
-const AFTER_IN = /\b(?:in|en|or|o|and|y|vs|versus)\s+([a-z]+(?:\s+(?!(?:in|en|or|o|and|y|vs|versus)\b)[a-z]+)?)/g;
+const AFTER_IN = /\b(in|en|or|o|and|y|vs|versus)\s+([a-z]+(?:\s+(?!(?:in|en|or|o|and|y|vs|versus)\b)[a-z]+)?)/g;
 const NOT_PLACES = new Set(['puerto rico', 'puerto', 'qloo', 'overture', 'census', 'pr', 'english', 'spanish', 'espanol', 'ingles',
   'a', 'an', 'the', 'this', 'that', 'my', 'our', 'your', 'el', 'la', 'los', 'las', 'un', 'una', 'mi', 'su', 'nuestro', 'este', 'esta', 'ese', 'esa',
   'town', 'towns', 'pueblo', 'pueblos', 'municipio', 'city', 'ciudad', 'downtown', 'center', 'centro', 'casco', 'plaza', 'zona', 'area', 'campo',
@@ -90,7 +90,11 @@ const NOT_PLACES = new Set(['puerto rico', 'puerto', 'qloo', 'overture', 'census
   'or', 'o', 'and', 'y', 'cual', 'cuales', 'que', 'donde', 'como', 'cuanto', 'cuanta', 'cuantos', 'cuantas', 'which', 'what', 'where', 'how', 'should',
   'do', 'does', 'can', 'is', 'are', 'not', 'no', 'si', 'yes', 'maybe', 'quizas', 'tal', 'otro', 'otra', 'other', 'another', 'both', 'ambos', 'neither',
   'open', 'opening', 'abrir', 'abro', 'buy', 'comprar', 'start', 'launch', 'montar', 'poner', 'invest', 'invertir', 'rent', 'alquilar', 'work', 'trabajar',
-  'live', 'living', 'vivo', 'vivir', 'sell', 'vender', 'make', 'hacer', 'be', 'ser', 'estar', 'tener', 'have']);
+  'live', 'living', 'vivo', 'vivir', 'sell', 'vender', 'make', 'hacer', 'be', 'ser', 'estar', 'tener', 'have',
+  // prepositions, pronouns and quantity words ("y por qué", "y para mí", "o con poco dinero")
+  'por', 'para', 'con', 'sin', 'de', 'del', 'al', 'lo', 'le', 'les', 'me', 'te', 'se', 'nos', 'mas', 'menos', 'muy', 'bien', 'mal',
+  'algo', 'nada', 'todo', 'todos', 'poco', 'poca', 'pocos', 'mucho', 'mucha', 'muchos', 'for', 'with', 'without', 'to', 'at', 'on', 'of',
+  'more', 'less', 'very', 'well', 'badly', 'something', 'nothing', 'all', 'few', 'many', 'much', 'little', 'then', 'luego', 'despues', 'also', 'tambien']);
 export function outsidePlace(question, towns) {
   // Clause by clause, so "Vivo en Caguas. ¿Me conviene...?" never reads "Caguas Me" as a place.
   for (const clause of String(question || '').split(/[.?!,;:()]+/)) {
@@ -100,9 +104,14 @@ export function outsidePlace(question, towns) {
   }
   return '';
 }
+const CONJUNCTION = new Set(['or', 'o', 'and', 'y', 'vs', 'versus']);
 function outsideIn(folded, towns) {
+  // "Ponce or Miami" names a place after a conjunction only when the clause already names a known town;
+  // "¿me conviene y por qué?" never does (judge panel 10/24 read "Por" as a town).
+  const namesKnown = towns.some(town => folded.includes(fold(town)));
   for (const match of folded.matchAll(AFTER_IN)) {
-    const words = match[1].split(' ');
+    if (CONJUNCTION.has(match[1]) && !namesKnown) continue;
+    const words = match[2].split(' ');
     // The candidate is the longest run of words that is not a determiner, generic word or source.
     const first = NOT_PLACES.has(words[0]) ? '' : NOT_PLACES.has(words.join(' ')) ? '' : words[0];
     if (!first) continue;
@@ -144,7 +153,15 @@ function matchesType(place, request, ground = false) {
   const roots = subtypes.find(([type]) => type === request.type)?.[3];
   const nested = String(place.genreId || '').match(/^urn:tag:genre:place:(.+)$/)?.[1];
   const labels = ground ? [place.category, ...(place.hierarchy || [])] : nested?.split(':') || [genreRoot(place.genreId, place.genre)];
-  if (roots) return labels.some(label => roots.some(root => label === root || (root === 'restaurant' && label?.endsWith('_restaurant'))));
+  if (roots) {
+    if (labels.some(label => roots.some(root => label === root || (root === 'restaurant' && label?.endsWith('_restaurant'))))) return true;
+    // Qloo files some bakeries and cafés under the plain restaurant genre ("Erik's Bakery and Pastry Shop",
+    // Maricao, judge panel 10/23); the name says what the tag does not. Only that tag, only those two
+    // types: a "Café Hotel" or a "Bakery School" keeps its own genre. Ground data carries its own hierarchy.
+    if (ground || nested !== 'restaurant' || !['bakery', 'cafe'].includes(request.type)) return false;
+    const words = subtypes.find(([type]) => type === request.type)?.[2];
+    return Boolean(words) && words.test(fold(place.name || ''));
+  }
   return labels.some(label => categoryOf('', label?.replace(/_/g, ' ')) === request.category);
 }
 
@@ -177,6 +194,9 @@ function opportunityEvidence(file, town, es) {
   return { industry: file.industry, group: row.group, tasteRank: row.tasteRank, ranked: file.towns.filter(r => Number.isInteger(r.tasteRank)).length, suppressed: row.suppressed,
     establishments: row.establishments, establishmentsMax: row.establishmentsMax, employees: row.employees,
     perTenThousand: row.perTenThousand, perTenThousandMax: row.perTenThousandMax,
+    // The median is the line the groups split on; the island average is context only (judge panel 10/24:
+    // Ponce at 1.13 was called few "against 0.76 island-wide", a contradiction on one screen).
+    medianPerTenThousand: Number.isFinite(file.medians?.perTenThousand) ? file.medians.perTenThousand : null,
     islandPerTenThousand: people > 0 ? businesses / people * 10000 : null, notes: file.notes?.[es ? 'es' : 'en'] || [], sources: file.sources || null };
 }
 

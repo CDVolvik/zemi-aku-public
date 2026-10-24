@@ -1654,7 +1654,8 @@ $("lm-row").addEventListener("click", (event) => {
 function showMotion() {
   const on = ZemiFlight.motion() && !reducedMotion;
   $("motion-pill").setAttribute("aria-pressed", String(on));
-  $("motion-pill").textContent = on ? "Camera motion on" : "Camera motion off";
+  const esPill = typeof ZemiConverse !== "undefined" && ZemiConverse.voice().lang === "es";
+  $("motion-pill").textContent = esPill ? (on ? "Movimiento de cámara activado" : "Movimiento de cámara apagado") : (on ? "Camera motion on" : "Camera motion off");
   document.querySelector("[data-motion]").setAttribute("aria-pressed", String(on));
 }
 function toggleMotion() {
@@ -1712,11 +1713,12 @@ function renderDirectory() {
   box.hidden = false;
   const folded = box.dataset.folded === "true";
   box.classList.toggle("folded", folded);
+  const esDir = ZemiConverse.voice().lang === "es";
   if (folded) {
-    $("dir-title").innerHTML = `<button type="button" data-unfold>Browse all ${directory.total.toLocaleString("en-US")} places${pickedId ? ` in ${esc(pickedId)}` : ""} ›</button>`;
+    $("dir-title").innerHTML = `<button type="button" data-unfold>${esDir ? "Ver los" : "Browse all"} ${directory.total.toLocaleString("en-US")} ${esDir ? "lugares" : "places"}${pickedId ? ` ${esDir ? "en" : "in"} ${esc(pickedId)}` : ""} ›</button>`;
     return;
   }
-  $("dir-title").textContent = `All ${directory.total.toLocaleString("en-US")} places`;
+  $("dir-title").textContent = `${esDir ? "Los" : "All"} ${directory.total.toLocaleString("en-US")} ${esDir ? "lugares" : "places"}`;
   const asking = dirMode === "ask";
   for (const button of $("dir-mode").querySelectorAll("[data-mode]")) button.setAttribute("aria-pressed", String(button.dataset.mode === dirMode));
   $("dir-ask").hidden = !asking;
@@ -1727,8 +1729,8 @@ function renderDirectory() {
       .map((q) => `<button type="button" data-q="${esc(q)}">${esc(q)}</button>`).join("")
       + `<p class="note">Or type your own question below, or press the orb and talk.</p>`;
   }
-  $("dir-cats").innerHTML = `<button type="button" data-cat="all" aria-pressed="${dirCat === "all"}">All<b>${directory.total}</b></button>` + directory.categories.map((category) =>
-    `<button type="button" data-cat="${category.id}" aria-pressed="${category.id === dirCat}">${esc(category.label)}<b>${category.count}</b></button>`).join("");
+  $("dir-cats").innerHTML = `<button type="button" data-cat="all" aria-pressed="${dirCat === "all"}">${esDir ? "Todos" : "All"}<b>${directory.total}</b></button>` + directory.categories.map((category) =>
+    `<button type="button" data-cat="${category.id}" aria-pressed="${category.id === dirCat}">${esc(ZemiMarks.KINDS[category.id] ? ZemiMarks.kindLabel(ZemiMarks.KINDS[category.id], esDir ? "es" : "en") : category.label)}<b>${category.count}</b></button>`).join("");
   const category = directory.categories.find((item) => item.id === dirCat);
   // The seven biggest kinds, so the list stays in view; the rest one tap away.
   const all = category && category.kinds.length > 1 ? category.kinds : [];
@@ -2052,6 +2054,7 @@ function showAbout(history) {
   const page = safePage(history.url);
   const shot = history.image ? `<img alt="" src="${esc(history.image)}" referrerpolicy="no-referrer">` : "";
   $("about-body").innerHTML = `${shot}<p>${esc(history.extract)}</p>${page ? `<a href="${esc(page)}" target="_blank" rel="noopener noreferrer">${esc(history.title || "Wikipedia")} · Wikipedia</a>` : ""}`;
+  $("town-about").querySelector("summary").textContent = ZemiConverse.voice().lang === "es" ? "Sobre este pueblo" : "About this town";
   $("town-about").hidden = false;
 }
 
@@ -2075,7 +2078,7 @@ function briefText(data) {
   if (data?.note) lines.push(data.note);
   lines.push(data?.business
     ? "Sources: Qloo’s saved catalog for local context." + (data.business.mode === 'buy' ? " External sale directories are linked; their listings have not been searched." : '')
-    : "Sources: Qloo place records and Wikipedia.");
+    : data?.history?.extract ? "Sources: Qloo place records and Wikipedia." : "Sources: Qloo place records.");
   if (data?.business?.evidence?.supply) lines.push(`Observed supply: Overture release ${data.business.evidence.supply.release || 'unknown'}. Dataset coverage, not a verified competitor census.`);
   if (data?.business?.evidence?.demographics) lines.push(`Demographics: Census PRCS ${data.business.evidence.demographics.period || 'unknown period'}. Municipality estimates, not business revenue.`);
   if (data?.business?.evidence?.taste?.status === 'ready') lines.push('Cultural affinities: Qloo locality signal. Not measured business demand.');
@@ -2088,8 +2091,10 @@ function showSources(...packs) {
     $("town-sources").hidden = true;
     return;
   }
+  const esRecord = ZemiConverse.voice().lang === "es";
   $("sources-body").innerHTML = real.map((data) => recordTable(data.packet)).join("")
-    + `<pre id="brief-text">${esc(real.map(briefText).join("\n\n"))}</pre><button type="button" class="ghost" id="copy-brief">Copy brief</button>`;
+    + `<pre id="brief-text">${esc(real.map(briefText).join("\n\n"))}</pre><button type="button" class="ghost" id="copy-brief">${esRecord ? "Copiar resumen" : "Copy brief"}</button>`;
+  $("town-sources").querySelector("summary").textContent = esRecord ? "Fuentes y el registro detrás de esta respuesta" : "Sources and the record behind this answer";
   $("town-sources").hidden = false;
   $("copy-brief").addEventListener("click", async (event) => {
     try {
@@ -2818,6 +2823,7 @@ function updateJourney() {
   $("journey-progress").textContent = journeyData
     ? `${journeyData.journey.artist} → Qloo taste matches → ${step === "place" ? "Explore this place" : "Choose a place"}` : "";
   $("journey-return").hidden = !journeyData || step !== "place";
+  $("journey-return").textContent = ZemiConverse.voice().lang === "es" ? "Volver a las afinidades" : "Back to taste matches";
 }
 
 async function runJourney(artist) {
@@ -3008,7 +3014,8 @@ async function applyMapActions(actions = [], speech = "") {
       }
       if (action.type === "show_places" && Array.isArray(action.places)) {
         const town = byName.has(action.town) ? action.town : "";
-        showCatalog({ ...action, town, speech, note: "Qloo places", cards: [] });
+        const esNote = typeof ZemiConverse !== "undefined" && ZemiConverse.voice().lang === "es";
+        showCatalog({ ...action, town, speech, note: esNote ? "Lugares de Qloo" : "Qloo places", cards: [] });
       }
       if (action.type === "open_place" && byName.has(action.town) && action.place?.id) {
         await openFoundPlace(action.place, action.town);
@@ -3221,7 +3228,7 @@ function renderHero(next) {
 }
 renderHero();
 // The voice menu's language pick is handled inside the voice module; the hero follows the picked value.
-$("talk-lang").addEventListener("change", (event) => renderHero(event.target.value));
+$("talk-lang").addEventListener("change", (event) => { renderHero(event.target.value); toggleMenu($("voice-menu"), $("voice-btn"), false); });
 $("decide-start").addEventListener("click", (event) => {
   const button = event.target.closest("[data-opportunity]");
   if (!button) return;

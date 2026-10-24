@@ -20,11 +20,12 @@ const file=(industry,towns)=>({industry,label:{en:industry,es:industry},medians:
 const base={lang:()=>'en',onChange(){},onAsk(){}};
 
 test('show() fetches the industry once and maps towns to groups',async()=>{
-  const {Z}=load();let calls=0,changes=0;
+  const {Z,elements}=load();let calls=0,changes=0;
   const ui=Z.mount({...base,onChange:()=>changes++,fetchJson:async url=>{calls++;assert.equal(url,'/api/opportunity?industry=bakery');
     return file('bakery',[{town:'Mayagüez',group:'gap',tasteRank:1,perTenThousand:0},{town:'Ponce',group:'quiet',tasteRank:9,perTenThousand:.2}]);}});
   await ui.show('bakery');await ui.show('bakery');
   assert.equal(calls,1);assert.equal(ui.active(),'bakery');
+  assert.ok(elements['opportunity-gaps'].innerHTML.includes('taste #1 of 2'),elements['opportunity-gaps'].innerHTML);
   assert.equal(ui.groupOf('Mayaguez'),'gap');assert.equal(ui.groupOf('Ponce'),'quiet');assert.equal(ui.groupOf('Caguas'),null);
   assert.ok(changes>=1);
   ui.hide();assert.equal(ui.active(),null);assert.equal(ui.groupOf('Ponce'),null);

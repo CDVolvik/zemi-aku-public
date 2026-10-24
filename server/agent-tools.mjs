@@ -17,14 +17,17 @@ function townReading(file, industry, town) {
   const island = people > 0 ? businesses / people * 10000 : null;
   const ranked = file.towns.filter((r) => Number.isInteger(r.tasteRank)).length;
   const figure = (n) => (Number.isFinite(n) ? Math.round(n * 100) / 100 : null);
+  const median = Number.isFinite(file.medians?.perTenThousand) ? file.medians.perTenThousand : null;
+  // The groups split at the median of towns with published counts; quote that line, not the island average.
+  const against = median !== null ? `against the median of ${figure(median)} the groups split on (island average ${figure(island)})` : `against ${figure(island)} island-wide`;
   const density = row.suppressed
     ? `no published count below 3, so 0 to ${row.establishmentsMax ?? 2} establishments`
-    : `${row.establishments} establishments, ${figure(row.perTenThousand)} per 10,000 residents against ${figure(island)} island-wide`;
+    : `${row.establishments} establishments with employees, ${figure(row.perTenThousand)} per 10,000 residents ${against}`;
   const reading = `${town} is ${GROUP_WORDS[row.group] || row.group} for ${industry}: taste rank ${row.tasteRank ?? "unranked"} of ${ranked}; ${density}. `
-    + (row.group === "gap" ? "Strong taste, few businesses: a lead to visit, not demand." : row.group === "competitive" ? "Strong taste, many businesses: the figure is above the island's, so never call it few."
+    + (row.group === "gap" ? "Strong taste, few businesses: a lead to visit, not demand." : row.group === "competitive" ? "Strong taste, many businesses: the figure is at or above the median, so never call it few."
       : row.group === "quiet" ? "Less taste, few businesses." : row.group === "crowded" ? "Less taste, many businesses." : "Not enough data to group.");
   return { town, group: row.group, tasteRank: row.tasteRank ?? null, ranked, establishments: row.establishments ?? null, establishmentsMax: row.establishmentsMax ?? null,
-    suppressed: Boolean(row.suppressed), perTenThousand: figure(row.perTenThousand), perTenThousandMax: figure(row.perTenThousandMax), islandPerTenThousand: island, reading };
+    suppressed: Boolean(row.suppressed), perTenThousand: figure(row.perTenThousand), perTenThousandMax: figure(row.perTenThousandMax), medianPerTenThousand: median, islandPerTenThousand: island, reading };
 }
 
 export function agentTools(api) {

@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { createAgent, createSpendLedger, checkChat, plainSpeech, spokenExcerpt, PROMPT } from "../server/agent.mjs";
+import { createAgent, createSpendLedger, checkChat, plainSpeech, spokenExcerpt, PROMPT, industryIn, namesTown, townFlight } from "../server/agent.mjs";
 
 const tools = [{ name: "town_catalog", description: "Places in a town", parameters: {
   type: "object", properties: { town: { type: "string", enum: ["Ponce"] } }, required: ["town"], additionalProperties: false,
@@ -410,6 +410,81 @@ test('an eating question adds category food to artist_places when the model left
   assert.deepEqual(got, { town: 'San Juan' });
 });
 
+test('an empty tool call takes the open town and the industry the question names, so it runs instead of failing', async t => {
+  const got = {};
+  const pair = [
+    { name: 'opportunity_map', description: 'x', parameters: { type: 'object', properties: { industry: { type: 'string', enum: ['bakery', 'cafe', 'bar'] }, town: { type: 'string' } }, required: ['industry'], additionalProperties: false },
+      run: async (args) => { got.map = args; return { data: { towns: [] } }; } },
+    { name: 'map_town', description: 'x', parameters: { type: 'object', properties: { town: { type: 'string' } }, required: ['town'], additionalProperties: false },
+      run: async (args) => { got.town = args; return { data: {} }; } },
+  ];
+  let count = 0;
+  const agent = createAgent({ key: 'test', tools: pair, ledger: ledger(t), fetchImpl: async () => {
+    count++;
+    return count === 1 ? reply({ content: null, tool_calls: [{ ...call('opportunity_map', {}), id: 'c1' }, { ...call('map_town', {}), id: 'c2' }] }) : reply({ content: 'ok' });
+  } });
+  const out = await agent({ question: '¿Hay espacio para una panadería en Arecibo?', town: 'Arecibo' });
+  assert.deepEqual(got.map, { industry: 'bakery', town: 'Arecibo' });
+  assert.deepEqual(got.town, { town: 'Arecibo' });
+  assert.ok(out.evidence.calls.every((c) => c.ok), JSON.stringify(out.evidence.calls));
+  // Nothing to guess from: the call still fails honestly.
+  count = 0; got.map = undefined;
+  const bare = await agent({ question: 'What is good here?', town: '' });
+  assert.equal(got.map, undefined);
+  assert.equal(bare.evidence.calls[0].ok, false);
+  assert.equal(industryIn('un salón de belleza en Loíza'), 'salon');
+  assert.equal(industryIn('coffee in Ponce'), 'cafe');
+  assert.equal(industryIn('nothing'), '');
+  // Ambiguous or non-business wording stays empty, so the call fails instead of answering another question.
+  assert.equal(industryIn('Compare cafés and bakeries island-wide'), '');
+  assert.equal(industryIn('¿Dónde conviene abrir un salón de eventos en Ponce?'), '');
+  // A data tool left town-less may mean the whole island: only map_town takes the open town, and a
+  // selected taste never picks the industry.
+  const catalog = [{ name: 'town_catalog', description: 'x', parameters: { type: 'object', properties: { town: { type: 'string' } }, required: ['town'], additionalProperties: false },
+    run: async (args) => { got.catalog = args; return { data: {} }; } }, pair[0]];
+  count = 0; got.map = undefined;
+  const wide = createAgent({ key: 'test', tools: catalog, ledger: ledger(t), fetchImpl: async () => {
+    count++;
+    return count === 1 ? reply({ content: null, tool_calls: [{ ...call('town_catalog', {}), id: 'c1' }, { ...call('opportunity_map', {}), id: 'c2' }] }) : reply({ content: 'ok' });
+  } });
+  const out2 = await wide({ question: 'What destinations do Bad Bunny fans like across Puerto Rico?', town: 'Ponce', taste: 'urn:tag:genre:place:restaurant:cafe' });
+  assert.equal(got.catalog, undefined);
+  assert.equal(got.map, undefined);
+  assert.ok(out2.evidence.calls.every((c) => c.ok === false));
+  // The map call gets the town row only when the question names the open town.
+  count = 0; got.map = undefined;
+  const named = createAgent({ key: 'test', tools: [pair[0]], ledger: ledger(t), fetchImpl: async () => {
+    count++;
+    return count === 1 ? reply({ content: null, tool_calls: [{ ...call('opportunity_map', { industry: 'bakery' }), id: 'c1' }] }) : reply({ content: 'ok' });
+  } });
+  await named({ question: '¿Hay espacio para otra panadería en arecibo o ya hay muchas?', town: 'Arecibo' });
+  assert.deepEqual(got.map, { industry: 'bakery', town: 'Arecibo' });
+  count = 0; got.map = undefined;
+  await named({ question: 'Which towns are the best bet for a bakery?', town: 'Arecibo' });
+  assert.deepEqual(got.map, { industry: 'bakery' });
+  assert.equal(namesTown('Vivo en Río Grande', 'Río Grande'), true);
+  assert.equal(namesTown('a bakery in Ponce', 'Ponce'), true);
+  assert.equal(namesTown('Juana Díaz', 'Díaz'), true);
+  assert.equal(namesTown('Hormigueros', 'Hormigueros'), true);
+  assert.equal(namesTown('Vega Alta', 'Vega Baja'), false);
+  assert.equal(namesTown('Hormigueros', 'Hormigueros'), true);
+  assert.equal(namesTown('Cayey', 'Caye'), false);
+});
+
+test('the map follows the town the question names when the model moved nothing, and never overrides a move', () => {
+  const towns = ['Adjuntas', 'Culebra', 'San Juan', 'Río Grande'];
+  assert.deepEqual(townFlight('¿Hay espacio para una panadería en Culebra?', 'Adjuntas', towns, []), [{ type: 'fly_town', town: 'Culebra' }]);
+  assert.deepEqual(townFlight('¿Y en río grande?', 'Adjuntas', towns, []), [{ type: 'fly_town', town: 'Río Grande' }]);
+  assert.deepEqual(townFlight('¿Hay espacio para una panadería en Culebra?', 'Culebra', towns, []), []);
+  assert.deepEqual(townFlight('What about the rent on Calle Loíza?', 'Adjuntas', towns, []), []);
+  const moved = [{ type: 'fly_town', town: 'San Juan' }];
+  assert.equal(townFlight('Compare Culebra and San Juan', 'Adjuntas', towns, moved), moved);
+  const places = [{ type: 'show_places', town: 'Culebra', places: [] }];
+  assert.equal(townFlight('Culebra bakeries', 'Adjuntas', towns, places), places);
+  assert.match(PROMPT, /call map_town for that town/);
+  assert.match(PROMPT, /per 10,000 residents in that unit/);
+});
+
 test('two large tool results that overrun the request drop the largest one and the model still answers', async t => {
   const big = { name: 'town_catalog', description: 'x'.repeat(14000), parameters: { type: 'object', properties: { town: { type: 'string' } }, required: ['town'], additionalProperties: false },
     run: async ({ town }) => ({ data: { town, places: Array.from({ length: 40 }, (_, i) => ({ name: `${town} place ${i}`, description: 'd'.repeat(400) })) } }) };
@@ -434,6 +509,6 @@ test('two large tool results that overrun the request drop the largest one and t
 
 test('the prompt tells the model how to answer a siting or comparison question and when to pass a category', () => {
   assert.match(PROMPT, /opportunity_map with the industry and each town/);
-  assert.match(PROMPT, /never say few when its figure is above the island/i);
+  assert.match(PROMPT, /never say few when its figure is at or\s+above the median/i);
   assert.match(PROMPT, /category food/);
 });

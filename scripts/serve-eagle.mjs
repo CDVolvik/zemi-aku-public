@@ -1605,11 +1605,11 @@ const registry = agentTools({ towns: townNames, weather,
       supply: overtureCounts.get(fold(town)) ?? null, qlooPlaces: countsByTown.get(fold(town))?.total ?? null,
       demographics: groundFile("census", town) }),
   });
-const textAgent = createAgent({ key: routerKey, ledger: modelLedger, tools: registry, model: process.env.ZEMI_MODEL || MODEL,
+const textAgent = createAgent({ key: routerKey, ledger: modelLedger, tools: registry, model: process.env.ZEMI_MODEL || MODEL, towns: townNames,
   onFallback: (reason) => console.warn(`agent fallback: ${reason}`) });
 // The control run: same model, prompt and settings, no Qloo tools. Built for /compare under ZEMI_COMPARE=1 and,
 // since October 23, for the public "Ask again without Qloo" button, under the same ledger and visitor cap.
-const bareAgent = createAgent({ key: routerKey, ledger: modelLedger, tools: withoutQloo(registry),
+const bareAgent = createAgent({ key: routerKey, ledger: modelLedger, tools: withoutQloo(registry), towns: townNames,
   model: process.env.ZEMI_MODEL || MODEL, onFallback: (reason) => console.warn(`bare agent fallback: ${reason}`) });
 // Three saved model runs, served when the model cannot answer (budget, provider, a refused round).
 const samples = createSamples({ dir: path.join(root, "data", "samples") });

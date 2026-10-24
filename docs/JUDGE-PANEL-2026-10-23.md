@@ -70,6 +70,20 @@ plus: a siting sentence that matches the census ratio on the same screen; food r
 food; Spanish that covers the chips and hours; a phone layout with one sheet at a time; and a
 next step an owner can act on.
 
+## Outcome (same day)
+
+Carlos said go. A-F shipped as `zemi-aku:verdict-20261023` after a Codex adversarial review of the diff (eight findings,
+all fixed: the control now repeats the original request snapshot instead of the grown history; the control endpoint is
+JSON and same-origin only; lowercase and mixed-pair places; standalone "best/mejor" no longer routes one-town questions
+to the model; eating questions set the tool category so evidence and cards agree, and an empty food set shows no cards;
+"unknown" rows say which data is missing; a dropped oversize result is marked in the drawer). Record: `DEPLOY.md` →
+Verdict release. The scores above are for the build the panel saw.
+
+**October 24:** the remaining consensus items shipped as `lang-20261024` (`DEPLOY.md` → Language release): the saved
+language now survives a reload and a Spanish browser starts in Spanish; the gap list says "taste #n of N"; the verdict
+closes with a next step; empty model tool calls are repaired from the question and the open town; a bakery filed by Qloo
+as a plain restaurant counts by its name. A second blind panel on that build: [JUDGE-PANEL-2026-10-24.md](JUDGE-PANEL-2026-10-24.md).
+
 ## Recommendation (for Carlos's decision under the freeze)
 
 Reopen the freeze for one tight release, then re-review, redeploy, re-export the snapshot:

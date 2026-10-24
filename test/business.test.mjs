@@ -50,6 +50,41 @@ test('missing saved data gives useful listing sources without claiming zero busi
   assert.match(data.speech, /isn’t available/);
   assert.equal(data.business.sources.length, 3);
 });
+test('a Spanish question that ends in "y por qué" is not sent off the map, and conjunction places need a known town', async () => {
+  const { outsidePlace } = await import('../server/business.mjs');
+  const asked = 'Quiero abrir una panadería pequeña con poco dinero. ¿En qué pueblo me conviene y por qué?';
+  assert.equal(outsidePlace(asked, towns), '');
+  assert.equal(outsidePlace('¿Dónde me conviene y para quién vendo?', towns), '');
+  assert.equal(outsidePlace('Should I open in Ponce or Miami?', towns), 'Miami');
+  assert.equal(outsidePlace('Should I open in Orlando or Miami?', towns), 'Orlando');
+  assert.equal(outsidePlace('a bakery in miami', towns), 'Miami');
+  const data = await discover({ question: asked, lang: 'es' });
+  assert.notEqual(data?.kind, 'outside');
+});
+
+test('a bakery that Qloo filed under the plain restaurant genre still counts as a bakery by its name', async () => {
+  const maricao = [
+    { id: 'e1', name: "Erik's Bakery and Pastry Shop", genre: 'Restaurant', genreId: 'urn:tag:genre:place:restaurant', municipality: 'Ponce', lat: 18.18, lon: -66.98 },
+    { id: 'e2', name: 'La Casona', genre: 'Restaurant', genreId: 'urn:tag:genre:place:restaurant', municipality: 'Ponce', lat: 18.18, lon: -66.98 },
+  ];
+  const named = createBusinessDiscovery({ towns, catalog: async () => maricao });
+  const data = await named({ question: 'Should I open a bakery in Ponce?', lang: 'en' });
+  assert.equal(data.business.total, 1);
+  assert.match(JSON.stringify(data.places), /Erik's Bakery/);
+  assert.doesNotMatch(JSON.stringify(data.places), /La Casona/);
+  const plain = await named({ question: 'Should I open a restaurant in Ponce?', lang: 'en' });
+  assert.equal(plain.business.total, 2);
+  // Other genres keep their own type whatever the name says.
+  const others = createBusinessDiscovery({ towns, catalog: async () => [
+    { id: 'h1', name: 'Café Hotel', genre: 'Hotel', genreId: 'urn:tag:genre:place:hotel', municipality: 'Ponce', lat: 18.0, lon: -66.6 },
+    { id: 's1', name: 'Caribbean Bakery School', genre: 'School', genreId: 'urn:tag:genre:place:school', municipality: 'Ponce', lat: 18.0, lon: -66.6 },
+    { id: 'b1', name: 'Hotel Bar Central', genre: 'Restaurant', genreId: 'urn:tag:genre:place:restaurant', municipality: 'Ponce', lat: 18.0, lon: -66.6 },
+  ] });
+  assert.equal((await others({ question: 'Should I open a cafe in Ponce?', lang: 'en' })).business.total, 0);
+  assert.equal((await others({ question: 'Should I open a bakery in Ponce?', lang: 'en' })).business.total, 0);
+  assert.equal((await others({ question: 'Should I open a hotel in Ponce?', lang: 'en' })).business.total, 1);
+});
+
 test('a new dinner question or greeting leaves acquisition research', async () => {
   const history = [{ role: 'user', content: 'Buy a business in Bayamon' }];
   assert.equal(await discover({ question: 'Where can I eat in Ponce?', history }), null);

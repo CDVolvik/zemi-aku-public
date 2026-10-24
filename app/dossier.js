@@ -39,7 +39,7 @@
     if (place?.image) return { src: place.image, credit: `Photo · ${place.imageSource || "Wikimedia Commons"}` };
     if (place?.logo) return { src: place.logo, credit: "Logo · Wikimedia Commons", logo: true };
     const domain = domainOf(place);
-    if (domain) return { src: `https://icons.duckduckgo.com/ip3/${domain}.ico`, credit: "Site icon", logo: true };
+    if (domain) return { src: `https://icons.duckduckgo.com/ip3/${domain}.ico`, credit: "", logo: true }; // no caption: "Site icon" read as stray text
     const initial = String(place?.name || "?").trim().charAt(0).toUpperCase() || "?";
     return { letter: true, initial, tone: chipTone(place), credit: "" };
   }
@@ -88,7 +88,7 @@
       place.price ? esc(place.price) : "",
       d.priceRange ? esc(d.priceRange) : "",
       stars(place.rating),
-      place.hours ? esc(place.hours) : "",
+      place.hours ? esc(window.ZemiMarks?.hoursText ? window.ZemiMarks.hoursText(place.hours) : place.hours) : "",
     ].filter(Boolean).map((html) => `<span class="badge">${html}</span>`).join("");
     const overview = place.description || d.standout;
     const about = overview ? `<p class="about place-overview">${esc(overview)} <span class="src">Qloo</span></p>` : "";

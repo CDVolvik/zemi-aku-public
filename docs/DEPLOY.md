@@ -367,6 +367,79 @@ the dock at 769, the island's west and east tips project to x 41 and 383 at y 17
 the ion token's origin restriction, not a live condition), the five nav links are 12 px tall each; `check-demo --journeys`
 0 failed. 341 tests.
 
+## Language release (2026-10-24)
+
+Live as `zemi-aku:lang-20261024`, source `95970c6` (fifth cut; earlier cuts the same day `b8f40f7`, `2fb4cc3`, `9a7e1f9`,
+`1a62260`), layered on `verdict-20261023` with `app/`, `server/` and `scripts/serve-eagle.mjs` (`tmp/deploy-lang-20261024.sh`,
+`-b.sh`, `-c.sh`, local only). Rollback set `/opt/zemi-aku/lang-20261024-rollback` (previous image `verdict-20261023`). Carlos
+asked to keep closing the panel's gaps; cuts one and two are the follow-ups to the verdict release, after a Codex adversarial
+review of the diff (eight findings, all fixed before deploy); cuts three to five answer the second blind panel
+(`JUDGE-PANEL-2026-10-24.md`), which scored cut two. No key, cap, cache, Caddy, env or connector change.
+
+What changed on the site:
+
+- The saved language and gender are read before the first render (they used to arrive only after `/api/voices` answered, so
+  the first screen read English with Spanish saved), the language menu renders at once, and a browser set to Spanish starts
+  in Spanish when nothing is saved. Blocked storage keeps the browser default.
+- The gap list under the opportunity map says "taste #2 of 76" (it started at #2 with no denominator).
+- The business verdict closes with a step the owner can take ("A lead, not proof: visit and check rents";
+  "Compare what two local competitors sell"; "Ask where people buy today before you bet on demand"; "Look at the next town
+  over, or a niche nobody serves"), in both languages, and the closing outranks the catalog counts under the 280-character
+  clamp.
+- A model call to `map_town` with no town takes the open town; an `opportunity_map` call with no industry takes the one
+  industry the question names (none when it names two, or "salón" without beauty wording; never from the selected taste
+  tag); an `opportunity_map` call without a town gets the town row when the question itself names the open town. Other
+  town-less data calls still fail, since a town-less call may mean the whole island.
+- A bakery or café that Qloo filed under the plain restaurant genre ("Erik's Bakery and Pastry Shop", Maricao) counts by
+  its name in the business filter; other genres keep their own type whatever the name says.
+- Cuts three to five (second panel): Spanish chips, legend, hours ("Hoy", "Cerrado hoy"), directory title and "All" button,
+  About and Sources headings, copy-brief, journey return, "Qloo places" note and camera pill follow the picked language;
+  "¿…y por qué?" no longer reads "Por" as a place off the island (a place after a conjunction needs a known town in the
+  clause); the spoken verdict and the model's town reading quote the median the groups split on ("against a median of 13")
+  and say "establishments with employees"; a model answer that moved nothing flies to the known town the question names;
+  the language sheet closes on a pick; the source line names Wikipedia only when an extract was read; the site-icon
+  caption is gone; employee counts carry separators.
+
+Checks: container healthy; changed-file SHA-256 hashes in the container equal the commit's after each cut; live probes
+(San Juan bakery, Loíza salon, Maricao, Arecibo, island-wide café, Ponce median, the Opus "y por qué" phrase, Culebra from
+Adjuntas with `fly_town`) answer as designed; `check-demo --journeys` 0 failed; 439 tests locally. Devpost screenshots
+01-04 and 06 retaken from cut two (headless Chromium, 1600×900 and 390×844; `tmp/shots-20261024/`); the bubble text in
+02 predates the "with employees" wording of cut four. Real phones not tested.
+
+## Verdict release (2026-10-23)
+
+Live as `zemi-aku:verdict-20261023`, source `f3a28fe`, layered on `notes-20261021` with `app/`, `server/` and
+`scripts/serve-eagle.mjs` (`tmp/deploy-verdict-20261023.sh`, local only). Rollback set `/opt/zemi-aku/verdict-20261023-rollback`
+(previous image `notes-20261021`). Carlos reopened the freeze on October 23 for the blind judge panel's findings
+(`JUDGE-PANEL-2026-10-23.md`, items A-F) after a Codex adversarial review of the diff (eight findings, all fixed before deploy;
+record in the Brain session notes). No key, cap, cache, Caddy, env or connector change.
+
+What changed on the site:
+
+- The rule-based business answer leads with the saved opportunity verdict and exact counts ("San Juan is a gap for bakeries:
+  strong taste, rank 5 of 76, and few businesses, 16 establishments or about 5 per hundred thousand residents against 8
+  island-wide. Qloo lists 35 and other map data 64."); a suppressed Census count is spoken as a range; an "unknown" row says
+  which data is missing. Counts are exact from three up (the bands "about fifty" and "a couple dozen" are gone).
+- Two-town, which-is-better and comparison questions go to the model, which now gets `opportunity_map(industry, town)` with
+  the town row, the island figure and a one-sentence reading; a business question naming a place off the island ("in Miami")
+  gets a one-line "not on this map" reply instead of the open town's answer.
+- "Where do fans eat": `artist_places` takes a category, the agent adds `food` for an eating question when the model omits it,
+  the cards equal the evidence count (eight), and an empty food set shows no cards.
+- An oversize model request drops its largest tool result (marked "dropped to fit the request" in the drawer, its map action
+  removed) instead of failing the turn to the rules router. The Caguas/Río Grande comparison needed this.
+- Public control: every live model answer's drawer offers **Ask again without Qloo**. It repeats the exact request snapshot
+  (town, taste, language, prior history) with the Qloo tools removed, under the same visitor cap and spend ledger; JSON
+  and same-origin only (415/403 otherwise); its drawer reads "live model · without Qloo tools". `/compare`, the spec and the
+  earlier note in this file that said the public site had no such switch are updated.
+- 390 px: the camera chrome hides under an open sheet (it sat on the sheet title once a tall caption pushed the sheet up).
+  Spanish: tours, example chips, search placeholder, voice preview and the brand line follow the picked language; the
+  legend says "mucha afinidad"; `<html lang>` follows too. Card hours and genres still come from the data in English.
+
+Checks: container healthy; the nine changed-file SHA-256 hashes in the container equal the commit's; live probes of the
+panel's own questions (San Juan bakery, Loíza salon, Maricao, Miami, Caguas vs Río Grande, Bad Bunny eat, and the no-Qloo
+control) all answer as designed; `check-demo --journeys` 0 failed; cross-origin control 415 then 403; 432 tests locally;
+gitleaks over 224 commits finds only the ignored `.env.example` placeholder. Real phones not tested.
+
 ## Courtesy notes release (2026-10-21)
 
 Live as `zemi-aku:notes-20261021`, source `e4e85c8`, layered on `credits-20261021` with only three production files: `app/home.html`, `app/qloo-notes.html` and `scripts/serve-eagle.mjs`. Carlos approved the personal report and asked to leave it on the public website "super less intrusive." A12px muted footer link opens `/notes-for-qloo`; no hero/nav/app entry point. The new static page retains Carlos Jimenez's attribution, a back link and `noindex,nofollow`. This narrowly authorizes the document/footer change during the freeze.
@@ -417,6 +490,12 @@ path, `_secrets` or key prefix; a fresh clone installs and passes 411 tests with
 tests that read saved Qloo results), boots, and `/compare` reports that the runs could not be loaded. Logged out:
 README, walkthrough and LICENSE 200 (MIT detected); `data/samples/maricao.json`, `data/compare-qloo.json` and the root
 draft 404. ⚠️ GitHub still serves the old commit page by its full SHA until GitHub purges unreferenced commits.
+**Re-exported October 23** from `f3a28fe` (the verdict release) as public `33c9992` with `tmp/public-snapshot-20261023.py` (same
+script; the public draft is kept as is), plus the October 21 notes page and test, `docs/JUDGE-PANEL-2026-10-23.md` and its four
+evidence reports. Scanned for the VM address, local paths, `_secrets`, key prefixes and the Gmail id (only the scan patterns in
+tests and this file match); gitleaks on the tree finds only the ignored `.env.example` placeholder; a fresh clone installs and
+passes 428 tests with four skips; README, notes page, panel record and LICENSE answer 200 logged out.
+
 Re-exporting from now on: run the same script against a new private commit, then commit and push with `gh`'s credential
 helper (`git -c credential.helper= -c "credential.helper=!gh auth git-credential" push`).
 

@@ -254,30 +254,34 @@ function verdictBits(d, lang) {
       ? [`No hay datos suficientes para ${label} en ${town}: ${parts}.`, counts, "Visite antes de decidir."]
       : [`Not enough data for ${label} in ${town}: ${parts}.`, counts, "Visit before you decide."];
   }
-  if (!whole(o.islandPerTenThousand) || !(o.suppressed ? whole(o.establishmentsMax) : whole(o.establishments) && whole(o.perTenThousand))) return null;
+  const baseline = whole(o.medianPerTenThousand) ? o.medianPerTenThousand : o.islandPerTenThousand;
+  if (!whole(baseline) || !(o.suppressed ? whole(o.establishmentsMax) : whole(o.establishments) && whole(o.perTenThousand))) return null;
   const strong = o.group === "gap" || o.group === "competitive";
   const many = o.group === "competitive" || o.group === "crowded";
   const max = Number.isFinite(o.establishmentsMax) ? o.establishmentsMax : 2;
   const density = o.suppressed
     ? (es ? `sin cifra publicada, de 0 a ${max} establecimientos` : `no published count, 0 to ${max} establishments`)
     : es
-      ? `${o.establishments} establecimientos o unos ${perLakh(o.perTenThousand)} por cada cien mil residentes frente a ${perLakh(o.islandPerTenThousand)} en la isla`
-      : `${o.establishments} establishments or about ${perLakh(o.perTenThousand)} per hundred thousand residents against ${perLakh(o.islandPerTenThousand)} island-wide`;
+      ? `${o.establishments} establecimientos con empleados, unos ${perLakh(o.perTenThousand)} por cada cien mil residentes frente a ${whole(o.medianPerTenThousand) ? `una mediana de ${perLakh(baseline)}` : `${perLakh(baseline)} en la isla`}`
+      : `${o.establishments} establishments with employees, about ${perLakh(o.perTenThousand)} per hundred thousand residents against ${whole(o.medianPerTenThousand) ? `a median of ${perLakh(baseline)}` : `${perLakh(baseline)} island-wide`}`;
   const names = es
     ? { gap: "una brecha", competitive: "competido", quiet: "tranquilo", crowded: "saturado" }
     : { gap: "a gap", competitive: "competitive", quiet: "quiet", crowded: "crowded" };
+  // One step the owner can take next (judge panel 10/23: "a next step an owner can act on").
   const closing = es
-    ? { gap: "Es una pista para visitar, no prueba de demanda.", competitive: "La afinidad ya está atendida; cuente con competencia.",
-        quiet: "Pocos rivales, pero poca señal de gusto.", crowded: "Terreno difícil: poca señal de gusto y muchos rivales." }
-    : { gap: "A lead to go visit, not proof of demand.", competitive: "Strong taste already served; expect to compete.",
-        quiet: "Few rivals, but little taste signal.", crowded: "Hard ground: little taste signal and many rivals." };
+    ? { gap: "Pista, no prueba: visite y revise rentas.", competitive: "Compare qué venden dos competidores locales.",
+        quiet: "Pregunte dónde compra la gente hoy antes de apostar.", crowded: "Mire el pueblo vecino o un nicho que nadie atiende." }
+    : { gap: "A lead, not proof: visit and check rents.", competitive: "Compare what two local competitors sell.",
+        quiet: "Ask where people buy today before you bet on demand.", crowded: "Look at the next town over, or a niche nobody serves." };
   const taste = es ? (strong ? "mucha afinidad" : "poca afinidad") : (strong ? "strong taste" : "less taste");
   const joiner = es ? (strong && many ? "pero" : "y") : (strong && many ? "but" : "and");
   const supply = es ? (many ? "muchos negocios" : "pocos negocios") : (many ? "many businesses" : "few businesses");
   const head = es
     ? `${town} es ${names[o.group]} para ${label}: ${taste}${rank ? `, ${rank}` : ""}, ${joiner} ${supply}, ${density}.`
     : `${town} is ${names[o.group]} for ${label}: ${taste}${rank ? `, ${rank}` : ""}, ${joiner} ${supply}, ${density}.`;
-  return [head, counts, closing[o.group]];
+  // A long town and label can push the three past the clamp; the next step outranks the catalog counts.
+  const bits = [head, counts, closing[o.group]];
+  return bits.join(" ").length > MAX ? [head, closing[o.group]] : bits;
 }
 
 function businessLine(d, lang) {

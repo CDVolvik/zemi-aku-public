@@ -109,13 +109,21 @@
     } catch {
       voices = []; listeningEnabled = false;
     }
+    restoreChoice();
+    renderPicker();
+  }
+
+  // The saved language and gender, read before anything renders (judge panel 10/23: the first screen
+  // read the default "en" because the saved value arrived only after /api/voices answered). With
+  // nothing saved, a browser set to Spanish starts in Spanish.
+  function restoreChoice() {
+    if (/^es\b/i.test(navigator.language || "")) lang = "es";
     try {
       const saved = localStorage.getItem(GENDER_STORE);
       if (saved === "female" || saved === "male") gender = saved;
       const savedLang = localStorage.getItem(LANG_STORE);
       if (Object.hasOwn(LANG_TAGS, savedLang)) lang = savedLang;
     } catch {}
-    renderPicker();
   }
 
   function renderPicker() {
@@ -561,6 +569,8 @@
     });
     window.speechSynthesis?.addEventListener?.("voiceschanged", renderPicker);
     setMode("off", IDLE_NOTE);
+    restoreChoice();
+    renderPicker(); // the menu and the EN/ES label show the saved pick before /api/voices answers
     loadVoices();
   }
 

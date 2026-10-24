@@ -20,11 +20,11 @@
   ].map(([id, en, es, pluralEn, pluralEs]) => ({ id, en, es, pluralEn, pluralEs }));
   const TEXT = {
     en: { kicker: "PUERTO RICO · WHERE TO OPEN", title: name => `Where should I open a ${name}?`, gaps: "Strongest taste with few businesses",
-      loading: "Loading…", unavailable: name => `Opportunity data is unavailable for ${name}.`, close: "Back to the island", rank: n => `taste #${n}`,
+      loading: "Loading…", unavailable: name => `Opportunity data is unavailable for ${name}.`, close: "Back to the island", rank: (n, of) => (of ? `taste #${n} of ${of}` : `taste #${n}`),
       tap: "Tap a town on the map or below to see its numbers." },
     es: { kicker: "PUERTO RICO · DÓNDE ABRIR", title: name => `¿Dónde abro ${name}?`, gaps: "Más gusto y pocos negocios",
       loading: "Cargando…", unavailable: name => `Los datos de oportunidad no están disponibles para ${name}.`, close: "Volver a la isla",
-      rank: n => `gusto #${n}`, tap: "Toque un pueblo en el mapa o abajo para ver sus números." },
+      rank: (n, of) => (of ? `gusto #${n} de ${of}` : `gusto #${n}`), tap: "Toque un pueblo en el mapa o abajo para ver sus números." },
   };
   const lang2 = value => (value === "es" ? "es" : "en");
 
@@ -92,7 +92,8 @@
   function supplyText(row, lang) {
     const es = lang2(lang) === "es";
     const fix = n => Number(n).toFixed(1);
-    if (!row.suppressed) return { businesses: es ? `${row.establishments} establecimientos · ${row.employees} empleados` : `${row.establishments} establishments · ${row.employees} employees`,
+    const people = Number(row.employees || 0).toLocaleString("en-US");
+    if (!row.suppressed) return { businesses: es ? `${row.establishments} establecimientos · ${people} empleados` : `${row.establishments} establishments · ${people} employees`,
       per: es ? `${fix(row.perTenThousand)} por cada 10,000 residentes` : `${fix(row.perTenThousand)} per 10,000 residents` };
     if (!row.establishments) return { businesses: es ? `de 0 a ${row.establishmentsMax} establecimientos (el Census no publica cifras menores de 3)` : `0–${row.establishmentsMax} establishments (Census does not publish counts below 3)`,
       per: es ? `hasta ${fix(row.perTenThousandMax)} por cada 10,000 residentes` : `up to ${fix(row.perTenThousandMax)} per 10,000 residents` };
@@ -117,8 +118,9 @@
       $("opportunity-legend").innerHTML = legendHtml(l, current.data.notes?.[l] || []) + definitionsHtml(l, current.data);
       $("opportunity-gaps-heading").textContent = text.gaps;
       const gaps = current.data.towns.filter(row => row.group === "gap").sort((a, b) => a.tasteRank - b.tasteRank).slice(0, 8);
+      const ranked = current.data.towns.filter(row => Number.isFinite(row.tasteRank)).length;
       $("opportunity-gaps").innerHTML = gaps.map(row => {
-        const facts = [Number.isFinite(row.tasteRank) ? text.rank(row.tasteRank) : "",
+        const facts = [Number.isFinite(row.tasteRank) ? text.rank(row.tasteRank, ranked) : "",
           Number.isFinite(row.perTenThousand) ? supplyText(row, l).per : ""].filter(Boolean).join(" · ");
         return `<button type="button" class="coast-card" data-opportunity-town="${esc(row.town)}"><strong>${esc(row.town)}</strong><span>${esc(facts)}</span></button>`;
       }).join("");

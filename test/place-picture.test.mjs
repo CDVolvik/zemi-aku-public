@@ -90,7 +90,8 @@ test('pictureOf prefers Qloo image, then Commons photo, then logo, then site ico
   assert.equal(dossier.pictureOf({ logo: 'https://l.png', image: 'https://p.jpg' }).credit, 'Photo · Wikimedia Commons');
   assert.equal(dossier.pictureOf({ logo: 'https://l.png', website: 'https://www.spot.pr' }).credit, 'Logo · Wikimedia Commons');
   assert.equal(dossier.pictureOf({ website: 'https://www.spot.pr', aerial: 'https://a.jpg' }).src, 'https://icons.duckduckgo.com/ip3/spot.pr.ico');
-  assert.equal(dossier.pictureOf({ website: 'https://www.spot.pr' }).credit, 'Site icon');
+  assert.equal(dossier.pictureOf({ website: 'https://www.spot.pr' }).credit, '');
+  assert.equal(dossier.pictureOf({ website: 'https://www.spot.pr' }).logo, true);
   // A Facebook or Instagram page is not the place's site: no platform logo on the card, letter tile instead.
   assert.equal(dossier.pictureOf({ name: 'TocaMadera Café', website: 'https://www.facebook.com/tocamaderacafe' }).letter, true);
   assert.equal(dossier.pictureOf({ name: 'TocaMadera Café', domain: 'facebook.com' }).letter, true);

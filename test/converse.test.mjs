@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 
-function browser(enabled=true,getMedia,voiceStatus,nativeVoices,stored={},voicesConfig) {
+function browser(enabled=true,getMedia,voiceStatus,nativeVoices,stored={},voicesConfig,language) {
  const elements=new Map(),sockets=[],captions=[],actions=[],timers=[];
  let clears=0,stopped=0;
  const element=id=>{
@@ -21,7 +21,7 @@ function browser(enabled=true,getMedia,voiceStatus,nativeVoices,stored={},voices
  const app={unlockAudio:async()=>{},stopSpeaking(){},outputLevel:()=>0,context:()=>({town:'Ponce',taste:'restaurant'}),
   voiceText:(...args)=>captions.push(args),applyMapActions:async list=>actions.push(...list),say(){},speak:async()=>{}};
  const context={window:{ZemiApp:app,AudioContext:function(){return audio;}},
-  document:{getElementById:element,querySelectorAll:()=>[]},navigator:{mediaDevices:{getUserMedia:getMedia||(async()=>({getTracks:()=>[{stop(){stopped++;}}]}))}},
+  document:{getElementById:element,querySelectorAll:()=>[]},navigator:{language,mediaDevices:{getUserMedia:getMedia||(async()=>({getTracks:()=>[{stop(){stopped++;}}]}))}},
   location:{protocol:'https:',host:'zemi.r21digital.com'},WebSocket:Socket,ArrayBuffer,URLSearchParams,AbortSignal,
   AudioWorkletNode:class{port={};disconnect(){}},localStorage:{getItem(k){return stored[k]??null;},setItem(k,v){stored[k]=v;}},
   ZemiWisp:{createWisp:()=>({setState(){},setLevel(){}})},ZemiVoicePlayer:{create:()=>({push(){},clear(){clears++;},done:async()=>{}})},
@@ -43,6 +43,21 @@ test('the orb connects to the voice agent with context, captions and server map 
  await new Promise(resolve=>setImmediate(resolve));
  assert.deepEqual(b.captions,[['user','Show Ponce']]);assert.equal(b.actions[0].town,'Ponce');b.converse.stop();
  assert.equal(b.stopped,1);assert.equal(ws.closed,true);
+});
+
+test('the saved language is in place as soon as init runs, and a Spanish browser starts in Spanish', () => {
+ const saved=browser(true,undefined,undefined,undefined,{'zemi-voice-lang':'es','zemi-voice-gender':'male'});
+ assert.equal(saved.converse.voice().lang,'es'); assert.equal(saved.converse.voice().gender,'male');
+ const fresh=browser(true,undefined,undefined,undefined,{},undefined,'es-PR');
+ assert.equal(fresh.converse.voice().lang,'es');
+ const english=browser(true,undefined,undefined,undefined,{},undefined,'en-US');
+ assert.equal(english.converse.voice().lang,'en');
+ const kept=browser(true,undefined,undefined,undefined,{'zemi-voice-lang':'en'},undefined,'es-PR');
+ assert.equal(kept.converse.voice().lang,'en');
+ // The menu shows the pick before /api/voices answers, and blocked storage still honours the browser language.
+ assert.match(saved.elements.get('talk-lang').innerHTML,/value="es" selected/);
+ const blocked=browser(true,undefined,undefined,undefined,{get 'zemi-voice-lang'(){throw new Error('SecurityError');},get 'zemi-voice-gender'(){throw new Error('SecurityError');}},undefined,'es-PR');
+ assert.equal(blocked.converse.voice().lang,'es');
 });
 
 test('the menu is Female / Male per language, remembers the gender and ignores an old voice id', async () => {

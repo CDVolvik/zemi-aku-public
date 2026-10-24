@@ -122,7 +122,7 @@ test('opportunity_map with a town returns that town’s row beside the island fi
   assert.equal(out.data.town.perTenThousand, 0.5);
   assert.ok(Math.abs(out.data.town.islandPerTenThousand - 41 / 600000 * 10000) < 1e-9);
   assert.equal(out.data.town.ranked, 5);
-  assert.match(out.data.town.reading, /^San Juan is a gap for bakery: taste rank 5 of 5; 16 establishments, 0\.5 per 10,000 residents against 0\.68 island-wide\./);
+  assert.match(out.data.town.reading, /^San Juan is a gap for bakery: taste rank 5 of 5; 16 establishments with employees, 0\.5 per 10,000 residents against (?:the median of [\d.]+ the groups split on \(island average 0\.68\)|0\.68 island-wide)\./);
   assert.deepEqual(out.action, { type: 'show_opportunity', industry: 'bakery' });
   const missing = await tool.run({ industry: 'bakery', town: 'Lares' });
   assert.equal(missing.data.town, null);

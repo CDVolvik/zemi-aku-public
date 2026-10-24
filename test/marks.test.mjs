@@ -56,6 +56,26 @@ test('the pin card copes with a bare record and tells a phone how to open the fu
   assert.match(marks.card({ name: 'Mirador', aerial: 'https://tiles/a.jpg' }), /pick-initial letter|class="letter"/);
 });
 
+test('a Spanish answer gets Spanish chips, legend and hours; English stays as the data came', () => {
+  const place = { name: 'La Casita', category: 'food', hours: 'Today 5:00 pm–12:00 am', lat: 18, lon: -66 };
+  const es = marks.resultCards([place, { name: 'Cerrada', category: 'other', hours: 'Closed today' }], { lang: 'es' });
+  assert.match(es, /cat-chip[^>]*>Comida</);
+  assert.match(es, /Hoy 5:00 pm–12:00 am/);
+  assert.match(es, /Cerrado hoy/);
+  assert.match(es, /Servicios y más/);
+  const en = marks.resultCards([place], { lang: 'en' });
+  assert.match(en, /cat-chip[^>]*>Food</);
+  assert.match(en, /Today 5:00 pm–12:00 am/);
+  assert.equal(marks.hoursText('Open 24 hours', 'es'), 'Abierto 24 horas');
+  assert.equal(marks.hoursText('', 'es'), '');
+  // The legend and the pin card follow <html lang>.
+  context.document = { documentElement: { lang: 'es' } };
+  assert.match(marks.legend([{ category: 'stay' }]), /Hospedajes<b>1<\/b>/);
+  assert.match(marks.card({ name: 'Kiosko' }), /Servicios y más/);
+  context.document = { documentElement: { lang: 'en' } };
+  assert.match(marks.legend([{ category: 'stay' }]), /Places to stay<b>1<\/b>/);
+});
+
 test('the server publishes each place with the catalog category the map colors by', async () => {
   const { categoryOf } = await import('../server/catalog.mjs');
   const { domainOf, affinityWhy } = await import('../server/lib.mjs');

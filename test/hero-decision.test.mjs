@@ -19,7 +19,7 @@ test('the island hero asks the decision question first and keeps the artists as 
 
 test('hero copy exists in both languages and re-renders when the voice language changes', () => {
   assert.match(html, /function renderHero\(next\)/);
-  assert.match(html, /\$\("talk-lang"\)\.addEventListener\("change", \(event\) => renderHero\(event\.target\.value\)\);/);
+  assert.match(html, /\$\("talk-lang"\)\.addEventListener\("change", \(event\) => \{ renderHero\(event\.target\.value\); toggleMenu\(\$\("voice-menu"\), \$\("voice-btn"\), false\); \}\);/);
   assert.match(html, /Where should I open a business in Puerto Rico\?/);
   assert.match(html, /¿Dónde abro un negocio en Puerto Rico\?/);
   assert.match(html, /Or start with an artist/);
