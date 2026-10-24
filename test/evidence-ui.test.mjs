@@ -118,19 +118,36 @@ test('a deterministic business or opportunity answer lists its sources and says 
 
 
 // October 23: a judge can fire the control from any model answer; the control's own drawer says what it is.
+test('a verdict with a model note reads sources + live model, names the model, and offers the control run', () => {
+  const Z = load();
+  const calls = [{ tool: 'town_catalog', args: { town: 'San Juan', type: 'bakery' }, ok: true, source: 'Qloo saved catalog', count: 37 }, { tool: 'opportunity_map', args: { industry: 'bakery' }, ok: true, source: 'Qloo heatmap' }];
+  const out = Z.html('en', { mode: 'sources', kind: 'business', at: '2026-10-24T08:00:00.000Z', calls, note: { model: 'deepseek/deepseek-v4.1-flash', ms: 2140 } });
+  assert.match(out, /<summary>Evidence · business research · sources \+ live model · 2 sources · 2\.1 s<\/summary>/);
+  assert.match(out, /The verdict sentence is rule-based from these sources; the model wrote the closing sentences from the same data · Model deepseek\/deepseek-v4\.1-flash via OpenRouter/);
+  assert.match(out, /data-control-run>Ask again without Qloo</);
+  const es = Z.html('es', { mode: 'sources', kind: 'business', calls, note: { model: 'm', ms: 900 } });
+  assert.match(es, /fuentes \+ modelo en vivo/);
+  assert.match(es, /Preguntar otra vez sin Qloo/);
+  // A skipped note says why and offers no control (there was no model turn to repeat).
+  const skipped = Z.html('en', { mode: 'sources', kind: 'business', calls, note: { fallback: 'visitor-cap' } });
+  assert.match(skipped, /no model turn · 2 sources/);
+  assert.match(skipped, /the model's closing note was skipped: your model turns for today are used/);
+  assert.doesNotMatch(skipped, /data-control-run/);
+});
+
 test('a model answer offers the control run and a control run is labeled instead', () => {
   const Z = load();
   const out = Z.html('en', modelRun);
   assert.match(out, /<p><button type="button" class="control-run" data-control-run>Ask again without Qloo<\/button><\/p>/);
   assert.match(Z.html('es', modelRun), /Preguntar otra vez sin Qloo/);
   const control = Z.html('en', { ...modelRun, control: 'no-qloo', calls: [] });
-  assert.match(control, /<summary>Evidence · live model · without Qloo tools · 0 tool calls · 3\.1 s<\/summary>/);
+  assert.match(control, /<summary>Evidence · live model · without Qloo tools, no history · 0 tool calls · 3\.1 s<\/summary>/);
   assert.doesNotMatch(control, /data-control-run/);
   assert.match(Z.html('es', { ...modelRun, control: 'no-qloo' }), /sin las herramientas de Qloo/);
   for (const mode of ['rules', 'replay', 'sources']) assert.doesNotMatch(Z.html('en', { ...modelRun, mode, reason: 'budget', kind: 'business' }), /data-control-run/);
   const ask = html.match(/async function askTown\([^]*?\n}\n/)[0];
-  assert.match(ask, /\{ town: control\.town, taste: control\.taste, question: control\.question, lang: control\.lang, pinTown: false, history: control\.history, tools: "no-qloo" \}/,
-    'the control repeats the snapshot of the original request, not the current UI state or the grown history');
+  assert.match(ask, /\{ town: control\.town, taste: control\.taste, question: control\.question, lang: control\.lang, pinTown: false, history: \[\], tools: "no-qloo" \}/,
+    'the control repeats the snapshot of the original request with no history, like /compare (judge panel 10/24 round 3: history carried Qloo-derived answers into the control)');
   assert.match(ask, /if \(control\) return data;/, 'a control run never enters the conversation history');
   assert.match(ask, /lastRequest = \{ town: request\.town, taste: request\.taste, question, lang: request\.lang, history: request\.history \}/);
   assert.match(html, /if \(event\.target\.closest\("\[data-control-run\]"\)\) return runControl/);

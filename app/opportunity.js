@@ -123,7 +123,8 @@
         const facts = [Number.isFinite(row.tasteRank) ? text.rank(row.tasteRank, ranked) : "",
           Number.isFinite(row.perTenThousand) ? supplyText(row, l).per : ""].filter(Boolean).join(" · ");
         return `<button type="button" class="coast-card" data-opportunity-town="${esc(row.town)}"><strong>${esc(row.town)}</strong><span>${esc(facts)}</span></button>`;
-      }).join("");
+      }).join("") + (ranked < current.data.towns.length
+        ? `<p class="note">${l === "es" ? `Los puestos son entre los ${ranked} de ${current.data.towns.length} pueblos con datos de gusto de Qloo.` : `Ranks are among the ${ranked} of ${current.data.towns.length} towns with Qloo taste data.`}</p>` : "");
     }
 
     async function show(id) {

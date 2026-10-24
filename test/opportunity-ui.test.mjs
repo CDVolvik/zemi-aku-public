@@ -26,6 +26,13 @@ test('show() fetches the industry once and maps towns to groups',async()=>{
   await ui.show('bakery');await ui.show('bakery');
   assert.equal(calls,1);assert.equal(ui.active(),'bakery');
   assert.ok(elements['opportunity-gaps'].innerHTML.includes('taste #1 of 2'),elements['opportunity-gaps'].innerHTML);
+  assert.ok(!elements['opportunity-gaps'].innerHTML.includes('towns with Qloo taste data'));
+  // A town without taste data lowers the rank base, and the list says so in both languages.
+  const {Z:Z2,elements:e2}=load();
+  const partial=Z2.mount({...base,fetchJson:async()=>file('bakery',[{town:'Mayagüez',group:'gap',tasteRank:1,perTenThousand:0},{town:'Ponce',group:'quiet',tasteRank:2,perTenThousand:.2},{town:'Culebra',group:'unknown',tasteRank:null,perTenThousand:0}])});
+  await partial.show('bakery');
+  assert.ok(e2['opportunity-gaps'].innerHTML.includes('taste #1 of 2'),e2['opportunity-gaps'].innerHTML);
+  assert.ok(e2['opportunity-gaps'].innerHTML.includes('Ranks are among the 2 of 3 towns with Qloo taste data.'),e2['opportunity-gaps'].innerHTML);
   assert.equal(ui.groupOf('Mayaguez'),'gap');assert.equal(ui.groupOf('Ponce'),'quiet');assert.equal(ui.groupOf('Caguas'),null);
   assert.ok(changes>=1);
   ui.hide();assert.equal(ui.active(),null);assert.equal(ui.groupOf('Ponce'),null);

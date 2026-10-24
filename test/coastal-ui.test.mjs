@@ -42,7 +42,7 @@ for (const navigation of ['goHome', 'select', 'showCatalog']) {
       focusToken: 0, leadNames: [], dirCat: 'food',
       placeSource: { entities: { removeAll: noop } }, heatSource: { entities: { removeAll: noop } },
       loadPlaces: async () => {}, opportunityUI: null,
-      mapHistory: { beginUserNav: noop },
+      mapHistory: { beginUserNav: noop }, localFocus: (f) => f,
     };
     for (const name of ['clearJourney', 'drawFootprint', 'repaint', 'hideCaption', 'showHits', 'goStep',
       'flyHome', 'openTownView', 'loadHeat', 'loadProfile', 'loadDirectory', 'loadLandmarks', 'frameWholeTown',

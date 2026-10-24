@@ -22,7 +22,7 @@ test("an answer is not hidden on a timer; a tap on its close hides it", () => {
 });
 
 test("a question's list folds the town directory to one line, a town opens it", () => {
-  assert.match(app, /const focus = data\.focus \|\| data\.query \|\| "Places";\n\s*listTitle = focus\.charAt\(0\)\.toUpperCase\(\) \+ focus\.slice\(1\);/);
+  assert.match(app, /const focus = localFocus\(data\.focus \|\| data\.query \|\| "Places"\);\n\s*listTitle = focus\.charAt\(0\)\.toUpperCase\(\) \+ focus\.slice\(1\);/);
   assert.match(app, /\$\("directory"\)\.dataset\.folded = "true";/);
   assert.match(app, /\$\("town-title"\)\.textContent = record\.town;\n\s*delete \$\("directory"\)\.dataset\.folded;/);
   assert.match(app, /data-unfold>\$\{esDir \? "Ver los" : "Browse all"\} \$\{directory\.total\.toLocaleString\("en-US"\)\} \$\{esDir \? "lugares" : "places"\}/);

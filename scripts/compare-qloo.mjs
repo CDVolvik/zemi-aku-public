@@ -1,4 +1,4 @@
-// The with-and-without-Qloo control: six frozen prompts, each asked twice of a local server started
+// The with-and-without-Qloo control: seven frozen prompts, each asked twice of a local server started
 // with ZEMI_COMPARE=1 (the second time with the Qloo tools removed). Writes data/compare-qloo.json.
 // Twelve model turns against the local daily budget; no key leaves this machine.
 //   ZEMI_COMPARE=1 PORT=4182 node scripts/serve-eagle.mjs &  node scripts/compare-qloo.mjs http://127.0.0.1:4182
@@ -34,14 +34,15 @@ async function once(prompt, tools) {
 const prompts = [];
 for (const prompt of PROMPTS) {
   const withRun = await ask(prompt);
-  const withoutRun = await ask(prompt, "no-qloo");
+  const withoutRun = await ask(prompt, prompt.control || "no-qloo");
   const compare = compareRuns(withRun, withoutRun);
   console.log(`${prompt.id}: with ${compare.tools.with} calls, ${compare.catalog} places, named ${compare.named.with.length}; without ${compare.tools.without} calls; ${compare.qlooAddedNothing ? "Qloo added nothing" : "Qloo changed " + compare.onlyWith.join(", ")}`);
   const strip = ({ actions, ...run }) => run; // the map actions carry full records; the page needs names only
   prompts.push({ ...prompt, with: strip(withRun), without: strip(withoutRun), compare });
 }
 const file = { ranAt: new Date().toISOString(), model: MODEL,
-  settings: { history: [], town: "", maxTokens: 1200, reasoningEffort: "low", rounds: 4, withoutTools: ["map_town", "town_weather", "landmarks", "town_history"] },
+  settings: { history: [], town: "", maxTokens: 1200, reasoningEffort: "low", rounds: 4, withoutTools: ["map_town", "town_weather", "landmarks", "town_history"],
+    catalogOnlyTools: ["map_town", "town_weather", "landmarks", "town_history", "town_catalog", "find_places", "place_details"] },
   prompts };
 fs.writeFileSync(out, JSON.stringify(file, null, 1) + "\n");
 console.log(`wrote ${path.relative(process.cwd(), out)}`);

@@ -7,7 +7,13 @@ import { CATEGORIES, categoryOf } from "./catalog.mjs";
 // "Ask again without Qloo" control under the same caps; see docs/SPEC-2026-10-14-with-and-without-qloo.md.
 export const NON_QLOO_TOOLS = ["map_town", "town_weather", "landmarks", "town_history"];
 export function withoutQloo(tools) { return tools.filter((tool) => NON_QLOO_TOOLS.includes(tool.name)); }
+// The second control (judge panel 10/24): the Qloo place catalog stays, every affinity tool goes (artist places,
+// fans-also-love, recommendations, audiences, tags, trends, the taste profile and the heatmap), so a pair shows
+// whether Qloo's taste signal changes which places are named, not just whether names exist.
+export const CATALOG_ONLY_TOOLS = [...NON_QLOO_TOOLS, "town_catalog", "find_places", "place_details"];
+export function catalogOnly(tools) { return tools.filter((tool) => CATALOG_ONLY_TOOLS.includes(tool.name)); }
 const GROUP_WORDS = { gap: "a gap", competitive: "competitive", quiet: "quiet", crowded: "crowded", unknown: "not enough data" };
+const GROUP_ES = { gap: "brecha", competitive: "competido", quiet: "tranquilo", crowded: "saturado", unknown: "sin datos suficientes" };
 function townReading(file, industry, town) {
   const row = file.towns.find((r) => r.town === town);
   if (!row) return null;
@@ -26,7 +32,7 @@ function townReading(file, industry, town) {
   const reading = `${town} is ${GROUP_WORDS[row.group] || row.group} for ${industry}: taste rank ${row.tasteRank ?? "unranked"} of ${ranked}; ${density}. `
     + (row.group === "gap" ? "Strong taste, few businesses: a lead to visit, not demand." : row.group === "competitive" ? "Strong taste, many businesses: the figure is at or above the median, so never call it few."
       : row.group === "quiet" ? "Less taste, few businesses." : row.group === "crowded" ? "Less taste, many businesses." : "Not enough data to group.");
-  return { town, group: row.group, tasteRank: row.tasteRank ?? null, ranked, establishments: row.establishments ?? null, establishmentsMax: row.establishmentsMax ?? null,
+  return { town, group: row.group, groupEs: GROUP_ES[row.group] || row.group, tasteRank: row.tasteRank ?? null, ranked, establishments: row.establishments ?? null, establishmentsMax: row.establishmentsMax ?? null,
     suppressed: Boolean(row.suppressed), perTenThousand: figure(row.perTenThousand), perTenThousandMax: figure(row.perTenThousandMax), medianPerTenThousand: median, islandPerTenThousand: island, reading };
 }
 

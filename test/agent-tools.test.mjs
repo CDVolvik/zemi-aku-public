@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { agentTools } from '../server/agent-tools.mjs';
+import { agentTools, catalogOnly, CATALOG_ONLY_TOOLS } from '../server/agent-tools.mjs';
 import { fold } from '../server/lib.mjs';
 test('name lookup folds accented input and empty results do not reset the map',async()=>{
   let upstream=0;
@@ -126,4 +126,11 @@ test('opportunity_map with a town returns that town’s row beside the island fi
   assert.deepEqual(out.action, { type: 'show_opportunity', industry: 'bakery' });
   const missing = await tool.run({ industry: 'bakery', town: 'Lares' });
   assert.equal(missing.data.town, null);
+});
+
+test('the catalog-only control keeps Qloo places and loses every affinity tool', () => {
+  const names = ['map_town', 'town_catalog', 'find_places', 'place_details', 'fans_also_love', 'artist_places', 'town_profile', 'landmarks', 'town_history', 'qloo_describe', 'qloo_recommend', 'qloo_compare_audiences', 'qloo_entity_tags', 'qloo_trends', 'opportunity_map', 'town_weather'];
+  const kept = catalogOnly(names.map((name) => ({ name }))).map((t) => t.name);
+  assert.deepEqual(kept.sort(), [...CATALOG_ONLY_TOOLS].sort());
+  for (const gone of ['artist_places', 'fans_also_love', 'qloo_recommend', 'qloo_compare_audiences', 'qloo_entity_tags', 'qloo_trends', 'town_profile', 'opportunity_map', 'qloo_describe']) assert.ok(!kept.includes(gone), gone);
 });

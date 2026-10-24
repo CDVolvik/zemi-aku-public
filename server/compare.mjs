@@ -10,6 +10,8 @@ export const PROMPTS = [
   { id: "mofongo", lang: "es", question: "¿Dónde comer mofongo en Ponce?" },
   { id: "rincon-rain", lang: "en", question: "Plan a rainy afternoon in Rincón." },
   { id: "calle-13", lang: "en", question: "Which town should I visit if I like Calle 13?" },
+  // The affinity pair (judge panel 10/24): both runs have the place catalog; only one has Qloo's taste tools.
+  { id: "bad-bunny-affinity", lang: "en", question: "Where do Bad Bunny fans eat in San Juan?", control: "catalog-only" },
 ];
 
 // The catalog places a run put on the map: every show_places list and every opened place.

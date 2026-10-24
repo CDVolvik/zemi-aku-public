@@ -19,8 +19,8 @@ import { checkTester, testersCsv } from "../server/testers.mjs";
 import { createTesterDelivery } from "../server/tester-delivery.mjs";
 import { handleConfig } from "../server/beta.mjs";
 import crypto from "node:crypto";
-import { createAgent, createSpendLedger, checkChat, MODEL } from "../server/agent.mjs";
-import { agentTools, withoutQloo } from "../server/agent-tools.mjs";
+import { createAgent, createSpendLedger, checkChat, MODEL, createNote, spokenExcerpt } from "../server/agent.mjs";
+import { agentTools, withoutQloo, catalogOnly } from "../server/agent-tools.mjs";
 import { createSamples } from "../server/samples.mjs";
 import { createWeather } from "../server/weather.mjs";
 import { createMcpHandler, mcpBudget, mcpTools } from "../server/mcp.mjs";
@@ -1489,6 +1489,38 @@ function sameOrigin(req) {
   return own.some((candidate) => candidate.replace(/\/$/, "").toLowerCase() === origin.replace(/\/$/, "").toLowerCase());
 }
 
+// The headline siting answer keeps its rule-based verdict (it matches the map) and, when the visitor has a
+// model turn and the budget allows, gets two model sentences from the same data (judge panels 10/23, 10/24).
+// A capped or failed note leaves the template alone; the drawer says which happened.
+const GROUP_ES = { gap: "brecha", competitive: "competido", quiet: "tranquilo", crowded: "saturado", unknown: "sin datos suficientes" };
+async function withVerdictNote(business, asked, ip) {
+  const row = business?.business?.evidence?.opportunity;
+  if (!row || !Array.isArray(business.places) || business.business.mode !== "research" || business.business.topic !== "overview") return business;
+  // The verdict templates exist in English and Spanish only; a French, Italian or German request gets no note
+  // rather than a verdict in one language and a note in another.
+  if (!["en", "es"].includes(asked.lang)) return { ...business, evidence: { ...business.evidence, note: { fallback: "language" } } };
+  if (!limiter.spend(`chat-turns:${ip}`, 1, CHAT_TURNS_PER_VISITOR)) return { ...business, evidence: { ...business.evidence, note: { fallback: "visitor-cap" } } };
+  const file = opportunity?.get?.(row.industry);
+  // The model repeats what it is given, so it gets the verdict's own unit (per hundred thousand residents, whole
+  // numbers; judge panel 10/24 round 3 saw "1,3 por cada cien mil" next to "0.7 per 10,000" in one bubble).
+  const lakh = (n) => (Number.isFinite(n) ? Math.round(n * 10) : null);
+  const UNIT = "per hundred thousand residents";
+  // A suppressed Census count is a range, never a zero (Codex 10/24); the current town is not its own comparison.
+  const figures = (r) => (r.suppressed
+    ? { suppressed: true, establishments: null, establishmentsMax: r.establishmentsMax ?? 2, rate: null, rateMax: lakh(r.perTenThousandMax), unit: UNIT, countNote: "no published count: the Census withholds counts below 3; use the range" }
+    : { suppressed: false, establishments: r.establishments ?? null, rate: lakh(r.perTenThousand), unit: UNIT });
+  const topGaps = (file?.towns || []).filter((r) => r.group === "gap" && r.town !== business.town).sort((a, b) => (a.tasteRank ?? 99) - (b.tasteRank ?? 99)).slice(0, 5)
+    .map((r) => ({ town: r.town, tasteRank: r.tasteRank ?? null, ...figures(r) }));
+  const places = business.places.slice(0, 6).map((p) => ({ name: p.name, genre: p.genre || null, rating: p.rating ?? null, hours: p.hours || null }));
+  const note = await verdictNote({ lang: asked.lang, town: business.town, industry: row.industry, verdict: business.speech, topGaps, places,
+    row: { group: row.group, groupEs: GROUP_ES[row.group] || row.group, tasteRank: row.tasteRank, ranked: row.ranked, ...figures(row),
+      medianRate: lakh(row.medianPerTenThousand), unit: UNIT, qlooCount: business.business.total, overtureCount: business.business.evidence?.supply?.count ?? null } });
+  if (note.fallback) { console.warn(`verdict note fallback: ${note.reason}`); return { ...business, evidence: { ...business.evidence, note: { fallback: note.reason } } }; }
+  const speech = `${business.speech} ${note.text}`;
+  // The voice reads whole sentences within the speak endpoint's limit; the caption shows the whole note.
+  return { ...business, speech, spoken: spokenExcerpt(speech, 300), evidence: { ...business.evidence, note: { model: note.model, ms: note.ms } } };
+}
+
 async function patternAnswer(body) {
   const question = String(body.question || "").slice(0, 240);
   const lang = String(body.lang || "en");
@@ -1611,6 +1643,11 @@ const textAgent = createAgent({ key: routerKey, ledger: modelLedger, tools: regi
 // since October 23, for the public "Ask again without Qloo" button, under the same ledger and visitor cap.
 const bareAgent = createAgent({ key: routerKey, ledger: modelLedger, tools: withoutQloo(registry), towns: townNames,
   model: process.env.ZEMI_MODEL || MODEL, onFallback: (reason) => console.warn(`bare agent fallback: ${reason}`) });
+// The closing note under the rule-based siting verdict: one short model call on the same data, same ledger.
+const verdictNote = createNote({ key: routerKey, ledger: modelLedger, model: process.env.ZEMI_MODEL || MODEL });
+// The catalog-only control for /compare (ZEMI_COMPARE=1 only): Qloo places without any affinity tool.
+const catalogAgent = createAgent({ key: routerKey, ledger: modelLedger, tools: catalogOnly(registry), towns: townNames,
+  model: process.env.ZEMI_MODEL || MODEL, onFallback: (reason) => console.warn(`catalog agent fallback: ${reason}`) });
 // Three saved model runs, served when the model cannot answer (budget, provider, a refused round).
 const samples = createSamples({ dir: path.join(root, "data", "samples") });
 // Off unless ZEMI_MCP_ENABLED=1: then /mcp is a plain 404, like any unknown path.
@@ -1863,6 +1900,14 @@ window.ZEMI_PHOTOREAL_ENABLED = ${process.env.ZEMI_PHOTOREAL_ENABLED === "1"};
         return sendJson(res, 400, { error: "Check your question, language and conversation history." });
       }
       const ip = limiter.visitorIp(req, TRUST_PROXY);
+      if (body.tools === "catalog-only") {
+        // Only the local compare build runs this control; the public site keeps the one documented switch.
+        if (process.env.ZEMI_COMPARE !== "1") return sendJson(res, 404, { error: "Not available here." });
+        if (!limiter.spend(`chat-turns:${ip}`, 1, CHAT_TURNS_PER_VISITOR)) return sendJson(res, 429, { error: "Your model turns for today are used." });
+        const run = await catalogAgent(checked.value);
+        if (run.fallback) return sendJson(res, 503, { error: "The control run could not answer.", reason: run.reason });
+        return sendJson(res, 200, { ...run, control: "catalog-only", evidence: { ...run.evidence, control: "catalog-only" } });
+      }
       if (body.tools === "no-qloo") {
         // The live control (judge panel 10/23: a recorded comparison is not one a judge can fire). One
         // visitor turn and one model reservation, like any model answer; a failed run is a plain 503.
@@ -1876,7 +1921,7 @@ window.ZEMI_PHOTOREAL_ENABLED = ${process.env.ZEMI_PHOTOREAL_ENABLED === "1"};
         return sendJson(res, 200, { ...bare, control: "no-qloo", evidence: { ...bare.evidence, control: "no-qloo" } });
       }
       const business = await businessAnswer(checked.value);
-      if (business) return sendJson(res, 200, business);
+      if (business) return sendJson(res, 200, await withVerdictNote(business, checked.value, ip));
       let answer;
       if (limiter.spend(`chat-turns:${ip}`, 1, CHAT_TURNS_PER_VISITOR)) answer = await textAgent(checked.value);
       else { console.warn("agent fallback: visitor-cap"); answer = { fallback: true, reason: "visitor-cap" }; }

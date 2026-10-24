@@ -17,7 +17,7 @@ forty turns per visitor) with Deepgram Aura-2 voices in five languages under a d
 line (tool calls, sources, counts, timing, model); three saved runs stand in, labeled replay, when
 the model falls back ([judge dry run, October 14](docs/JUDGE-DRYRUN-2026-10-14.md)). Earlier evidence:
 [public demo](docs/PUBLIC-DEMO-2026-10-08.md). The [with-and-without-Qloo control](https://zemi.r21digital.com/compare)
-runs six frozen questions through the same model twice, once with the Qloo tools removed
+runs seven frozen questions through the same model twice, once with the Qloo tools removed (the seventh keeps the place catalog and removes only the taste tools)
 (`node scripts/compare-qloo.mjs` writes `data/compare-qloo.json`; the site serves its saved run).
 The [public coastal demo](docs/PUBLIC-COASTAL-2026-10-08.md) adds five ports,
 received AIS positions and port-to-Qloo discovery. Bounded public reception and the
@@ -74,7 +74,7 @@ node scripts/check-demo.mjs http://127.0.0.1:4174
 node scripts/check-demo.mjs http://127.0.0.1:4174 --journeys
 ```
 
-There are 439 local automated tests. A fresh clone of the public repository skips four: the one
+There are 445 local automated tests. A fresh clone of the public repository skips four: the one
 that needs the Census cache and the three that read the saved Qloo results.
 Public HTTPS, Chrome journey/3D, private-path protection and capped WebSocket probes pass.
 Live speech and a real iPhone still require separate verification.

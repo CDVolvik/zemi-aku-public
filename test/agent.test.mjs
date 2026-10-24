@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { createAgent, createSpendLedger, checkChat, plainSpeech, spokenExcerpt, PROMPT, industryIn, namesTown, townFlight } from "../server/agent.mjs";
+import { createAgent, createSpendLedger, checkChat, plainSpeech, spokenExcerpt, PROMPT, industryIn, namesTown, townFlight, createNote, wholeSentences, echoes, checkNote, noteLanguage } from "../server/agent.mjs";
 
 const tools = [{ name: "town_catalog", description: "Places in a town", parameters: {
   type: "object", properties: { town: { type: "string", enum: ["Ponce"] } }, required: ["town"], additionalProperties: false,
@@ -483,6 +483,61 @@ test('the map follows the town the question names when the model moved nothing, 
   assert.equal(townFlight('Culebra bakeries', 'Adjuntas', towns, places), places);
   assert.match(PROMPT, /call map_town for that town/);
   assert.match(PROMPT, /per 10,000 residents in that unit/);
+});
+
+test('the verdict note is one plain model call on the data given, charged to the ledger, and a failure leaves the template alone', async t => {
+  let sent;
+  const note = createNote({ key: 'test', ledger: ledger(t), fetchImpl: async (url, init) => { sent = JSON.parse(init.body); return reply({ content: '**Go see** Panadería Alturas at 6 am. Río Grande ranks higher.' }, 0.0004); } });
+  const out = await note({ lang: 'en', town: 'San Juan', industry: 'bakery', verdict: 'San Juan is a gap.', row: { group: 'gap' }, topGaps: [{ town: 'Río Grande' }], places: [{ name: 'Panadería Alturas' }] });
+  assert.equal(out.text, 'Go see Panadería Alturas at 6 am. Río Grande ranks higher.');
+  assert.equal(out.model, 'deepseek/deepseek-v4.1-flash');
+  assert.ok(sent.messages[0].content.includes('two short sentences'));
+  assert.ok(sent.messages[1].content.includes('Language: en'));
+  assert.ok(sent.messages[1].content.includes('Panadería Alturas'));
+  assert.equal(sent.tools, undefined);
+  const refused = createNote({ key: 'test', ledger: ledger(t), fetchImpl: async () => ({ ok: false, status: 429 }) });
+  assert.deepEqual(await refused({ town: 'Ponce' }), { fallback: true, reason: 'http-429' });
+  const noKey = createNote({ key: '', ledger: ledger(t) });
+  assert.deepEqual(await noKey({ town: 'Ponce' }), { fallback: true, reason: 'no-key' });
+  const empty = createNote({ key: 'test', ledger: ledger(t), fetchImpl: async () => reply({ content: '' }) });
+  assert.deepEqual(await empty({ town: 'Ponce' }), { fallback: true, reason: 'empty-answer' });
+  // A note cut by the token limit keeps only whole sentences.
+  const cut = createNote({ key: 'test', ledger: ledger(t), fetchImpl: async () => reply({ content: "Visit El Horno at 7 am. Compare San Juan's 0" }) });
+  assert.equal((await cut({ town: 'San Juan' })).text, 'Visit El Horno at 7 am.');
+  assert.equal(wholeSentences('Only a fragment with no end'), '');
+  assert.equal(wholeSentences('¿Listo? Sí.'), '¿Listo? Sí.');
+  assert.equal(wholeSentences('Done.'), 'Done.');
+  assert.ok(sent.max_tokens >= 400);
+  assert.deepEqual(sent.reasoning, { enabled: false });
+  // A note that echoes the verdict is dropped (a probe saw the whole verdict sentence come back).
+  const verdict = 'San Juan is a gap for bakeries: strong taste, rank 5 of 76, and few businesses, 16 establishments with employees. Qloo lists 37. A lead, not proof: visit and check rents.';
+  const echo = createNote({ key: 'test', ledger: ledger(t), fetchImpl: async () => reply({ content: verdict }) });
+  assert.deepEqual(await echo({ town: 'San Juan', verdict }), { fallback: true, reason: 'echo' });
+  assert.equal(echoes('Visit El Horno at 7 am and check the queue. Compare with Río Grande, rank 2.', verdict), false);
+  assert.equal(echoes('San Juan is a gap for bakeries with strong taste and few businesses, 16 establishments with employees, rank 5 of 76.', verdict), true);
+  // The output contract: the requested language, no claim the data cannot carry, three sentences at most.
+  const english = createNote({ key: 'test', ledger: ledger(t), fetchImpl: async () => reply({ content: 'Visit El Horno at 7 am and check the queue. Compare with Río Grande, rank 2.' }) });
+  assert.deepEqual(await english({ town: 'San Juan', lang: 'es', verdict }), { fallback: true, reason: 'language' });
+  const spanish = createNote({ key: 'test', ledger: ledger(t), fetchImpl: async () => reply({ content: 'Visite El Horno a las 7 de la mañana y mire la fila. Compare con Río Grande, puesto 2 de 76.' }) });
+  assert.equal((await spanish({ town: 'San Juan', lang: 'es', verdict })).text, 'Visite El Horno a las 7 de la mañana y mire la fila. Compare con Río Grande, puesto 2 de 76.');
+  const claim = createNote({ key: 'test', ledger: ledger(t), fetchImpl: async () => reply({ content: 'Visit El Horno at 7 am. A bakery there will make money, guaranteed.' }) });
+  assert.deepEqual(await claim({ town: 'San Juan', lang: 'en', verdict }), { fallback: true, reason: 'claim' });
+  assert.equal(checkNote('One. Two. Three. Four.', 'en').text, 'One. Two. Three.');
+  assert.equal(noteLanguage('Visite y compare con la mediana de la isla'), 'es');
+  assert.equal(noteLanguage('Visit and compare with the island median'), 'en');
+  assert.equal(noteLanguage('Panadería Alturas'), '');
+  // The route sends suppressed rows as ranges, never zeroes, and never compares a town with itself.
+  const server = fs.readFileSync(new URL('../scripts/serve-eagle.mjs', import.meta.url), 'utf8');
+  assert.match(server, /r\.group === "gap" && r\.town !== business\.town/);
+  assert.match(server, /suppressed: true, establishments: null, establishmentsMax/);
+  assert.match(server, /if \(!\["en", "es"\]\.includes\(asked\.lang\)\) return \{ \.\.\.business, evidence: \{ \.\.\.business\.evidence, note: \{ fallback: "language" \} \} \};/);
+  assert.match(server, /spoken: spokenExcerpt\(speech, 300\)/);
+  // The note gets the verdict's unit, whole numbers per hundred thousand, and the Spanish group name.
+  assert.match(server, /const UNIT = "per hundred thousand residents"/);
+  assert.match(server, /rate: lakh\(r\.perTenThousand\), unit: UNIT/);
+  assert.match(server, /groupEs: GROUP_ES\[row\.group\]/);
+  assert.match(PROMPT, /brecha, competido, tranquilo, saturado/);
+  assert.match(PROMPT, /Never state\s+rents, foot traffic, menus, prices or "more traffic"/);
 });
 
 test('two large tool results that overrun the request drop the largest one and the model still answers', async t => {

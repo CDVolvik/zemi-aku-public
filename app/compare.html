@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Zemi-Aku — with and without Qloo</title>
-<meta name="description" content="Six questions about Puerto Rico, asked twice of the same model: once with Qloo's tools, once without. What changed, and where Qloo added nothing.">
+<meta name="description" content="Seven questions about Puerto Rico, asked twice of the same model: once with Qloo's tools, once without (the last pair keeps the place catalog and removes only the taste tools). What changed, and where Qloo added nothing.">
 <link rel="icon" type="image/png" sizes="32x32" href="/app/assets/favicon-32.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -50,7 +50,7 @@
 </header>
 <main>
   <h1>With and without Qloo.</h1>
-  <p class="dek">Six questions, each asked twice of the same model with the same prompt and settings. The first run has Zemi-Aku's Qloo tools. The second keeps only the map, the weather, Wikidata landmarks and Wikipedia history. Places from Qloo's catalog are marked in the answers; the line under each pair says what Qloo changed, or that it added nothing.</p>
+  <p class="dek">Seven questions, each asked twice of the same model with the same prompt and settings. The first run has Zemi-Aku's Qloo tools. In six pairs the second run keeps only the map, the weather, Wikidata landmarks and Wikipedia history. In the last pair the second run also keeps Qloo's place catalog and loses only the taste tools, so the difference is Qloo's affinity signal, not the existence of a catalog. Places from Qloo's catalog are marked in the answers; the line under each pair says what Qloo changed, or that it added nothing.</p>
   <p class="meta" id="meta">Loading the saved runs…</p>
   <div id="runs"></div>
 </main>
@@ -84,18 +84,20 @@ const trace = (calls) => `<ul class="trace">${(calls || []).map((c) => {
 }).join("")}</ul>`;
 const utc = (iso) => new Date(iso).toISOString().slice(0, 16).replace("T", " ") + " UTC";
 fetch("/data/compare-qloo.json").then((r) => r.json()).then((file) => {
-  document.getElementById("meta").innerHTML = `Model <code>${esc(file.model)}</code> via OpenRouter · same system prompt, ${file.settings.maxTokens} max tokens, reasoning ${esc(file.settings.reasoningEffort)}, up to ${file.settings.rounds} rounds, no history, no open town · without-Qloo tools: ${file.settings.withoutTools.map((t) => `<code>${esc(t)}</code>`).join(", ")} · run ${utc(file.ranAt)}`;
+  document.getElementById("meta").innerHTML = `Model <code>${esc(file.model)}</code> via OpenRouter · same system prompt, ${file.settings.maxTokens} max tokens, reasoning ${esc(file.settings.reasoningEffort)}, up to ${file.settings.rounds} rounds, no history, no open town · without-Qloo tools: ${file.settings.withoutTools.map((t) => `<code>${esc(t)}</code>`).join(", ")}${file.settings.catalogOnlyTools ? ` · catalog-only tools: ${file.settings.catalogOnlyTools.map((t) => `<code>${esc(t)}</code>`).join(", ")}` : ""} · run ${utc(file.ranAt)}`;
   document.getElementById("runs").innerHTML = file.prompts.map((row) => {
     const c = row.compare;
+    const affinity = row.control === "catalog-only";
+    const what = affinity ? "Qloo's taste signal" : "Qloo";
     const verdict = c.qlooAddedNothing
-      ? `Qloo added nothing here${c.named.with.length ? ` (both runs name ${c.named.with.join(", ")})` : c.catalog ? ` (Qloo returned ${c.catalog} places; the answer named none by name)` : " (no catalog place came back)"}`
-      : `Qloo changed: ${c.onlyWith.join(", ")}${c.onlyWithout.length ? ` · named only without Qloo: ${c.onlyWithout.join(", ")}` : ""}`;
+      ? `${what} added nothing here${c.named.with.length ? ` (both runs name ${c.named.with.join(", ")})` : c.catalog ? ` (Qloo returned ${c.catalog} places; the answer named none by name)` : " (no catalog place came back)"}`
+      : `${what} changed: ${c.onlyWith.join(", ")}${c.onlyWithout.length ? ` · named only ${affinity ? "by the catalog-only run" : "without Qloo"}: ${c.onlyWithout.join(", ")}` : ""}`;
     return `<article id="${esc(row.id)}">
       <h2>${esc(row.question)}</h2>
-      <p class="q">${esc(row.lang)} · ${c.tools.with} tool call${c.tools.with === 1 ? "" : "s"} with Qloo, ${c.tools.without} without · ${c.catalog} catalog place${c.catalog === 1 ? "" : "s"} on the map</p>
+      <p class="q">${esc(row.lang)} · ${c.tools.with} tool call${c.tools.with === 1 ? "" : "s"} with Qloo, ${c.tools.without} ${affinity ? "with the catalog only" : "without"} · ${c.catalog} catalog place${c.catalog === 1 ? "" : "s"} on the map${affinity ? " · both runs can read the catalog; only the first has affinity tools" : ""}</p>
       <div class="cols">
         <div class="col with"><h3>With Qloo</h3><p class="answer">${mark(row.with.speech, c.named.with)}</p>${trace(row.with.evidence.calls)}</div>
-        <div class="col"><h3>Without Qloo</h3><p class="answer">${mark(row.without.speech, c.named.without)}</p>${trace(row.without.evidence.calls)}</div>
+        <div class="col"><h3>${affinity ? "Catalog without affinity" : "Without Qloo"}</h3><p class="answer">${mark(row.without.speech, c.named.without)}</p>${trace(row.without.evidence.calls)}</div>
       </div>
       <p class="verdict${c.qlooAddedNothing ? " nothing" : ""}">${esc(verdict)}</p>
     </article>`;

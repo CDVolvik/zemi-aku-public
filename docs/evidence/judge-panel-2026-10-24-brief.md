@@ -1,7 +1,7 @@
 # Blind evaluation brief (read fully before touching anything)
 
 You are an independent evaluator for a hackathon entry. You have NOT seen the project's code or docs
-and you must not open them. Do not read anything under D:/R21-Brain. Work only from the public web.
+and you must not open them. Do not read anything on the machine you run on. Work only from the public web.
 
 Entry: https://zemi.r21digital.com (hosted demo; app at /app, control page at /compare,
 public source https://github.com/CDVolvik/zemi-aku-public). It is a Qloo Agentic Hackathon entry:

@@ -233,6 +233,11 @@ try {
   .location-shot { margin: 10px 0 0; max-width: 140px; }
   .location-thumb { display: block; width: 140px; height: 88px; object-fit: cover; border-radius: 10px; background: var(--wash); }
   .location-shot figcaption { margin-top: 4px; font-size: 11px; color: var(--muted); }
+  .decision { border-left: 3px solid var(--line); padding: 2px 0 2px 12px; margin: 10px 0 14px; }
+  .decision h4 { margin: 6px 0 2px; }
+  .decision ol { margin: 4px 0; padding-left: 18px; }
+  .legend-chip.note { opacity: .75; }
+  .control-verdict { margin: 6px 0 0; font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; opacity: .85; }
   .why-line { margin: 6px 0 0; font-size: 13px; color: var(--soft); }
   .answer-cards {
     display: flex; flex-direction: column; gap: 8px; margin: 10px 0 0;
@@ -1097,7 +1102,12 @@ function drawPlaces(places) {
     pin.placeIndex = index;
   });
   const legend = $("legend");
-  legend.innerHTML = ZemiMarks.legend(places);
+  // The chips count what is on the map; when the catalog holds more, the legend says so (judge panel 10/24:
+  // "941 places" in the text beside "Food 50" in the chips).
+  const total = directory?.town === pickedId ? directory.total : null;
+  const esLegend = typeof ZemiConverse !== "undefined" && ZemiConverse.voice().lang === "es";
+  legend.innerHTML = ZemiMarks.legend(places) + (Number.isFinite(total) && total > places.length
+    ? `<span class="legend-chip note">${esLegend ? `${places.length} de ${total.toLocaleString("en-US")} en el mapa` : `${places.length} of ${total.toLocaleString("en-US")} on the map`}</span>` : "");
   legend.hidden = !legend.innerHTML;
 }
 
@@ -1695,7 +1705,7 @@ async function loadDirectory(town) {
   try {
     const data = await (await fetch("/api/catalog?town=" + encodeURIComponent(town))).json();
     if (!townView || pickedId !== town || !data?.categories) return;
-    directory = data;
+    directory = { ...data, town }; // the town it belongs to, so a later answer's legend never borrows its total
     renderDirectory();
     // A category opened from a link may have arrived first; it gets its name now.
     if (dirCat) showListTitle(`${categoryLabel() || "All places"} · ${dirCount}, most popular first`);
@@ -1916,10 +1926,11 @@ function showCatalog(data, opts = {}) {
   $("landmarks").hidden = true;
   $("town-weather").hidden = true;
   // "food in Mayagüez" from the router reads as a title once its first letter is up.
-  const focus = data.focus || data.query || "Places";
+  const focus = localFocus(data.focus || data.query || "Places");
   listTitle = focus.charAt(0).toUpperCase() + focus.slice(1);
   $("town-title").textContent = listTitle;
   $("town-lede").textContent = data.note || "";
+  researchPlaces = Array.isArray(data.places) ? data.places : [];
   showBusinessResearch(data.business);
   $("town-tools").hidden = true;
   $("compare-box").hidden = true;
@@ -1943,8 +1954,47 @@ function showCatalog(data, opts = {}) {
   syncHash();
 }
 
+function decisionCard(business, o, places, es) {
+  const l = es ? "es" : "en";
+  const fix = (n) => Number(n).toFixed(1);
+  const count = o.suppressed
+    ? (es ? `de 0 a ${o.establishmentsMax ?? 2} establecimientos con empleados (el Census no publica cifras menores de 3)` : `0 to ${o.establishmentsMax ?? 2} establishments with employees (Census does not publish counts below 3)`)
+    : Number.isFinite(o.establishments) ? (es ? `${o.establishments} establecimientos con empleados` : `${o.establishments} establishments with employees`) : "";
+  const median = Number.isFinite(o.medianPerTenThousand) ? (es ? ` frente a la mediana de ${fix(o.medianPerTenThousand)} con la que se dividen los grupos` : ` against the median of ${fix(o.medianPerTenThousand)} the groups split on`) : "";
+  const rate = o.suppressed
+    ? (Number.isFinite(o.perTenThousandMax) ? (es ? `hasta ${fix(o.perTenThousandMax)} por cada 10,000 residentes${median}` : `up to ${fix(o.perTenThousandMax)} per 10,000 residents${median}`) : "")
+    : Number.isFinite(o.perTenThousand) ? (es ? `${fix(o.perTenThousand)} por cada 10,000 residentes${median}` : `${fix(o.perTenThousand)} per 10,000 residents${median}`) : "";
+  const supply = business.evidence?.supply;
+  const says = [
+    `${esc(ZemiOpportunity.LABELS[l][o.group] || "")}${Number.isFinite(o.tasteRank) ? (es ? ` · gusto #${o.tasteRank} de ${o.ranked}` : ` · taste #${o.tasteRank} of ${o.ranked}`) : ""}.`,
+    [count, rate].filter(Boolean).join(", ") + (count || rate ? "." : ""),
+    es ? `Qloo registra ${business.total} lugares de este tipo; Overture, ${supply ? supply.count : "—"}.` : `Qloo lists ${business.total} places of this type; Overture, ${supply ? supply.count : "—"}.`,
+  ].filter(Boolean).join(" ");
+  const cannot = es
+    ? "Demanda, ventas, rentas, tráfico peatonal, permisos ni ganancias. Los horarios son una foto del catálogo en su fecha."
+    : "Demand, sales, rents, foot traffic, permits or profit. Hours are a snapshot of the catalog on its date.";
+  const names = (places || []).slice(0, 3).map((p) => p.name).filter(Boolean);
+  const where = names.length ? names.map(esc).join(", ") : (es ? "los lugares de la lista" : "the listed places");
+  const checks = es
+    ? [`Visite ${where} a la hora de apertura y mire fila, precios y horario real.`, "Pregunte rentas en la calle principal y los permisos en el municipio antes de firmar.", "Compare con los pueblos del grupo brecha en el mapa."]
+    : [`Visit ${where} at opening time and watch the queue, prices and actual hours.`, "Ask rents on the main street and permits at the municipio before you sign.", "Compare with the gap-group towns on the map."];
+  return `<div class="decision"><h4>${es ? "Lo que dicen los datos" : "What the data says"}</h4><p>${says}</p>`
+    + `<h4>${es ? "Lo que no puede decir" : "What it cannot tell you"}</h4><p>${cannot}</p>`
+    + `<h4>${es ? "Tres pasos siguientes" : "Next three checks"}</h4><ol>${checks.map((c) => `<li>${c}</li>`).join("")}</ol></div>`;
+}
+let researchPlaces = []; // the answer's listed places, for the decision card's first check
+// A tool title such as "food in Caguas" or "all in Adjuntas" reads in the picked language (judge panels 10/24).
+function localFocus(focus) {
+  if (typeof ZemiConverse === "undefined" || ZemiConverse.voice().lang !== "es") return focus;
+  const m = String(focus).match(/^(.+?) in (.+)$/);
+  if (!m) return focus;
+  const key = m[1].toLowerCase();
+  const kind = typeof ZemiMarks !== "undefined" && ZemiMarks.KINDS[key] ? ZemiMarks.kindLabel(ZemiMarks.KINDS[key], "es").toLowerCase() : key === "all" ? "todos" : /fans$/.test(key) ? `fanáticos de ${m[1].replace(/ fans$/, "")}` : m[1];
+  return `${kind} en ${m[2]}`;
+}
 function showBusinessResearch(business) {
   $("business-research").hidden = !business;
+  if (business?.evidence?.opportunity) $("panel").scrollTop = 0; // a new verdict starts at its card, not mid-scroll
   if (!business) return;
   const es = ZemiConverse.voice().lang === "es";
   $("business-sale-links").hidden = business.mode !== 'buy';
@@ -1984,6 +2034,9 @@ function showBusinessResearch(business) {
       + `<details class="small"><summary>${es ? "Fuentes y límites" : "Sources and limits"}</summary>${(opportunity.notes || []).map(line => `<p>${esc(line)}</p>`).join("")}${ZemiOpportunity.definitionsHtml(es ? "es" : "en", opportunity)}</details>`);
   }
   if (business.proximity) parts.push(`<p>${business.proximity.reference ? `${esc(business.proximity.reference.name)} · ${esc(business.proximity.note)}` : (es ? 'Abra un lugar para usarlo como referencia de distancia.' : 'Open a place to use as the distance reference.')}</p>`);
+  // The decision card first (judge panels 10/23, 10/24: "what this says, what it cannot, next checks"): plain
+  // sentences from the same numbers, so an owner reads the verdict before the source notes.
+  if (opportunity && ["gap", "competitive", "quiet", "crowded", "unknown"].includes(opportunity.group) && typeof decisionCard === "function") parts.unshift(decisionCard(business, opportunity, researchPlaces, es));
   $("business-evidence").innerHTML = parts.join('');
   // The second turn of the decision: another industry for this town, or back to the colored island.
   // The six industries replace the older four-type row while they are on screen.
@@ -2612,6 +2665,10 @@ function showCaption(who, text, evidence, places) {
     : "";
   caption.innerHTML = `<span class="who">${who === "you" ? "You" : "Zemi-Aku"}</span>${esc(text)}<button type="button" class="x" aria-label="Dismiss">×</button>${ZemiEvidence.answerBody(lang, evidence, cards)}`;
   wireResultLogos(caption);
+  // A phone shows one sheet at a time (judge panels 10/23, 10/24): an answer folds the open panel to its
+  // handle; dismissing the answer unfolds it again. Status lines while listening never fold anything.
+  const panel = $("panel");
+  if (who === "zemi" && (evidence || rows.length) && window.innerWidth <= 720 && !panel.hidden && panel.dataset.collapsed !== "true") setPanelCollapsed(true, { byCaption: true });
   // Only the appearance animates; text updates while listening must not (they come many per second).
   if (caption.hidden) {
     caption.hidden = false;
@@ -2623,6 +2680,7 @@ function showCaption(who, text, evidence, places) {
 }
 function hideCaption() {
   $("caption").hidden = true;
+  if ($("panel").dataset.foldedByCaption === "true") setPanelCollapsed(false);
 }
 // On a phone the caption rises from the dock over the readout's last lines; the readout lifts by the caption's
 // height instead (--caption-h feeds the phone rules for #panel and #opportunity-panel). Zero while dismissed.
@@ -2640,8 +2698,18 @@ $("caption").addEventListener("click", (event) => {
 // "Ask again without Qloo": the last typed question, same model and settings, Qloo tools removed, shown
 // under the answer it controls for. The map stays where the Qloo answer put it.
 let lastAgentAnswer = null;
-const CONTROL = { en: { with: "With Qloo", without: "Without Qloo", waiting: "Asking again without Qloo…", failed: "The control run could not answer." },
-  es: { with: "Con Qloo", without: "Sin Qloo", waiting: "Preguntando otra vez sin Qloo…", failed: "La corrida de control no pudo responder." } };
+const CONTROL = { en: { with: "With Qloo", without: "Without Qloo", waiting: "Asking again without Qloo…", failed: "The control run could not answer.",
+    changed: (names) => `Qloo changed: ${names.join(", ")}`, nothing: "Qloo added nothing here (no catalog place is named only with Qloo)" },
+  es: { with: "Con Qloo", without: "Sin Qloo", waiting: "Preguntando otra vez sin Qloo…", failed: "La corrida de control no pudo responder.",
+    changed: (names) => `Qloo cambió: ${names.join(", ")}`, nothing: "Qloo no añadió nada aquí (ningún lugar del catálogo se nombra solo con Qloo)" } };
+let lastAgentPlaces = []; // the catalog place names the with-Qloo answer put on the map, for the control's diff line
+// The same name test as /compare (server/compare.mjs): a multi-word catalog name, accent- and case-insensitive.
+const foldName = (v) => String(v || "").normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
+function qlooDiff(withText, withoutText, names) {
+  const named = (text) => names.filter((name) => foldName(name).trim().includes(" ") && ` ${foldName(text)} `.includes(foldName(name)));
+  const without = named(withoutText);
+  return named(withText).filter((name) => !without.includes(name));
+}
 async function runControl(button) {
   if (!lastAgentAnswer?.question) return;
   const lang = ZemiConverse.voice().lang;
@@ -2658,8 +2726,10 @@ function showControl(withText, data) {
   const caption = $("caption");
   const lang = ZemiConverse.voice().lang;
   const t = CONTROL[lang] || CONTROL.en;
+  const changed = qlooDiff(withText, data.speech, lastAgentPlaces);
   caption.innerHTML = `<span class="who">Zemi-Aku</span><p class="control-pair"><b>${t.with}:</b> ${esc(withText)}</p>`
-    + `<p class="control-pair"><b>${t.without}:</b> ${esc(data.speech)}</p><button type="button" class="x" aria-label="Dismiss">×</button>`
+    + `<p class="control-pair"><b>${t.without}:</b> ${esc(data.speech)}</p>`
+    + `<p class="control-verdict">${esc(changed.length ? t.changed(changed) : t.nothing)}</p><button type="button" class="x" aria-label="Dismiss">×</button>`
     + ZemiEvidence.answerBody(lang, data.evidence, "");
   caption.hidden = false;
 }
@@ -2869,7 +2939,7 @@ let lastRequest = null;
 async function askTown(town, question, { pinTown = false, control = null } = {}) {
   const referenceId = step === 'place' ? openPlaces[focusedIndex]?.id || '' : businessReferenceId;
   const request = control
-    ? { town: control.town, taste: control.taste, question: control.question, lang: control.lang, pinTown: false, history: control.history, tools: "no-qloo" }
+    ? { town: control.town, taste: control.taste, question: control.question, lang: control.lang, pinTown: false, history: [], tools: "no-qloo" }
     : { town, taste: currentTaste(), question, lang: ZemiConverse.voice().lang, pinTown,
       history: pinTown ? [] : conversation.slice(-12), ...(referenceId && !pinTown ? { referenceId } : {}) };
   if (!pinTown && !control) lastRequest = { town: request.town, taste: request.taste, question, lang: request.lang, history: request.history };
@@ -2914,6 +2984,8 @@ async function runQuestion(question) {
   let data;
   try { data = await askTown(pickedId || "", question); }
   finally { clearTimeout(waitingTimer); if (waiting) showCaption("you", question); }
+  // A verdict with a model note offers the same control run as a model answer.
+  if (data?.evidence?.note?.model) { lastAgentAnswer = { ...lastRequest, speech: data.speech }; lastAgentPlaces = (data.places || []).map((p) => p.name); }
   if (data.opportunity) {
     await opportunityUI.show(data.opportunity.industry);
     showCaption("zemi", data.speech, data.evidence, data.places);
@@ -2926,6 +2998,7 @@ async function runQuestion(question) {
     if (!data.actions?.length && step !== "island") renderList();
     // One answer, shown once: the caption carries it, the panel keeps the picks and the list.
     $("town-say").hidden = true;
+    lastAgentPlaces = (data.actions || []).flatMap((action) => ["show_places", "open_place"].includes(action.type) ? (action.places || (action.place ? [action.place] : [])) : []).map((p) => p?.name).filter(Boolean);
     const agentPlaces = (data.actions || []).flatMap((action) => action.type === "show_places" ? (action.places || []) : [])
       .filter((place, index, all) => all.findIndex((other) => (other.id || other.name) === (place.id || place.name)) === index);
     showCaption("zemi", data.speech, data.evidence, agentPlaces);
@@ -3163,14 +3236,17 @@ $("tilt-btn").addEventListener("click", () => {
   setTiltEnabled(tilt.tiltEnabled);
   reframeCurrent(reducedMotion ? 0 : 0.6);
 });
-$("panel-collapse").addEventListener("click", () => {
+// One setter for the panel's folded state, so the handle's glyph and ARIA always agree with it. A manual
+// toggle takes ownership back from an automatic fold (an answer on a phone).
+function setPanelCollapsed(collapsed, { byCaption = false } = {}) {
   const panel = $("panel");
-  const collapsed = panel.dataset.collapsed === "true";
-  panel.dataset.collapsed = collapsed ? "false" : "true";
-  $("panel-collapse").setAttribute("aria-expanded", String(collapsed));
-  $("panel-collapse").textContent = collapsed ? "‹" : "›";
-  $("panel-collapse").setAttribute("aria-label", collapsed ? "Collapse panel" : "Expand panel");
-});
+  panel.dataset.collapsed = collapsed ? "true" : "false";
+  if (byCaption && collapsed) panel.dataset.foldedByCaption = "true"; else delete panel.dataset.foldedByCaption;
+  $("panel-collapse").setAttribute("aria-expanded", String(!collapsed));
+  $("panel-collapse").textContent = collapsed ? "›" : "‹";
+  $("panel-collapse").setAttribute("aria-label", collapsed ? "Expand panel" : "Collapse panel");
+}
+$("panel-collapse").addEventListener("click", () => setPanelCollapsed($("panel").dataset.collapsed !== "true"));
 // popstate alone: hashchange also fires on the same traversal and would double-restore.
 // Every Back/Forward goes through restoreHash (including the no-town / home case).
 window.addEventListener("popstate", () => { mapHistory.onHistoryNav(); });
@@ -3225,6 +3301,7 @@ function renderHero(next) {
     if (t.jobs[key]) button.textContent = t.jobs[key];
   }
   if (!pickedId) $("q").placeholder = t.placeholder;
+  if (typeof showMotion === "function" && typeof ZemiFlight !== "undefined") showMotion(); // the camera pill follows too
 }
 renderHero();
 // The voice menu's language pick is handled inside the voice module; the hero follows the picked value.

@@ -367,6 +367,52 @@ the dock at 769, the island's west and east tips project to x 41 and 383 at y 17
 the ion token's origin restriction, not a live condition), the five nav links are 12 px tall each; `check-demo --journeys`
 0 failed. 341 tests.
 
+## Decide release (2026-10-24, evening)
+
+Live as `zemi-aku:decide-20261024`, source `ce88f18` (cuts `c80af4e`, `250e93b`, `ce88f18`), layered on `lang-20261024` with `app/`, `server/`,
+`scripts/serve-eagle.mjs` and `data/compare-qloo.json` (`tmp/deploy-decide-20261024.sh`, local only). Rollback set
+`/opt/zemi-aku/decide-20261024-rollback` (previous image `lang-20261024`). Carlos: "max out on your suggestion", the five
+items that move the criteria both panels score low (technical execution, real-world impact). Codex adversarial review of
+the diff: eight findings, all fixed before deploy. No key, cap, cache, Caddy, env or connector change; the note shares
+the model ledger and the forty-turn visitor cap.
+
+What changed on the site:
+
+- **The headline siting answer is a hybrid.** The rule-based verdict stays (it matches the map) and, when the visitor has a
+  model turn and the budget allows, gets two model sentences from the same data (`createNote`, one plain completion, no
+  hidden reasoning): which listed places to go see and what to check once, and one comparison with a gap town or a next
+  step. The drawer reads "sources + live model", names the model and the time, and offers the same **Ask again without
+  Qloo** control. A note is skipped, and the drawer says why, when the visitor cap or budget is spent, the model echoes the
+  verdict, writes in the wrong language, makes a claim the data cannot carry (revenue, profit, guarantee), or returns
+  nothing. Suppressed Census rows reach the model as ranges with a note, never as zeroes; the current town is never its own
+  comparison; French, Italian and German get no note. The voice reads whole sentences up to the speak limit.
+- **A decision card** opens the business panel: what the data says (group, rank, establishments with employees, rate
+  against the median the groups split on, Qloo and Overture counts), what it cannot tell you (demand, sales, rents, foot
+  traffic, permits, profit; hours are a dated snapshot), next three checks (visit the listed places at opening, ask rents
+  and permits, compare with the gap towns). Deterministic, both languages.
+- **One sheet at a time on phones:** an answer folds the open panel to its handle through the same setter the handle uses;
+  dismissing the answer unfolds it; a manual toggle takes ownership back.
+- **Counts agree:** the legend says "50 of 941 on the map" for the town the directory belongs to; the gap list says
+  "ranks are among the 76 of 78 towns with Qloo taste data".
+- **A seventh compare pair:** the Bad Bunny question with the place catalog but no affinity tool (`catalog-only`, compare
+  build only). The catalog-only run says it has no tool mapping fans to restaurants and gives a general read; the Qloo run
+  ranks places by measured affinity. The page labels the pair "Catalog without affinity". `data/compare-qloo.json`
+  regenerated locally (14 model turns).
+
+- Third cut (same evening, after the third blind panel's first two reports, record `JUDGE-PANEL-2026-10-24b.md`): the note receives the verdict's own unit
+  (whole numbers per hundred thousand residents) and the Spanish group names, so one bubble no longer mixes "per
+  10,000" with "por cada cien mil" and never says "grupo gap"; the decision card reads a suppressed count as "up to X
+  per 10,000", never 0.0; the live control sends no history, like `/compare`, and shows a one-line "Qloo changed: …"
+  diff against the catalog places the with-Qloo answer put on the map; the agent prompt forbids rents, foot traffic,
+  menus and prices the tools do not carry, and bars towns from the places-to-visit slot; tool list titles ("food in
+  Caguas", "all in Adjuntas") read in Spanish; the camera pill follows a language change; a new verdict scrolls its
+  panel to the top.
+
+Checks: container healthy; changed-file SHA-256 hashes in the container equal the commit's after each cut; live probes
+of San Juan (both languages, one unit), Luquillo (suppressed), Loíza, Río Grande, Ponce, a French question and the
+no-history control answer as designed with notes in 0.4–0.9 s; `check-demo --journeys` 0 failed; 445 tests locally.
+Real phones not tested.
+
 ## Language release (2026-10-24)
 
 Live as `zemi-aku:lang-20261024`, source `95970c6` (fifth cut; earlier cuts the same day `b8f40f7`, `2fb4cc3`, `9a7e1f9`,
@@ -495,6 +541,14 @@ script; the public draft is kept as is), plus the October 21 notes page and test
 evidence reports. Scanned for the VM address, local paths, `_secrets`, key prefixes and the Gmail id (only the scan patterns in
 tests and this file match); gitleaks on the tree finds only the ignored `.env.example` placeholder; a fresh clone installs and
 passes 428 tests with four skips; README, notes page, panel record and LICENSE answer 200 logged out.
+
+**Re-exported October 24** from `dbdd008` (the language release records) as public `770563d` with
+`tmp/public-snapshot-20261024.py` (same script plus the second panel record and its four evidence reports). One mistake on
+the way, recorded here: the first run crashed on a stale `node_modules` left in the clone by the October 23 fresh-clone test,
+and the command chain still committed and pushed the half-emptied tree as `1fd6594` (83 deletions, nothing private). It was
+replaced within minutes by a lease-guarded forced update to `770563d`; the script now skips `node_modules`. Scanned for the VM
+address, local paths, `_secrets`, key prefixes (only the scan patterns in tests and this file match); a fresh clone installs
+and passes 435 tests with four skips; README (439 tests), the panel record and LICENSE answer 200 logged out.
 
 Re-exporting from now on: run the same script against a new private commit, then commit and push with `gh`'s credential
 helper (`git -c credential.helper= -c "credential.helper=!gh auth git-credential" push`).

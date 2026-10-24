@@ -8,20 +8,26 @@
       noTurn: "no model turn", unfinished: "model did not finish", place: (n) => `${n} place${n === 1 ? "" : "s"}`, measured: "catalog measured", read: "read", refused: "refused",
       done: "done", more: (n) => `+${n} more`, modelLine: (m) => `Model ${m} via OpenRouter`, rounds: (n) => `${n} round${n === 1 ? "" : "s"}`, answered: "answered", ids: "Qloo IDs",
       rulesBody: "Answered by the rule-based router from the saved Qloo catalog", replayBody: "A saved run, replayed; the times are when its data was read",
-      reasons: { budget: "daily model budget spent", "visitor-cap": "your model turns for today are used", "no-key": "no model configured" },
+      reasons: { budget: "daily model budget spent", "visitor-cap": "your model turns for today are used", "no-key": "no model configured",
+        echo: "the model repeated the verdict", claim: "the model made a claim the data cannot carry", language: "the note is written in English and Spanish only" },
       failed: (code) => `the model did not answer: ${code}`, decimal: ".",
       sources: (n) => `${n} source${n === 1 ? "" : "s"}`, kinds: { business: "business research", opportunity: "opportunity map" },
       sourcesBody: "Answered from these sources without a model turn",
-      control: "without Qloo tools", again: "Ask again without Qloo" },
+      hybrid: "sources + live model", hybridBody: "The verdict sentence is rule-based from these sources; the model wrote the closing sentences from the same data",
+      noteSkipped: (why) => `the model's closing note was skipped: ${why}`,
+      control: "without Qloo tools, no history", again: "Ask again without Qloo" },
     es: { evidence: "Evidencia", model: "modelo en vivo", rules: "reglas", replay: "repetición guardada", call: (n) => `${n} llamada${n === 1 ? "" : "s"}`,
       noTurn: "sin turno del modelo", unfinished: "el modelo no terminó", place: (n) => `${n} lugar${n === 1 ? "" : "es"}`, measured: "catálogo medido", read: "leído", refused: "rechazada",
       done: "hecho", more: (n) => `+${n} más`, modelLine: (m) => `Modelo ${m} vía OpenRouter`, rounds: (n) => `${n} ronda${n === 1 ? "" : "s"}`, answered: "respondió", ids: "IDs de Qloo",
       rulesBody: "Respondió el enrutador de reglas desde el catálogo guardado de Qloo", replayBody: "Una corrida guardada, repetida; las horas son de cuando se leyeron sus datos",
-      reasons: { budget: "presupuesto diario del modelo agotado", "visitor-cap": "sus turnos del modelo de hoy se usaron", "no-key": "sin modelo configurado" },
+      reasons: { budget: "presupuesto diario del modelo agotado", "visitor-cap": "sus turnos del modelo de hoy se usaron", "no-key": "sin modelo configurado",
+        echo: "el modelo repitió el veredicto", claim: "el modelo afirmó algo que los datos no sostienen", language: "la nota solo se escribe en inglés y español" },
       failed: (code) => `el modelo no respondió: ${code}`, decimal: ",",
       sources: (n) => `${n} fuente${n === 1 ? "" : "s"}`, kinds: { business: "investigación de negocio", opportunity: "mapa de oportunidad" },
       sourcesBody: "Respondido desde estas fuentes, sin turno del modelo",
-      control: "sin las herramientas de Qloo", again: "Preguntar otra vez sin Qloo" },
+      hybrid: "fuentes + modelo en vivo", hybridBody: "La oración del veredicto sale de reglas sobre estas fuentes; el modelo escribió las oraciones finales con los mismos datos",
+      noteSkipped: (why) => `la nota final del modelo se omitió: ${why}`,
+      control: "sin las herramientas de Qloo, sin historial", again: "Preguntar otra vez sin Qloo" },
   };
   const short = (id) => (/^[0-9a-fA-F-]{36}$/.test(id) ? `${id.slice(0, 4)}…${id.slice(-4)}` : id);
   const utc = (iso) => {
@@ -53,9 +59,16 @@
     const when = evidence.at ? utc(evidence.at) : "";
     let summary, body;
     if (evidence.mode === "sources") {
-      // A deterministic answer (business research, opportunity map): the sources it was read from, no model.
-      summary = `${t.evidence} · ${t.kinds[evidence.kind] || t.rules} · ${t.noTurn} · ${t.sources(calls.length)}`;
-      body = `<ul>${calls.map((call) => callLine(call, t)).join("")}</ul><p>${t.sourcesBody}${when ? ` · ${when}` : ""}</p>`;
+      // A deterministic answer (business research, opportunity map): the sources it was read from. With a
+      // closing note the line says "sources + live model" and offers the control run; a skipped note says why.
+      const note = evidence.note && typeof evidence.note === "object" ? evidence.note : null;
+      const hybrid = Boolean(note?.model);
+      summary = hybrid
+        ? `${t.evidence} · ${t.kinds[evidence.kind] || t.rules} · ${t.hybrid} · ${t.sources(calls.length)} · ${seconds(note.ms || 0, t)}`
+        : `${t.evidence} · ${t.kinds[evidence.kind] || t.rules} · ${t.noTurn} · ${t.sources(calls.length)}`;
+      body = `<ul>${calls.map((call) => callLine(call, t)).join("")}</ul><p>${hybrid ? `${t.hybridBody} · ${t.modelLine(esc(note.model))}` : t.sourcesBody}${when ? ` · ${when}` : ""}</p>`
+        + (hybrid ? `<p><button type="button" class="control-run" data-control-run>${t.again}</button></p>`
+          : note?.fallback ? `<p>${t.noteSkipped(t.reasons[note.fallback] || esc(String(note.fallback)))}</p>` : "");
     } else if (evidence.mode === "rules") {
       const why = t.reasons[evidence.reason] || t.failed(esc(String(evidence.reason || "unknown")));
       if (calls.length) {
