@@ -30,10 +30,42 @@ function townReading(file, industry, town) {
     ? `no published count below 3, so 0 to ${row.establishmentsMax ?? 2} establishments`
     : `${row.establishments} establishments with employees, ${figure(row.perTenThousand)} per 10,000 residents ${against}`;
   const reading = `${town} is ${GROUP_WORDS[row.group] || row.group} for ${industry}: taste rank ${row.tasteRank ?? "unranked"} of ${ranked}; ${density}. `
-    + (row.group === "gap" ? "Strong taste, few businesses: a lead to visit, not demand." : row.group === "competitive" ? "Strong taste, many businesses: the figure is at or above the median, so never call it few."
-      : row.group === "quiet" ? "Less taste, few businesses." : row.group === "crowded" ? "Less taste, many businesses." : "Not enough data to group.");
+    + (row.group === "gap" ? "Taste above the median, few businesses: a lead to visit, not demand." : row.group === "competitive" ? "Taste above the median, many businesses: the figure is at or above the median, so never call it few."
+      : row.group === "quiet" ? "Taste below the median, few businesses." : row.group === "crowded" ? "Taste below the median, many businesses." : "Not enough data to group.");
   return { town, group: row.group, groupEs: GROUP_ES[row.group] || row.group, tasteRank: row.tasteRank ?? null, ranked, establishments: row.establishments ?? null, establishmentsMax: row.establishmentsMax ?? null,
     suppressed: Boolean(row.suppressed), perTenThousand: figure(row.perTenThousand), perTenThousandMax: figure(row.perTenThousandMax), medianPerTenThousand: median, islandPerTenThousand: island, reading };
+}
+
+// Which town has fewer businesses per resident is decided here, never by the model (judge panel 10/24 round 3:
+// it recommended Cayey for "less competition" while quoting Cayey 1.22 against Caguas 0.72 per 10,000).
+export function townComparison(file, industry, towns) {
+  // A suppressed row is a range from 0 to its upper bound, a published row a point; a row with no figure is left out.
+  const lo = (r) => (r.suppressed ? 0 : r.perTenThousand);
+  const hi = (r) => (r.suppressed ? r.perTenThousandMax : r.perTenThousand);
+  const rows = [...new Set(towns)].map((t) => townReading(file, industry, t)).filter((r) => r && Number.isFinite(hi(r)));
+  if (rows.length < 2) return null;
+  const ordered = [...rows].sort((a, b) => hi(a) - hi(b) || lo(a) - lo(b) || a.town.localeCompare(b.town));
+  const label = INDUSTRIES.find((row) => row.id === industry)?.label || { en: industry, es: industry };
+  const part = (r) => (r.suppressed
+    ? `${r.town} (no published count, 0 to ${r.perTenThousandMax} per 10,000, ${GROUP_WORDS[r.group] || r.group})`
+    : `${r.town} (${r.establishments} establishments with employees, ${r.perTenThousand} per 10,000, ${GROUP_WORDS[r.group] || r.group})`);
+  const parteEs = (r) => (r.suppressed
+    ? `${r.town} (sin cifra publicada, de 0 a ${r.perTenThousandMax} por cada 10,000, ${r.groupEs})`
+    : `${r.town} (${r.establishments} establecimientos con empleados, ${r.perTenThousand} por cada 10,000, ${r.groupEs})`);
+  const first = ordered[0], last = ordered[ordered.length - 1];
+  // A direction only when the ranges do not overlap; two equal published rates are equal, not ordered.
+  const ordered2 = lo(last) > hi(first);
+  const equal = !first.suppressed && !last.suppressed && first.perTenThousand === last.perTenThousand;
+  const direction = ordered2 ? `${last.town} has more ${label.en} businesses per resident than ${first.town}.`
+    : equal ? `${first.town} and ${last.town} have the same ${label.en} businesses per resident.`
+    : `${first.town} and ${last.town} cannot be ordered: a withheld count may be below or above the other town's rate.`;
+  const directionEs = ordered2 ? `${last.town} tiene más negocios de ${label.es} por residente que ${first.town}.`
+    : equal ? `${first.town} y ${last.town} tienen la misma cifra de negocios de ${label.es} por residente.`
+    : `${first.town} y ${last.town} no se pueden ordenar: una cifra retenida puede estar por debajo o por encima de la del otro pueblo.`;
+  const sentence = `${label.en} businesses per resident, lowest first: ${ordered.map(part).join("; ")}. ${direction} Repeat this as given; never recompute it.`;
+  const sentenceEs = `Negocios de ${label.es} por residente, de menor a mayor: ${ordered.map(parteEs).join("; ")}. ${directionEs} Repita esto tal cual; nunca lo recalcule.`;
+  return { towns: ordered.map((r) => ({ town: r.town, group: r.group, groupEs: r.groupEs, suppressed: r.suppressed, establishments: r.establishments, perTenThousand: r.perTenThousand, perTenThousandMax: r.perTenThousandMax })),
+    fewerPerResident: ordered2 ? first.town : null, morePerResident: ordered2 ? last.town : null, sentence, sentenceEs };
 }
 
 export function agentTools(api) {
@@ -149,18 +181,20 @@ export function agentTools(api) {
           || new Date(end_date).toISOString().slice(0, 10) !== end_date) return { error: "Invalid date range." };
         return kit("qloo_trends", { entities: [entity], entity_type: type, start_date, end_date, limit: 6 });
       }),
-    tool("opportunity_map", "Where in Puerto Rico a taste is strong and businesses are few, for one industry: Qloo heatmap taste against Census businesses per 10,000 residents, in four groups. Not demand or profit.",
-      { industry: { type: "string", enum: INDUSTRIES.map((industry) => industry.id) }, town }, ["industry"], async ({ industry, town: asked }) => {
+    tool("opportunity_map", "Where in Puerto Rico a taste is above the median and businesses are few, for one industry: Qloo heatmap taste against Census businesses per 10,000 residents, in four groups. Not demand or profit. To compare towns, pass towns (two to four): the result carries the comparison sentence to repeat.",
+      { industry: { type: "string", enum: INDUSTRIES.map((industry) => industry.id) }, town, towns: { type: "array", items: town, maxItems: 4 } }, ["industry"], async ({ industry, town: asked, towns: compared }) => {
         const file = api.opportunityFor?.(industry);
         if (!file) return { error: "Opportunity data is unavailable for this industry." };
         // One town's row beside the island figure, read as a sentence the model can repeat without
         // contradicting it (judge panel 10/23: "pocos negocios por habitante" at 2.8 against 0.8).
         const townRow = asked ? townReading(file, industry, asked) : undefined;
+        const comparison = Array.isArray(compared) && compared.length >= 2 ? townComparison(file, industry, compared) : null;
         const byRank = [...file.towns].sort((a, b) => (a.tasteRank ?? Infinity) - (b.tasteRank ?? Infinity) || a.town.localeCompare(b.town));
         const groups = Object.fromEntries(["gap", "competitive", "quiet", "crowded", "unknown"].map((group) => [group,
           byRank.filter((row) => row.group === group).map((row) => row.town)]));
         return { data: { source: "Qloo heatmap · Census County Business Patterns 2023 · Census PRCS 2020–2024", industry,
           ...(asked ? { town: townRow } : {}),
+          ...(comparison ? { comparison } : {}),
           ...(file.sources?.qloo?.retrievedAt ? { retrievedAt: file.sources.qloo.retrievedAt } : {}),
           medians: file.medians, notes: file.notes.en, groups,
           topGaps: byRank.filter((row) => row.group === "gap").slice(0, 5).map(({ town, tasteRank, suppressed, perTenThousand, perTenThousandMax }) =>

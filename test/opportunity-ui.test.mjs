@@ -57,11 +57,11 @@ test('a failed load leaves no colors and says the industry is unavailable',async
 test('the legend uses the group labels and honesty lines in the chosen language',()=>{
   const {Z}=load();
   const en=Z.legendHtml('en',notes.en);
-  for(const text of ['Gap: strong taste, few businesses','Competitive: strong taste, many businesses','Quiet: less taste, few businesses',
-    'Crowded: less taste, many businesses','Not enough data','Not a measure of demand']) assert.ok(en.includes(text),text);
+  for(const text of ['Gap: taste above the median, few businesses','Competitive: taste above the median, many businesses','Quiet: taste below the median, few businesses',
+    'Crowded: taste below the median, many businesses','Not enough data','Not a measure of demand']) assert.ok(en.includes(text),text);
   const es=Z.legendHtml('es',notes.es);
-  for(const text of ['Brecha: mucha afinidad, pocos negocios','Competido: mucha afinidad, muchos negocios','Tranquilo: poca afinidad, pocos negocios',
-    'Saturado: poca afinidad, muchos negocios','Datos insuficientes','No mide demanda']) assert.ok(es.includes(text),text);
+  for(const text of ['Brecha: afinidad sobre la mediana, pocos negocios','Competido: afinidad sobre la mediana, muchos negocios','Tranquilo: afinidad bajo la mediana, pocos negocios',
+    'Saturado: afinidad bajo la mediana, muchos negocios','Datos insuficientes','No mide demanda']) assert.ok(es.includes(text),text);
 });
 
 test('tapping a town asks the town question in the current language',async()=>{

@@ -153,6 +153,23 @@ test('a model answer offers the control run and a control run is labeled instead
   assert.match(html, /if \(event\.target\.closest\("\[data-control-run\]"\)\) return runControl/);
   const run = html.match(/async function runControl\([^]*?\n}\n/)[0];
   assert.match(run, /askTown\(asked\.town, asked\.question, \{ control: asked \}\)/);
-  assert.match(html.match(/function showControl\([^]*?\n}\n/)[0], /ZemiEvidence\.answerBody\(lang, data\.evidence, ""\)/);
+  const show = html.match(/async function showControl\([^]*?\n}\n/)[0];
+  assert.match(show, /ZemiEvidence\.answerBody\(lang, data\.evidence, ""\)/);
+  // The control replaces the with-Qloo places on the map and in the list (judge panel 10/24 round 3: the cards stayed).
+  assert.match(show, /clearJourney\(\);/);
+  assert.match(show, /if \(actions\.length\) await applyMapActions\(actions, data\.speech\)/, 'every control action applies, not only a place list');
+  assert.match(show, /if \(pickedId && byName\.has\(pickedId\)\) await loadPlaces\(byName\.get\(pickedId\)\.record\)/, "the town's own catalog replaces the with-Qloo list");
+  assert.match(show, /else clearAnswerPlaces\(\);/);
+  assert.match(html.match(/async function runControl\([^]*?\n}\n/)[0], /try \{ await showControl\(asked\.speech, data\); \}/);
+  // The clearing helper runs: an island-wide answer's places leave the list and the map.
+  const clear = html.match(/function clearAnswerPlaces\(\) \{[^]*?\n}\n/)[0];
+  const calls = [];
+  const ctx = { openPlaces: [{ name: 'A' }], leadNames: ['A'], focusedIndex: 2, step: 'town', drawPlaces: (p) => calls.push(['draw', p.length]), resetCategory: () => calls.push(['reset']), showListTitle: (t) => calls.push(['title', t]), renderList: () => calls.push(['render']) };
+  vm.createContext(ctx); vm.runInContext(clear + 'clearAnswerPlaces();', ctx);
+  assert.equal(JSON.stringify([ctx.openPlaces, ctx.leadNames, ctx.focusedIndex]), '[[],[],-1]');
+  assert.equal(JSON.stringify(calls), JSON.stringify([['draw', 0], ['reset'], ['title', ''], ['render']]));
+  assert.match(show, /lastAgentPlaces\.length \? `<p class="control-verdict">\$\{esc\(t\.cleared\)\}<\/p>` : ""/);
+  assert.match(Z.html('en', { mode: 'sources', kind: 'business', calls: [], note: { fallback: 'number' } }), /the model restated a figure; the verdict carries the numbers/);
+  assert.match(Z.html('es', { mode: 'sources', kind: 'business', calls: [], note: { fallback: 'number' } }), /el modelo repitió una cifra/);
   assert.match(html.match(/async function runQuestion\([^]*?\n}\n/)[0], /lastAgentAnswer = \{ \.\.\.lastRequest, speech: data\.speech \};/);
 });

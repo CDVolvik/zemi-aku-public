@@ -92,11 +92,11 @@ const sanJuan = { town: 'San Juan', mode: 'research', available: true, count: 35
   opportunity: { group: 'gap', tasteRank: 5, ranked: 78, establishments: 16, establishmentsMax: 16, suppressed: false, perTenThousand: 0.476, perTenThousandMax: 0.476, islandPerTenThousand: 0.8 } };
 test('a town with an opportunity verdict is spoken as that verdict with exact counts, in both languages', () => {
   const en = spoken('business', sanJuan, 'en');
-  assert.equal(en, 'San Juan is a gap for bakeries: strong taste, rank 5 of 78, and few businesses, 16 establishments with employees, about 5 per hundred thousand residents against 8 island-wide. Qloo lists 35 and other map data 64. A lead, not proof: visit and check rents.');
+  assert.equal(en, 'San Juan is a gap for bakeries: taste above the median, rank 5 of 78, and few businesses, 16 establishments with employees, about 5 per hundred thousand residents against 8 island-wide. Qloo lists 35 and other map data 64. A lead, not proof: visit and check rents.');
   assert.doesNotMatch(en, /busy|some options|small one|about fifty|couple dozen/);
   assert.deepEqual(spokenIssues(en, 'en'), []);
   const es = spoken('business', { ...sanJuan, label: 'panaderías' }, 'es');
-  assert.equal(es, 'San Juan es una brecha para panaderías: mucha afinidad, puesto 5 de 78, y pocos negocios, 16 establecimientos con empleados, unos 5 por cada cien mil residentes frente a 8 en la isla. Qloo registra 35 y otros datos del mapa 64. Pista, no prueba: visite y revise rentas.');
+  assert.equal(es, 'San Juan es una brecha para panaderías: afinidad sobre la mediana, puesto 5 de 78, y pocos negocios, 16 establecimientos con empleados, unos 5 por cada cien mil residentes frente a 8 en la isla. Qloo registra 35 y otros datos del mapa 64. Pista, no prueba: visite y revise rentas.');
   assert.deepEqual(spokenIssues(es, 'es'), []);
 });
 
@@ -112,7 +112,7 @@ test('when the file carries the median the groups split on, the verdict quotes t
 
 test('the four other verdicts and a suppressed count each read as their own sentence', () => {
   const line = (patch, lang = 'en') => spoken('business', { ...sanJuan, town: 'Adjuntas', opportunity: { ...sanJuan.opportunity, ...patch } }, lang);
-  assert.match(line({ group: 'competitive', tasteRank: 32, establishments: 5, perTenThousand: 2.8 }), /^Adjuntas is competitive for bakeries: strong taste, rank 32 of 78, but many businesses, 5 establishments with employees, about 28 per hundred thousand residents against 8 island-wide\./);
+  assert.match(line({ group: 'competitive', tasteRank: 32, establishments: 5, perTenThousand: 2.8 }), /^Adjuntas is competitive for bakeries: taste above the median, rank 32 of 78, but many businesses, 5 establishments with employees, about 28 per hundred thousand residents against 8 island-wide\./);
   assert.match(line({ group: 'competitive', tasteRank: 32, establishments: 5, perTenThousand: 2.8 }), /Compare what two local competitors sell\.$/);
   // The next step survives a long town and label: the catalog counts go before it does (Codex 10/24).
   const closings = { gap: /revise rentas\.$/, competitive: /competidores locales\.$/, quiet: /antes de apostar\.$/, crowded: /nadie atiende\.$/ };
@@ -122,8 +122,8 @@ test('the four other verdicts and a suppressed count each read as their own sent
     assert.ok(long.length <= 280, long);
     assert.deepEqual(spokenIssues(long, 'es'), []);
   }
-  assert.match(line({ group: 'quiet', tasteRank: 50 }), /^Adjuntas is quiet for bakeries: less taste, rank 50 of 78, and few businesses/);
-  assert.match(line({ group: 'crowded', tasteRank: 60, establishments: 9, perTenThousand: 3.1 }), /^Adjuntas is crowded for bakeries: less taste, rank 60 of 78, and many businesses/);
+  assert.match(line({ group: 'quiet', tasteRank: 50 }), /^Adjuntas is quiet for bakeries: taste below the median, rank 50 of 78, and few businesses/);
+  assert.match(line({ group: 'crowded', tasteRank: 60, establishments: 9, perTenThousand: 3.1 }), /^Adjuntas is crowded for bakeries: taste below the median, rank 60 of 78, and many businesses/);
   const unknown = line({ group: 'unknown', tasteRank: 37, establishments: 0, establishmentsMax: 2, suppressed: true, perTenThousand: 0, perTenThousandMax: 1.1 });
   assert.equal(unknown, 'Not enough data for bakeries in Adjuntas: no published count, 0 to 2 establishments, and taste rank 37 of 78. Qloo lists 35 and other map data 64. Visit before you decide.');
   const unknownEs = line({ group: 'unknown', tasteRank: 37, establishments: 0, establishmentsMax: 2, suppressed: true, perTenThousand: 0, perTenThousandMax: 1.1 }, 'es');
@@ -142,7 +142,7 @@ test('a suppressed Census count in a grouped town is spoken as a range, and zero
   const loiza = { ...sanJuan, town: 'Loíza', count: 0, supplyCount: 7, label: 'salones de belleza',
     opportunity: { ...sanJuan.opportunity, establishments: 0, establishmentsMax: 4, suppressed: true, perTenThousand: 0, perTenThousandMax: 1.6, islandPerTenThousand: 1.0 } };
   const es = spoken('business', loiza, 'es');
-  assert.equal(es, 'Loíza es una brecha para salones de belleza: mucha afinidad, puesto 5 de 78, y pocos negocios, sin cifra publicada, de 0 a 4 establecimientos. Qloo no registra ninguno y otros datos del mapa 7. Pista, no prueba: visite y revise rentas.');
+  assert.equal(es, 'Loíza es una brecha para salones de belleza: afinidad sobre la mediana, puesto 5 de 78, y pocos negocios, sin cifra publicada, de 0 a 4 establecimientos. Qloo no registra ninguno y otros datos del mapa 7. Pista, no prueba: visite y revise rentas.');
   assert.deepEqual(spokenIssues(es, 'es'), []);
   assert.match(spoken('business', { ...loiza, label: 'salons' }, 'en'), /few businesses, no published count, 0 to 4 establishments\. Qloo lists none and other map data 7\. A lead, not proof/);
 });

@@ -177,10 +177,10 @@ test('the spoken count names the researched kind in the visitor language', async
 // names two towns, asks which is better, or names a place off the island must not get a one-town template.
 test('a town opening question speaks the opportunity verdict with exact counts', async () => {
   const data = await withMap({ question: 'Should I open a café in Bayamón?', lang: 'en' });
-  assert.match(data.speech, /^Bayamón is a gap for cafés: strong taste, rank 3 of 2, and few businesses, 10 establishments/);
+  assert.match(data.speech, /^Bayamón is a gap for cafés: taste above the median, rank 3 of 2, and few businesses, 10 establishments/);
   assert.doesNotMatch(data.speech, /busy|some options|small one/);
   const es = await withMap({ question: '¿Conviene abrir una cafetería en Bayamón?', lang: 'es' });
-  assert.match(es.speech, /^Bayamón es una brecha para cafeterías: mucha afinidad, puesto 3 de 2, y pocos negocios, 10 establecimientos/);
+  assert.match(es.speech, /^Bayamón es una brecha para cafeterías: afinidad sobre la mediana, puesto 3 de 2, y pocos negocios, 10 establecimientos/);
   assert.equal(data.business.evidence.opportunity.ranked, 2);
 });
 

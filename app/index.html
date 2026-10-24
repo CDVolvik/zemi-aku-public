@@ -1974,10 +1974,19 @@ function decisionCard(business, o, places, es) {
     ? "Demanda, ventas, rentas, tráfico peatonal, permisos ni ganancias. Los horarios son una foto del catálogo en su fecha."
     : "Demand, sales, rents, foot traffic, permits or profit. Hours are a snapshot of the catalog on its date.";
   const names = (places || []).slice(0, 3).map((p) => p.name).filter(Boolean);
-  const where = names.length ? names.map(esc).join(", ") : (es ? "los lugares de la lista" : "the listed places");
+  // Overture's map may list businesses Qloo's catalog lacks (judge panel 10/24 round 3: two Adjuntas bakeries were
+  // on the card but not in the visit line); they join the list, marked by source.
+  const seen = new Set(names.map((n) => String(n).toLowerCase()));
+  const overture = (supply?.places || []).map((p) => p?.name).filter((n) => n && !seen.has(String(n).toLowerCase())).slice(0, 2);
+  const where = (names.length ? names.map(esc).join(", ") : (es ? "los lugares de la lista" : "the listed places"))
+    + (overture.length ? (es ? ` y, del mapa de Overture, ${overture.map(esc).join(" y ")}` : ` and, from Overture's map, ${overture.map(esc).join(" and ")}`) : "");
+  // The third check follows the group (judge panel 10/24 round 3: "compare with the gap-group towns" on a competitive town).
+  const third = es
+    ? { gap: "Compare con el siguiente pueblo del grupo brecha en el mapa antes de decidir.", competitive: "Visite dos competidores y anote qué venden y a qué precio.", quiet: "Pregunte dónde compra la gente esto hoy antes de apostar a la demanda.", crowded: "Mire el pueblo vecino o un nicho que nadie atiende aquí.", unknown: "Pida al municipio su propio conteo de negocios; el Census no publica el de aquí." }
+    : { gap: "Compare with the next gap-group town on the map before you decide.", competitive: "Visit two competitors and note what they sell and charge.", quiet: "Ask where people buy this today before you bet on demand.", crowded: "Look at the next town over, or a niche nobody here serves.", unknown: "Ask the municipio for its own business count; the Census does not publish one here." };
   const checks = es
-    ? [`Visite ${where} a la hora de apertura y mire fila, precios y horario real.`, "Pregunte rentas en la calle principal y los permisos en el municipio antes de firmar.", "Compare con los pueblos del grupo brecha en el mapa."]
-    : [`Visit ${where} at opening time and watch the queue, prices and actual hours.`, "Ask rents on the main street and permits at the municipio before you sign.", "Compare with the gap-group towns on the map."];
+    ? [`Visite ${where} a la hora de apertura y mire fila, precios y horario real.`, "Pregunte rentas en la calle principal y los permisos en el municipio antes de firmar.", third[o.group] || third.gap]
+    : [`Visit ${where} at opening time and watch the queue, prices and actual hours.`, "Ask rents on the main street and permits at the municipio before you sign.", third[o.group] || third.gap];
   return `<div class="decision"><h4>${es ? "Lo que dicen los datos" : "What the data says"}</h4><p>${says}</p>`
     + `<h4>${es ? "Lo que no puede decir" : "What it cannot tell you"}</h4><p>${cannot}</p>`
     + `<h4>${es ? "Tres pasos siguientes" : "Next three checks"}</h4><ol>${checks.map((c) => `<li>${c}</li>`).join("")}</ol></div>`;
@@ -2699,9 +2708,11 @@ $("caption").addEventListener("click", (event) => {
 // under the answer it controls for. The map stays where the Qloo answer put it.
 let lastAgentAnswer = null;
 const CONTROL = { en: { with: "With Qloo", without: "Without Qloo", waiting: "Asking again without Qloo…", failed: "The control run could not answer.",
-    changed: (names) => `Qloo changed: ${names.join(", ")}`, nothing: "Qloo added nothing here (no catalog place is named only with Qloo)" },
+    changed: (names) => `Qloo changed: ${names.join(", ")}`, nothing: "Qloo added nothing here (no catalog place is named only with Qloo)",
+    cleared: "The places the with-Qloo answer put on the map and in the list were removed." },
   es: { with: "Con Qloo", without: "Sin Qloo", waiting: "Preguntando otra vez sin Qloo…", failed: "La corrida de control no pudo responder.",
-    changed: (names) => `Qloo cambió: ${names.join(", ")}`, nothing: "Qloo no añadió nada aquí (ningún lugar del catálogo se nombra solo con Qloo)" } };
+    changed: (names) => `Qloo cambió: ${names.join(", ")}`, nothing: "Qloo no añadió nada aquí (ningún lugar del catálogo se nombra solo con Qloo)",
+    cleared: "Los lugares que la respuesta con Qloo puso en el mapa y en la lista se quitaron." } };
 let lastAgentPlaces = []; // the catalog place names the with-Qloo answer put on the map, for the control's diff line
 // The same name test as /compare (server/compare.mjs): a multi-word catalog name, accent- and case-insensitive.
 const foldName = (v) => String(v || "").normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
@@ -2719,19 +2730,39 @@ async function runControl(button) {
   const asked = lastAgentAnswer;
   const data = await askTown(asked.town, asked.question, { control: asked });
   if (data.error || !data.speech) { button.disabled = false; button.textContent = t.failed; return; }
-  showControl(asked.speech, data);
+  try { await showControl(asked.speech, data); } catch (error) { console.warn("control run", error); }
 }
-function showControl(withText, data) {
+// The with-Qloo answer's places leave the list and the map (judge panel 10/24 round 3; Codex: an island-wide
+// answer has no town to reload, so its places stayed).
+function clearAnswerPlaces() {
+  openPlaces = [];
+  leadNames = [];
+  focusedIndex = -1;
+  drawPlaces([]);
+  resetCategory();
+  showListTitle("");
+  if (step !== "island") renderList();
+}
+async function showControl(withText, data) {
   clearTimeout(captionTimer);
   const caption = $("caption");
   const lang = ZemiConverse.voice().lang;
   const t = CONTROL[lang] || CONTROL.en;
   const changed = qlooDiff(withText, data.speech, lastAgentPlaces);
+  const cleared = lastAgentPlaces.length ? `<p class="control-verdict">${esc(t.cleared)}</p>` : "";
   caption.innerHTML = `<span class="who">Zemi-Aku</span><p class="control-pair"><b>${t.with}:</b> ${esc(withText)}</p>`
     + `<p class="control-pair"><b>${t.without}:</b> ${esc(data.speech)}</p>`
-    + `<p class="control-verdict">${esc(changed.length ? t.changed(changed) : t.nothing)}</p><button type="button" class="x" aria-label="Dismiss">×</button>`
+    + `<p class="control-verdict">${esc(changed.length ? t.changed(changed) : t.nothing)}</p>${cleared}<button type="button" class="x" aria-label="Dismiss">×</button>`
     + ZemiEvidence.answerBody(lang, data.evidence, "");
   caption.hidden = false;
+  // The control replaces the with-Qloo places on the map and in the list, not only the caption (judge panel 10/24
+  // round 3: the cards, stars and affinity percentages stayed above the new answer). Its own place list, if any, shows.
+  clearJourney();
+  const actions = Array.isArray(data.actions) ? data.actions : [];
+  if (actions.length) await applyMapActions(actions, data.speech).catch((error) => console.warn("control actions", error));
+  if (actions.some((action) => action.type === "show_places")) return;
+  if (pickedId && byName.has(pickedId)) await loadPlaces(byName.get(pickedId).record).catch(() => {}); // the town's own catalog, listed and drawn
+  else clearAnswerPlaces();
 }
 
 // converse.js writes its status to #talk-status; show it as the caption while a conversation runs.

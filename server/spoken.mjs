@@ -273,7 +273,8 @@ function verdictBits(d, lang) {
         quiet: "Pregunte dónde compra la gente hoy antes de apostar.", crowded: "Mire el pueblo vecino o un nicho que nadie atiende." }
     : { gap: "A lead, not proof: visit and check rents.", competitive: "Compare what two local competitors sell.",
         quiet: "Ask where people buy today before you bet on demand.", crowded: "Look at the next town over, or a niche nobody serves." };
-  const taste = es ? (strong ? "mucha afinidad" : "poca afinidad") : (strong ? "strong taste" : "less taste");
+  // "Strong taste" read as a strong yes for a town just above the median (judge panel 10/24 round 3); say the split.
+  const taste = es ? (strong ? "afinidad sobre la mediana" : "afinidad bajo la mediana") : (strong ? "taste above the median" : "taste below the median");
   const joiner = es ? (strong && many ? "pero" : "y") : (strong && many ? "but" : "and");
   const supply = es ? (many ? "muchos negocios" : "pocos negocios") : (many ? "many businesses" : "few businesses");
   const head = es

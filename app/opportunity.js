@@ -8,10 +8,10 @@
   const GROUPS = ["gap", "competitive", "quiet", "crowded", "unknown"];
   const GROUP_COLORS = { gap: "#e07a3d", competitive: "#2f8f7a", quiet: "#9cc3b4", crowded: "#7c5cff", unknown: "#6b7280" };
   const LABELS = {
-    en: { gap: "Gap: strong taste, few businesses", competitive: "Competitive: strong taste, many businesses",
-      quiet: "Quiet: less taste, few businesses", crowded: "Crowded: less taste, many businesses", unknown: "Not enough data" },
-    es: { gap: "Brecha: mucha afinidad, pocos negocios", competitive: "Competido: mucha afinidad, muchos negocios",
-      quiet: "Tranquilo: poca afinidad, pocos negocios", crowded: "Saturado: poca afinidad, muchos negocios", unknown: "Datos insuficientes" },
+    en: { gap: "Gap: taste above the median, few businesses", competitive: "Competitive: taste above the median, many businesses",
+      quiet: "Quiet: taste below the median, few businesses", crowded: "Crowded: taste below the median, many businesses", unknown: "Not enough data" },
+    es: { gap: "Brecha: afinidad sobre la mediana, pocos negocios", competitive: "Competido: afinidad sobre la mediana, muchos negocios",
+      quiet: "Tranquilo: afinidad bajo la mediana, pocos negocios", crowded: "Saturado: afinidad bajo la mediana, muchos negocios", unknown: "Datos insuficientes" },
   };
   const INDUSTRIES = [
     ["cafe", "café", "una cafetería", "Cafés", "Cafeterías"], ["bakery", "bakery", "una panadería", "Bakeries", "Panaderías"],

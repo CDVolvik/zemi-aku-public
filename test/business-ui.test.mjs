@@ -70,7 +70,7 @@ test('a town with an opportunity verdict gets a decision card first: what the da
   const elements = new Map();
   const context = { $: id => { if (!elements.has(id)) elements.set(id, { dataset: {} }); return elements.get(id); },
     ZemiConverse: { voice: () => ({ lang: 'es' }) }, esc: text => String(text), document: { querySelectorAll: () => [] },
-    ZemiOpportunity: { LABELS: { es: { gap: 'Brecha: mucha afinidad, pocos negocios' }, en: { gap: 'Gap' } }, supplyText: () => ({ businesses: '16 establecimientos', per: '0.5 por cada 10,000' }),
+    ZemiOpportunity: { LABELS: { es: { gap: 'Brecha: afinidad sobre la mediana, pocos negocios', competitive: 'Competido' }, en: { gap: 'Gap' } }, supplyText: () => ({ businesses: '16 establecimientos', per: '0.5 por cada 10,000' }),
       definitionsHtml: () => '', industryChips: () => '' } };
   vm.createContext(context); vm.runInContext(source, context);
   vm.runInContext("researchPlaces = [{ name: 'Panadería Alturas' }, { name: 'La Familia Bakery 2' }, { name: 'Ekelekua' }, { name: 'Cuarta' }];", context);
@@ -78,10 +78,21 @@ test('a town with an opportunity verdict gets a decision card first: what the da
     evidence: { supply: { count: 64, release: '2026-09' }, opportunity: { industry: 'bakery', group: 'gap', tasteRank: 5, ranked: 76, establishments: 16, suppressed: false, perTenThousand: 0.476, medianPerTenThousand: 1.3, notes: [] } } });
   const out = elements.get('business-evidence').innerHTML;
   assert.ok(out.indexOf('class="decision"') < out.indexOf('Overture'), 'the card comes first');
-  assert.match(out, /Lo que dicen los datos<\/h4><p>Brecha: mucha afinidad, pocos negocios · gusto #5 de 76\. 16 establecimientos con empleados, 0\.5 por cada 10,000 residentes frente a la mediana de 1\.3 con la que se dividen los grupos\. Qloo registra 37 lugares de este tipo; Overture, 64\./);
+  assert.match(out, /Lo que dicen los datos<\/h4><p>Brecha: afinidad sobre la mediana, pocos negocios · gusto #5 de 76\. 16 establecimientos con empleados, 0\.5 por cada 10,000 residentes frente a la mediana de 1\.3 con la que se dividen los grupos\. Qloo registra 37 lugares de este tipo; Overture, 64\./);
   assert.match(out, /Lo que no puede decir<\/h4><p>Demanda, ventas, rentas, tráfico peatonal, permisos ni ganancias\./);
   assert.match(out, /Tres pasos siguientes<\/h4><ol><li>Visite Panadería Alturas, La Familia Bakery 2, Ekelekua a la hora de apertura/);
   assert.match(out, /<li>Pregunte rentas en la calle principal/);
+  assert.match(out, /<li>Compare con el siguiente pueblo del grupo brecha/);
+  assert.doesNotMatch(out, /Overture, [^<]*mapa de Overture/);
+  // The third check follows the group, and Overture-only names join the visit list (judge panel 10/24 round 3).
+  elements.clear();
+  context.showBusinessResearch({ town: 'Adjuntas', mode: 'research', available: true, total: 5, counts: [],
+    evidence: { supply: { count: 7, places: [{ name: 'Panadería Alturas' }, { name: 'La Adjunteña' }, { name: 'La Fé' }, { name: 'Otra' }] },
+      opportunity: { industry: 'bakery', group: 'competitive', tasteRank: 32, ranked: 76, establishments: 5, suppressed: false, perTenThousand: 2.8, medianPerTenThousand: 1.3, notes: [] } } });
+  const comp = elements.get('business-evidence').innerHTML;
+  assert.match(comp, /Visite Panadería Alturas, La Familia Bakery 2, Ekelekua y, del mapa de Overture, La Adjunteña y La Fé a la hora de apertura/);
+  assert.match(comp, /<li>Visite dos competidores y anote qué venden y a qué precio\.<\/li>/);
+  assert.doesNotMatch(comp, /grupo brecha/);
   // A suppressed count reads as a range and an upper bound, never 0.0.
   elements.clear();
   context.showBusinessResearch({ town: 'Luquillo', mode: 'research', available: true, total: 3, counts: [],

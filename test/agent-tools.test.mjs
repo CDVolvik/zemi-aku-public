@@ -42,6 +42,35 @@ test('opportunity_map groups towns and lists the top gaps by taste rank',async()
   assert.equal(out.data.retrievedAt,'2026-10-11T07:13:59.194Z','the drawer shows when the heatmap was read');
   assert.deepEqual(out.action,{type:'show_opportunity',industry:'bakery'});
 });
+test('opportunity_map with towns says which town has fewer businesses per resident, so the model never works it out', async () => {
+  const file = { ...bakeryFile, towns: bakeryFile.towns.map(row => ({ ...row, population: 100000, establishments: row.town === 'Caguas' ? 7 : 12, perTenThousand: row.town === 'Caguas' ? 0.72 : 1.22 })) };
+  const tool = agentTools({ towns: ['Caguas', 'Ponce'], categories: [], opportunityFor: id => id === 'bakery' ? file : null }).find(t => t.name === 'opportunity_map');
+  assert.equal(tool.parameters.properties.towns.maxItems, 4);
+  const out = await tool.run({ industry: 'bakery', towns: ['Ponce', 'Caguas'] });
+  assert.equal(out.data.comparison.fewerPerResident, 'Caguas');
+  assert.equal(out.data.comparison.morePerResident, 'Ponce');
+  assert.deepEqual(out.data.comparison.towns.map(r => [r.town, r.establishments]), [['Caguas', 7], ['Ponce', 12]], 'the count travels with the row, so the model never calls it unpublished');
+  assert.match(out.data.comparison.sentence, /^bakery businesses per resident, lowest first: Caguas \(7 establishments with employees, 0\.72 per 10,000, competitive\); Ponce \(12 establishments with employees, 1\.22 per 10,000, quiet\)\. Ponce has more bakery businesses per resident than Caguas\. Repeat this as given; never recompute it\.$/);
+  assert.equal(out.data.comparison.sentenceEs, 'Negocios de panadería por residente, de menor a mayor: Caguas (7 establecimientos con empleados, 0.72 por cada 10,000, competido); Ponce (12 establecimientos con empleados, 1.22 por cada 10,000, tranquilo). Ponce tiene más negocios de panadería por residente que Caguas. Repita esto tal cual; nunca lo recalcule.');
+  // A suppressed town is a range: it overlaps a published rate inside it (no direction), not one above it.
+  const vieques = await tool.run({ industry: 'bakery', towns: ['Vieques', 'Caguas'] });
+  assert.match(vieques.data.comparison.sentence, /Vieques \(no published count, 0 to 2\.1 per 10,000, a gap\)/);
+  assert.match(vieques.data.comparison.sentence, /Caguas and Vieques cannot be ordered: a withheld count may be below or above the other town's rate\./);
+  assert.match(vieques.data.comparison.sentenceEs, /Vieques \(sin cifra publicada, de 0 a 2\.1 por cada 10,000, brecha\)\. Caguas y Vieques no se pueden ordenar/);
+  assert.equal(vieques.data.comparison.fewerPerResident, null);
+  const above = { ...file, towns: file.towns.map(row => (row.town === 'Ponce' ? { ...row, perTenThousand: 3.4 } : row)) };
+  const vp = await agentTools({ towns: [], categories: [], opportunityFor: () => above }).find(t => t.name === 'opportunity_map').run({ industry: 'bakery', towns: ['Ponce', 'Vieques'] });
+  assert.match(vp.data.comparison.sentence, /Ponce has more bakery businesses per resident than Vieques\./);
+  // Equal published rates are equal, not ordered; a town with no figure is left out.
+  const same = { ...file, towns: file.towns.map(row => (row.town === 'Ponce' ? { ...row, perTenThousand: 0.72 } : row)) };
+  const eq = await agentTools({ towns: [], categories: [], opportunityFor: () => same }).find(t => t.name === 'opportunity_map').run({ industry: 'bakery', towns: ['Ponce', 'Caguas'] });
+  assert.match(eq.data.comparison.sentence, /Caguas and Ponce have the same bakery businesses per resident\./);
+  assert.equal(eq.data.comparison.morePerResident, null);
+  const blank = { ...file, towns: file.towns.map(row => (row.town === 'Ponce' ? { ...row, suppressed: false, perTenThousand: null, perTenThousandMax: null } : row)) };
+  assert.equal((await agentTools({ towns: [], categories: [], opportunityFor: () => blank }).find(t => t.name === 'opportunity_map').run({ industry: 'bakery', towns: ['Ponce', 'Caguas'] })).data.comparison, undefined);
+  assert.equal((await tool.run({ industry: 'bakery', towns: ['Caguas', 'Nowhere'] })).data.comparison, undefined);
+  assert.equal((await tool.run({ industry: 'bakery' })).data.comparison, undefined);
+});
 test('opportunity_map reports a missing build as an error',async()=>{
   const tool=agentTools({towns:['Ponce'],categories:[],opportunityFor:()=>null}).find(t=>t.name==='opportunity_map');
   assert.deepEqual(await tool.run({industry:'hotel'}),{error:'Opportunity data is unavailable for this industry.'});
@@ -122,7 +151,8 @@ test('opportunity_map with a town returns that town’s row beside the island fi
   assert.equal(out.data.town.perTenThousand, 0.5);
   assert.ok(Math.abs(out.data.town.islandPerTenThousand - 41 / 600000 * 10000) < 1e-9);
   assert.equal(out.data.town.ranked, 5);
-  assert.match(out.data.town.reading, /^San Juan is a gap for bakery: taste rank 5 of 5; 16 establishments with employees, 0\.5 per 10,000 residents against (?:the median of [\d.]+ the groups split on \(island average 0\.68\)|0\.68 island-wide)\./);
+  assert.match(out.data.town.reading, /^San Juan is a gap for bakery: taste rank 5 of 5; 16 establishments with employees, 0\.5 per 10,000 residents against (?:the median of [\d.]+ the groups split on \(island average 0\.68\)|0\.68 island-wide)\. Taste above the median, few businesses/);
+  assert.doesNotMatch(out.data.town.reading, /strong taste/i);
   assert.deepEqual(out.action, { type: 'show_opportunity', industry: 'bakery' });
   const missing = await tool.run({ industry: 'bakery', town: 'Lares' });
   assert.equal(missing.data.town, null);

@@ -1245,7 +1245,8 @@ async function artistAnswer(catalog, question, lang, named = [], { exploreOnly =
       affinitySignal: artist.name,
       whyLang: lang,
       why: affinityWhy(place.affinity, artist.name, lang) || place.why || "",
-    }));
+    }))
+    .sort((a, b) => (Number(b.affinity) || 0) - (Number(a.affinity) || 0)); // the order the cards display
   if (!fans.length) return null;
   const rows = [...named, ...fans];
   const fansLine = `places that people who like ${artist.name} also like, in ${town}, from Qloo's cross-domain taste data. They are not places connected to ${artist.name}.`;
@@ -1355,7 +1356,7 @@ async function tasteAnswer(query, town, q, lang, { strictOnly = false } = {}) {
     affinitySignal: tag.name,
     whyLang: lang,
     why: affinityWhy(place.affinity, tag.name, lang) || place.why || "",
-  }));
+  })).sort((a, b) => (Number(b.affinity) || 0) - (Number(a.affinity) || 0));
   const cards = places.slice(0, 3).map((place) => toCard(place, missedTown ? "" : town));
   const note = missedTown ? `No Qloo place in ${missedTown} lists ${tag.name}. ${label.note}` : label.note;
   const brief = { catalog: true, query: tag.name, town: where, missedTown, count: places.length, lead: places.slice(0, 3).map((place) => ({ name: place.name, kind: place.genre || "" })) };
@@ -1501,20 +1502,25 @@ async function withVerdictNote(business, asked, ip) {
   if (!["en", "es"].includes(asked.lang)) return { ...business, evidence: { ...business.evidence, note: { fallback: "language" } } };
   if (!limiter.spend(`chat-turns:${ip}`, 1, CHAT_TURNS_PER_VISITOR)) return { ...business, evidence: { ...business.evidence, note: { fallback: "visitor-cap" } } };
   const file = opportunity?.get?.(row.industry);
-  // The model repeats what it is given, so it gets the verdict's own unit (per hundred thousand residents, whole
-  // numbers; judge panel 10/24 round 3 saw "1,3 por cada cien mil" next to "0.7 per 10,000" in one bubble).
-  const lakh = (n) => (Number.isFinite(n) ? Math.round(n * 10) : null);
-  const UNIT = "per hundred thousand residents";
-  // A suppressed Census count is a range, never a zero (Codex 10/24); the current town is not its own comparison.
-  const figures = (r) => (r.suppressed
-    ? { suppressed: true, establishments: null, establishmentsMax: r.establishmentsMax ?? 2, rate: null, rateMax: lakh(r.perTenThousandMax), unit: UNIT, countNote: "no published count: the Census withholds counts below 3; use the range" }
-    : { suppressed: false, establishments: r.establishments ?? null, rate: lakh(r.perTenThousand), unit: UNIT });
+  const es = asked.lang === "es";
+  // No figure reaches the note (judge panel 10/24 round 3: it restated the rate in the wrong unit and once inverted a
+  // comparison); the verdict holds the numbers, and the comparison with the first gap town is written here, in words.
+  // The current town is never its own comparison; a suppressed Census count is said in words, never as zero.
+  const label = es ? "negocios de este tipo" : "businesses of this type";
+  const rate = (r) => (r.suppressed ? r.perTenThousandMax ?? 0 : r.perTenThousand ?? 0);
   const topGaps = (file?.towns || []).filter((r) => r.group === "gap" && r.town !== business.town).sort((a, b) => (a.tasteRank ?? 99) - (b.tasteRank ?? 99)).slice(0, 5)
-    .map((r) => ({ town: r.town, tasteRank: r.tasteRank ?? null, ...figures(r) }));
+    .map((r) => ({ town: r.town, group: "gap", suppressed: Boolean(r.suppressed) }));
+  const gap = (file?.towns || []).find((r) => r.town === topGaps[0]?.town);
+  const comparison = !gap ? (es ? "No hay otro pueblo del grupo brecha con el que comparar." : "No other gap-group town to compare with.")
+    : row.suppressed ? (es ? `${business.town} no tiene cifra publicada (el Census retiene los conteos pequeños), así que no se compara con ${gap.town}.` : `${business.town} has no published count (the Census withholds small counts), so it cannot be compared with ${gap.town}.`)
+    : gap.suppressed ? (es ? `${gap.town} no tiene cifra publicada (el Census retiene los conteos pequeños).` : `${gap.town} has no published count (the Census withholds small counts).`)
+    : rate(gap) < rate(row) ? (es ? `${gap.town} tiene menos ${label} por residente que ${business.town}.` : `${gap.town} has fewer ${label} per resident than ${business.town}.`)
+    : rate(gap) > rate(row) ? (es ? `${gap.town} tiene más ${label} por residente que ${business.town}.` : `${gap.town} has more ${label} per resident than ${business.town}.`)
+    : (es ? `${gap.town} y ${business.town} tienen la misma cifra por residente.` : `${gap.town} and ${business.town} have the same figure per resident.`);
   const places = business.places.slice(0, 6).map((p) => ({ name: p.name, genre: p.genre || null, rating: p.rating ?? null, hours: p.hours || null }));
-  const note = await verdictNote({ lang: asked.lang, town: business.town, industry: row.industry, verdict: business.speech, topGaps, places,
-    row: { group: row.group, groupEs: GROUP_ES[row.group] || row.group, tasteRank: row.tasteRank, ranked: row.ranked, ...figures(row),
-      medianRate: lakh(row.medianPerTenThousand), unit: UNIT, qlooCount: business.business.total, overtureCount: business.business.evidence?.supply?.count ?? null } });
+  const note = await verdictNote({ lang: asked.lang, town: business.town, industry: row.industry, verdict: business.speech, topGaps, places, comparison,
+    row: { group: row.group, groupEs: GROUP_ES[row.group] || row.group, suppressed: Boolean(row.suppressed),
+      ...(row.suppressed ? { countNote: "no published count: the Census withholds small counts" } : {}) } });
   if (note.fallback) { console.warn(`verdict note fallback: ${note.reason}`); return { ...business, evidence: { ...business.evidence, note: { fallback: note.reason } } }; }
   const speech = `${business.speech} ${note.text}`;
   // The voice reads whole sentences within the speak endpoint's limit; the caption shows the whole note.

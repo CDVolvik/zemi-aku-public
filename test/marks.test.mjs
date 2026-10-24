@@ -162,6 +162,8 @@ test('result cards carry why-it-fits, distance, actions and a small location thu
   assert.doesNotMatch(html, /undefined/);
   const noCoords = marks.resultCards([{ name: 'X', category: 'food', index: 1 }], { lang: 'en' });
   assert.match(noCoords, /class="result-name" data-open-place/);
+  assert.match(noCoords, /hours not listed/, 'a place with no hours says so (judge panel 10/24 round 3)');
+  assert.match(marks.resultCards([{ name: 'X', category: 'food' }], { lang: 'es' }), /sin horario publicado/);
   assert.doesNotMatch(noCoords, /maps\/dir/);
   assert.doesNotMatch(noCoords, /Why it fits you/);
   assert.doesNotMatch(marks.resultCards([{ name: 'Y', category: 'food', affinity: null }]), /data-index=/);

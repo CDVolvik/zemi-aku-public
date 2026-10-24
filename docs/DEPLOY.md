@@ -367,6 +367,50 @@ the dock at 769, the island's west and east tips project to x 41 and 383 at y 17
 the ion token's origin restriction, not a live condition), the five nav links are 12 px tall each; `check-demo --journeys`
 0 failed. 341 tests.
 
+## Trust release (2026-10-24, night)
+
+Live as `zemi-aku:trust-20261024`, source `46e8092` (cuts `7c0be3b`, `46e8092`), layered on `decide-20261024` with `app/`,
+`server/`, `scripts/serve-eagle.mjs` and `data/compare-qloo.json` (`tmp/deploy-trust-20261024.sh` and `-b.sh`, local only).
+Rollback set `/opt/zemi-aku/trust-20261024-rollback` (previous image `decide-20261024`). Carlos: "proceed, do as much as we
+can to max out based on the feedback" after the third blind panel (`JUDGE-PANEL-2026-10-24b.md`). Codex adversarial
+review of the diff: two Highs (a withheld count treated as a point in the comparison; the no-town control fallback left
+the places), three Mediums (control actions ignored, ranks and count nouns passing the figure check, tool text still
+saying "strong taste"), one Low (five-town prompt against a four-town schema); all fixed before deploy. No key, cap,
+cache, Caddy, env or connector change.
+
+What changed on the site:
+
+- **The model never says a number.** The closing note after the verdict gets no rate, count or rank; it gets the places,
+  the group in both languages and a comparison with the first gap town written by the route in words ("Río Grande has
+  fewer businesses of this type per resident than Adjuntas"; a withheld count says so). A note that restates a figure
+  (a rate, a count noun, a rank, a percentage) is dropped and the drawer says why; clock times and the catalog names it
+  was given (including "La Familia Bakery 2") pass.
+- **Town comparisons come from the tool.** `opportunity_map` takes `towns` (two to four) and returns the order lowest
+  first with each town's count, rate and group in English and Spanish, and a direction only when the ranges do not
+  overlap (a withheld count is a range; equal rates are equal). The prompt tells the model to repeat it in the
+  answer's language and never work out the direction itself.
+- **The control replaces the with-Qloo places.** "Ask again without Qloo" applies the control answer's own actions,
+  then reloads the open town's catalog in the list and on the map, or clears the answer places when no town is open,
+  and says so under the diff line.
+- **The decision card speaks to the owner:** the third check follows the group (gap: the next gap town; competitive:
+  two competitors; quiet: where people buy today; crowded: the next town or a niche; unknown: the municipio's own
+  count), and Overture-only names join the visit line, marked by source.
+- **Taste wording says the split:** "taste above/below the median", "afinidad sobre/bajo la mediana" on the legend,
+  the card and the spoken verdict.
+- **Cards** say "hours not listed" when the catalog has none, and fan and taste lists sort by the affinity they display.
+- **Front page** matches the evidence panel: "Take Qloo away and the places go with it", "Every place comes from a
+  record", the model writes the note and never the numbers, a run without Qloo says it is general knowledge.
+- `/compare` runs regenerated under the new prompt (seven pairs).
+
+Checks: container healthy; nine changed-file SHA-256 hashes in the container equal the commit's after each cut; live
+probes of San Juan, Adjuntas, Luquillo (suppressed), Río Grande, Ponce, Mayagüez and Vieques with notes in 0.3–0.7 s
+and no figure; "¿Caguas o Cayey?" and "San Juan or Ponce?" repeat the tool's order in the question's language with the
+right direction; a browser run of the Bad Bunny question, the control (list goes from five fan matches to the town's
+eight best known, no affinity line left) and the Adjuntas card; `check-demo --journeys` 0 failed; 447 tests locally.
+One defect found live and fixed in the second cut: the figure check read "La Familia Bakery 2, Panadería…" as a count
+and dropped the Río Grande note twice; the names the note was given are masked before the check. Real phones not
+tested. Screenshots 02, 05 and 07 retaken from the second cut.
+
 ## Decide release (2026-10-24, evening)
 
 Live as `zemi-aku:decide-20261024`, source `ce88f18` (cuts `c80af4e`, `250e93b`, `ce88f18`), layered on `lang-20261024` with `app/`, `server/`,
@@ -549,6 +593,13 @@ and the command chain still committed and pushed the half-emptied tree as `1fd65
 replaced within minutes by a lease-guarded forced update to `770563d`; the script now skips `node_modules`. Scanned for the VM
 address, local paths, `_secrets`, key prefixes (only the scan patterns in tests and this file match); a fresh clone installs
 and passes 435 tests with four skips; README (439 tests), the panel record and LICENSE answer 200 logged out.
+
+**Re-exported October 24, evening** from `fe97492` (the third panel records) as public `16420a3` with the same script plus
+the third panel record and its four evidence reports. One correction in the public copies only: the two panel briefs told
+the evaluators not to read a local directory by its path; the script now rewrites that sentence, since the earlier export
+had published it. Scanned for the VM address, local paths, `_secrets`, key prefixes and the Gmail id (only the scan
+patterns in tests and this file match); the clone installs and passes 445 tests with four skips; README (445 tests), the
+panel record, the brief and LICENSE answer 200 logged out and `data/compare-qloo.json` 404.
 
 Re-exporting from now on: run the same script against a new private commit, then commit and push with `gh`'s credential
 helper (`git -c credential.helper= -c "credential.helper=!gh auth git-credential" push`).

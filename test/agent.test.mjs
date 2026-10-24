@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { createAgent, createSpendLedger, checkChat, plainSpeech, spokenExcerpt, PROMPT, industryIn, namesTown, townFlight, createNote, wholeSentences, echoes, checkNote, noteLanguage } from "../server/agent.mjs";
+import { createAgent, createSpendLedger, checkChat, plainSpeech, spokenExcerpt, PROMPT, validArgs, industryIn, namesTown, townFlight, createNote, wholeSentences, echoes, checkNote, noteLanguage } from "../server/agent.mjs";
+const NOTE_SOURCE = fs.readFileSync(new URL('../server/agent.mjs', import.meta.url), 'utf8');
 
 const tools = [{ name: "town_catalog", description: "Places in a town", parameters: {
   type: "object", properties: { town: { type: "string", enum: ["Ponce"] } }, required: ["town"], additionalProperties: false,
@@ -510,34 +511,63 @@ test('the verdict note is one plain model call on the data given, charged to the
   assert.ok(sent.max_tokens >= 400);
   assert.deepEqual(sent.reasoning, { enabled: false });
   // A note that echoes the verdict is dropped (a probe saw the whole verdict sentence come back).
-  const verdict = 'San Juan is a gap for bakeries: strong taste, rank 5 of 76, and few businesses, 16 establishments with employees. Qloo lists 37. A lead, not proof: visit and check rents.';
+  const verdict = 'San Juan is a gap for bakeries: taste above the median, rank 5 of 76, and few businesses, 16 establishments with employees. Qloo lists 37. A lead, not proof: visit and check rents.';
   const echo = createNote({ key: 'test', ledger: ledger(t), fetchImpl: async () => reply({ content: verdict }) });
   assert.deepEqual(await echo({ town: 'San Juan', verdict }), { fallback: true, reason: 'echo' });
   assert.equal(echoes('Visit El Horno at 7 am and check the queue. Compare with Río Grande, rank 2.', verdict), false);
-  assert.equal(echoes('San Juan is a gap for bakeries with strong taste and few businesses, 16 establishments with employees, rank 5 of 76.', verdict), true);
+  assert.equal(echoes('San Juan is a gap for bakeries with taste above the median and few businesses, 16 establishments with employees, rank 5 of 76.', verdict), true);
   // The output contract: the requested language, no claim the data cannot carry, three sentences at most.
-  const english = createNote({ key: 'test', ledger: ledger(t), fetchImpl: async () => reply({ content: 'Visit El Horno at 7 am and check the queue. Compare with Río Grande, rank 2.' }) });
+  const english = createNote({ key: 'test', ledger: ledger(t), fetchImpl: async () => reply({ content: 'Visit El Horno at 7 am and check the queue. Compare with Río Grande, which has fewer bakeries per resident.' }) });
   assert.deepEqual(await english({ town: 'San Juan', lang: 'es', verdict }), { fallback: true, reason: 'language' });
-  const spanish = createNote({ key: 'test', ledger: ledger(t), fetchImpl: async () => reply({ content: 'Visite El Horno a las 7 de la mañana y mire la fila. Compare con Río Grande, puesto 2 de 76.' }) });
-  assert.equal((await spanish({ town: 'San Juan', lang: 'es', verdict })).text, 'Visite El Horno a las 7 de la mañana y mire la fila. Compare con Río Grande, puesto 2 de 76.');
+  const spanish = createNote({ key: 'test', ledger: ledger(t), fetchImpl: async () => reply({ content: 'Visite El Horno a las 7 de la mañana y mire la fila. Compare con Río Grande, que tiene menos negocios por residente.' }) });
+  assert.equal((await spanish({ town: 'San Juan', lang: 'es', verdict })).text, 'Visite El Horno a las 7 de la mañana y mire la fila. Compare con Río Grande, que tiene menos negocios por residente.');
   const claim = createNote({ key: 'test', ledger: ledger(t), fetchImpl: async () => reply({ content: 'Visit El Horno at 7 am. A bakery there will make money, guaranteed.' }) });
   assert.deepEqual(await claim({ town: 'San Juan', lang: 'en', verdict }), { fallback: true, reason: 'claim' });
   assert.equal(checkNote('One. Two. Three. Four.', 'en').text, 'One. Two. Three.');
+  // A figure beside a unit is the model restating a number; the verdict carries them all.
+  const figure = createNote({ key: 'test', ledger: ledger(t), fetchImpl: async () => reply({ content: 'Visite El Horno. Río Grande tiene unos 0,65 por cada cien mil residentes.' }) });
+  assert.deepEqual(await figure({ town: 'San Juan', lang: 'es', verdict }), { fallback: true, reason: 'number' });
+  assert.deepEqual(checkNote('Compare with Rincón, where the maximum is 1.3 per 10,000.', 'en'), { reason: 'number' });
+  assert.deepEqual(checkNote('Caguas has 16 establishments with employees.', 'en'), { reason: 'number' });
+  assert.deepEqual(checkNote('Strong match for Bad Bunny fans (87%).', 'en'), { reason: 'number' });
+  // Ranks and counted nouns are figures too (Codex 10/24); clock times are not.
+  for (const text of ['Compare con Río Grande, puesto 2 de 76.', 'Río Grande ranks 2 of 76.', 'Río Grande is #2 for taste.', 'Qloo lists 12 bakeries there.', 'Hay 5 panaderías en Adjuntas.'])
+    assert.deepEqual(checkNote(text, 'en'), { reason: 'number' }, text);
+  assert.equal(checkNote('Visite a las 7 de la mañana y vuelva a las 5 pm.', 'es').text, 'Visite a las 7 de la mañana y vuelva a las 5 pm.');
+  // A place name ending in a digit is not a figure (live: "La Familia Bakery 2, Panadería Alturas" was dropped).
+  const listed = 'Visit La Familia Bakery 2, Panadería Alturas de Río Grande and Tres Hermanos, and check the queue.';
+  assert.deepEqual(checkNote(listed, 'en'), { reason: 'number' });
+  assert.equal(checkNote(listed, 'en', ['La Familia Bakery 2', 'Panadería Alturas de Río Grande']).text, listed);
+  assert.deepEqual(checkNote('Visit La Familia Bakery 2 and 12 bakeries nearby.', 'en', ['La Familia Bakery 2']), { reason: 'number' });
+  const named = createNote({ key: 'test', ledger: ledger(t), fetchImpl: async () => reply({ content: listed }) });
+  assert.equal((await named({ town: 'Río Grande', lang: 'en', verdict, places: [{ name: 'La Familia Bakery 2' }, { name: 'Panadería Alturas de Río Grande' }] })).text, listed);
+  assert.equal(checkNote('Visit El Horno at 7 am and check the queue. Río Grande has fewer bakeries per resident than San Juan.', 'en').text,
+    'Visit El Horno at 7 am and check the queue. Río Grande has fewer bakeries per resident than San Juan.');
+  const compared = createNote({ key: 'test', ledger: ledger(t), fetchImpl: async (url, init) => { sent = JSON.parse(init.body); return reply({ content: 'Visit El Horno at 7 am. Río Grande has fewer bakeries per resident than San Juan.' }); } });
+  await compared({ town: 'San Juan', lang: 'en', verdict, comparison: 'Río Grande has fewer businesses of this type per resident than San Juan.' });
+  assert.ok(sent.messages[1].content.includes('"comparison":"Río Grande has fewer businesses of this type per resident than San Juan."'));
   assert.equal(noteLanguage('Visite y compare con la mediana de la isla'), 'es');
   assert.equal(noteLanguage('Visit and compare with the island median'), 'en');
   assert.equal(noteLanguage('Panadería Alturas'), '');
   // The route sends suppressed rows as ranges, never zeroes, and never compares a town with itself.
   const server = fs.readFileSync(new URL('../scripts/serve-eagle.mjs', import.meta.url), 'utf8');
   assert.match(server, /r\.group === "gap" && r\.town !== business\.town/);
-  assert.match(server, /suppressed: true, establishments: null, establishmentsMax/);
+  assert.match(server, /const comparison = !gap \?/, 'the comparison with the first gap town is written by the route, in words');
+  assert.match(server, /has fewer \$\{label\} per resident than \$\{business\.town\}/);
+  assert.match(server, /tiene menos \$\{label\} por residente que \$\{business\.town\}/);
+  assert.doesNotMatch(server, /rate: lakh\(/, 'no figure reaches the note');
   assert.match(server, /if \(!\["en", "es"\]\.includes\(asked\.lang\)\) return \{ \.\.\.business, evidence: \{ \.\.\.business\.evidence, note: \{ fallback: "language" \} \} \};/);
   assert.match(server, /spoken: spokenExcerpt\(speech, 300\)/);
-  // The note gets the verdict's unit, whole numbers per hundred thousand, and the Spanish group name.
-  assert.match(server, /const UNIT = "per hundred thousand residents"/);
-  assert.match(server, /rate: lakh\(r\.perTenThousand\), unit: UNIT/);
+  // The note gets the Spanish group name and the comparison sentence, never a rate.
   assert.match(server, /groupEs: GROUP_ES\[row\.group\]/);
+  assert.match(server, /topGaps, places, comparison,/);
+  assert.doesNotMatch(server.slice(server.indexOf('async function withVerdictNote'), server.indexOf('async function patternAnswer')), /tasteRank: row\.tasteRank|ranked: row\.ranked|below 3|menos de 3|fewer than 3/, 'no rank or numeric threshold reaches the note');
+  assert.match(PROMPT, /four at most/);
+  assert.match(PROMPT, /call opportunity_map once with the industry and towns: \[every town named, four at most;/);
+  assert.match(NOTE_SOURCE, /Never quote a rate, count, rank or percentage/);
   assert.match(PROMPT, /brecha, competido, tranquilo, saturado/);
-  assert.match(PROMPT, /Never state\s+rents, foot traffic, menus, prices or "more traffic"/);
+  assert.match(PROMPT, /Never state\s+rents, foot traffic, footfall, crowds, menus, prices or "more traffic"/);
+  assert.match(PROMPT, /sentence in English, sentenceEs in Spanish/);
 });
 
 test('two large tool results that overrun the request drop the largest one and the model still answers', async t => {
@@ -562,8 +592,18 @@ test('two large tool results that overrun the request drop the largest one and t
   assert.equal(dropped[0].count, undefined);
 });
 
+test('tool arguments may carry a short list of strings, each checked by the item rule', () => {
+  const schema = { properties: { industry: { type: 'string', enum: ['bakery'] }, towns: { type: 'array', items: { type: 'string', maxLength: 10 }, maxItems: 4 } }, required: ['industry'] };
+  assert.equal(validArgs(schema, { industry: 'bakery', towns: ['Caguas', 'Cayey'] }), true);
+  assert.equal(validArgs(schema, { industry: 'bakery', towns: ['Caguas'] }), false, 'one town is no comparison');
+  assert.equal(validArgs(schema, { industry: 'bakery', towns: ['a', 'b', 'c', 'd', 'e'] }), false, 'over maxItems');
+  assert.equal(validArgs(schema, { industry: 'bakery', towns: ['Caguas', 'a town name too long'] }), false, 'the item rule applies');
+  assert.equal(validArgs(schema, { industry: 'bakery', towns: 'Caguas' }), false);
+  assert.equal(validArgs(schema, { industry: 'bakery', towns: ['Caguas', 7] }), false);
+});
+
 test('the prompt tells the model how to answer a siting or comparison question and when to pass a category', () => {
-  assert.match(PROMPT, /opportunity_map with the industry and each town/);
+  assert.match(PROMPT, /opportunity_map with the industry and the town\. For a comparison of\s+two to four towns, call opportunity_map once with the industry and towns/);
   assert.match(PROMPT, /never say few when its figure is at or\s+above the median/i);
   assert.match(PROMPT, /category food/);
 });

@@ -136,6 +136,7 @@
       ask: es ? "Preguntar más" : "Ask more",
       location: es ? "Ubicación" : "Location",
       newTab: es ? "(se abre en una pestaña nueva)" : "(opens in a new tab)",
+      noHours: es ? "sin horario publicado" : "hours not listed", // judge panel 10/24 round 3: an unchecked place looked like a checked one
     };
     const renderId = ++resultCardRender;
     return `<ul class="answer-cards">${(places || []).map((place, index) => {
@@ -158,7 +159,7 @@
       const metaBits = [
         Number.isFinite(km) ? `${km.toFixed(1)} km` : "",
         place.rating != null ? `★ ${place.rating}` : "",
-        hoursText(place.hours, lang),
+        hoursText(place.hours, lang) || labels.noHours,
       ].filter(Boolean).map((text) => esc(text)).join(" · ");
       const meta = metaBits ? `<p class="result-meta" id="${metaId}">${metaBits}</p>` : "";
       const describedBy = [whyText ? whyId : "", metaBits ? metaId : ""].filter(Boolean).join(" ");
