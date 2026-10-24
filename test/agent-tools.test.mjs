@@ -35,7 +35,7 @@ test('opportunity_map groups towns and lists the top gaps by taste rank',async()
   assert.deepEqual(tool.parameters.properties.industry.enum,['cafe','bakery','restaurant','bar','hotel','salon']);
   const out=await tool.run({industry:'bakery'});
   assert.deepEqual(out.data.groups,{gap:['Vieques','San Juan'],competitive:['Caguas'],quiet:['Ponce'],crowded:['Aibonito'],unknown:['Culebra']});
-  assert.deepEqual(out.data.topGaps,[{town:'Vieques',tasteRank:1,suppressed:true,perTenThousand:0,perTenThousandMax:2.1},{town:'San Juan',tasteRank:5,suppressed:false,perTenThousand:.5,perTenThousandMax:.5}]);
+  assert.deepEqual(out.data.topGaps,[{town:'Vieques',tasteRank:1,suppressed:true,perTenThousand:null,perTenThousandMax:2.1},{town:'San Juan',tasteRank:5,suppressed:false,perTenThousand:.5,perTenThousandMax:.5}]);
   assert.equal(out.data.source,'Qloo heatmap · Census County Business Patterns 2023 · Census PRCS 2020–2024');
   assert.deepEqual(out.data.notes,bakeryFile.notes.en);
   assert.deepEqual(out.data.medians,bakeryFile.medians);
@@ -154,6 +154,9 @@ test('opportunity_map with a town returns that town’s row beside the island fi
   assert.match(out.data.town.reading, /^San Juan is a gap for bakery: taste rank 5 of 5; 16 establishments with employees, 0\.5 per 10,000 residents against (?:the median of [\d.]+ the groups split on \(island average 0\.68\)|0\.68 island-wide)\. Taste above the median, few businesses/);
   assert.doesNotMatch(out.data.town.reading, /strong taste/i);
   assert.deepEqual(out.action, { type: 'show_opportunity', industry: 'bakery' });
+  const withheld = await tool.run({ industry: 'bakery', town: 'Vieques' });
+  assert.equal(withheld.data.town.perTenThousand, null, 'a withheld count is never a rate of zero');
+  assert.equal(withheld.data.town.perTenThousandMax, 2.1);
   const missing = await tool.run({ industry: 'bakery', town: 'Lares' });
   assert.equal(missing.data.town, null);
 });

@@ -158,16 +158,15 @@ test('a model answer offers the control run and a control run is labeled instead
   // The control replaces the with-Qloo places on the map and in the list (judge panel 10/24 round 3: the cards stayed).
   assert.match(show, /clearJourney\(\);/);
   assert.match(show, /if \(actions\.length\) await applyMapActions\(actions, data\.speech\)/, 'every control action applies, not only a place list');
-  assert.match(show, /if \(pickedId && byName\.has\(pickedId\)\) await loadPlaces\(byName\.get\(pickedId\)\.record\)/, "the town's own catalog replaces the with-Qloo list");
-  assert.match(show, /else clearAnswerPlaces\(\);/);
+  assert.match(show, /clearAnswerPlaces\(\);[^\n]*\n\s*if \(pickedId && byName\.has\(pickedId\)\) await loadPlaces\(byName\.get\(pickedId\)\.record\)/, "the answer places, picks and heading clear, then the town's own catalog returns");
   assert.match(html.match(/async function runControl\([^]*?\n}\n/)[0], /try \{ await showControl\(asked\.speech, data\); \}/);
   // The clearing helper runs: an island-wide answer's places leave the list and the map.
   const clear = html.match(/function clearAnswerPlaces\(\) \{[^]*?\n}\n/)[0];
   const calls = [];
-  const ctx = { openPlaces: [{ name: 'A' }], leadNames: ['A'], focusedIndex: 2, step: 'town', drawPlaces: (p) => calls.push(['draw', p.length]), resetCategory: () => calls.push(['reset']), showListTitle: (t) => calls.push(['title', t]), renderList: () => calls.push(['render']) };
+  const ctx = { openPlaces: [{ name: 'A' }], leadNames: ['A'], listTitle: 'Bad Bunny fans in San Juan', focusedIndex: 2, step: 'town', showPicks: (n) => calls.push(['picks', n.length]), drawPlaces: (p) => calls.push(['draw', p.length]), resetCategory: () => calls.push(['reset']), showListTitle: (t) => calls.push(['title', t]), renderList: () => calls.push(['render']) };
   vm.createContext(ctx); vm.runInContext(clear + 'clearAnswerPlaces();', ctx);
-  assert.equal(JSON.stringify([ctx.openPlaces, ctx.leadNames, ctx.focusedIndex]), '[[],[],-1]');
-  assert.equal(JSON.stringify(calls), JSON.stringify([['draw', 0], ['reset'], ['title', ''], ['render']]));
+  assert.equal(JSON.stringify([ctx.openPlaces, ctx.leadNames, ctx.listTitle, ctx.focusedIndex]), '[[],[],"",-1]');
+  assert.equal(JSON.stringify(calls), JSON.stringify([['picks', 0], ['draw', 0], ['reset'], ['title', ''], ['render']]));
   assert.match(show, /lastAgentPlaces\.length \? `<p class="control-verdict">\$\{esc\(t\.cleared\)\}<\/p>` : ""/);
   assert.match(Z.html('en', { mode: 'sources', kind: 'business', calls: [], note: { fallback: 'number' } }), /the model restated a figure; the verdict carries the numbers/);
   assert.match(Z.html('es', { mode: 'sources', kind: 'business', calls: [], note: { fallback: 'number' } }), /el modelo repitió una cifra/);

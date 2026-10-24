@@ -33,7 +33,7 @@ function townReading(file, industry, town) {
     + (row.group === "gap" ? "Taste above the median, few businesses: a lead to visit, not demand." : row.group === "competitive" ? "Taste above the median, many businesses: the figure is at or above the median, so never call it few."
       : row.group === "quiet" ? "Taste below the median, few businesses." : row.group === "crowded" ? "Taste below the median, many businesses." : "Not enough data to group.");
   return { town, group: row.group, groupEs: GROUP_ES[row.group] || row.group, tasteRank: row.tasteRank ?? null, ranked, establishments: row.establishments ?? null, establishmentsMax: row.establishmentsMax ?? null,
-    suppressed: Boolean(row.suppressed), perTenThousand: figure(row.perTenThousand), perTenThousandMax: figure(row.perTenThousandMax), medianPerTenThousand: median, islandPerTenThousand: island, reading };
+    suppressed: Boolean(row.suppressed), perTenThousand: row.suppressed ? null : figure(row.perTenThousand), perTenThousandMax: figure(row.perTenThousandMax), medianPerTenThousand: median, islandPerTenThousand: island, reading };
 }
 
 // Which town has fewer businesses per resident is decided here, never by the model (judge panel 10/24 round 3:
@@ -197,8 +197,9 @@ export function agentTools(api) {
           ...(comparison ? { comparison } : {}),
           ...(file.sources?.qloo?.retrievedAt ? { retrievedAt: file.sources.qloo.retrievedAt } : {}),
           medians: file.medians, notes: file.notes.en, groups,
+          // A withheld count is a range, never a rate of zero (judge panel 10/24 round 4: "la tasa es 0 por cada 10,000").
           topGaps: byRank.filter((row) => row.group === "gap").slice(0, 5).map(({ town, tasteRank, suppressed, perTenThousand, perTenThousandMax }) =>
-            ({ town, tasteRank, suppressed, perTenThousand, perTenThousandMax })) },
+            ({ town, tasteRank, suppressed, perTenThousand: suppressed ? null : perTenThousand, perTenThousandMax })) },
         action: { type: "show_opportunity", industry } };
       }),
   ];

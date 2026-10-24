@@ -369,7 +369,7 @@ the ion token's origin restriction, not a live condition), the five nav links ar
 
 ## Trust release (2026-10-24, night)
 
-Live as `zemi-aku:trust-20261024`, source `46e8092` (cuts `7c0be3b`, `46e8092`), layered on `decide-20261024` with `app/`,
+Live as `zemi-aku:trust-20261024`, source `898a3d7` (cuts `7c0be3b`, `46e8092`, `9346372`, `898a3d7`), layered on `decide-20261024` with `app/`,
 `server/`, `scripts/serve-eagle.mjs` and `data/compare-qloo.json` (`tmp/deploy-trust-20261024.sh` and `-b.sh`, local only).
 Rollback set `/opt/zemi-aku/trust-20261024-rollback` (previous image `decide-20261024`). Carlos: "proceed, do as much as we
 can to max out based on the feedback" after the third blind panel (`JUDGE-PANEL-2026-10-24b.md`). Codex adversarial
@@ -408,8 +408,18 @@ and no figure; "¿Caguas o Cayey?" and "San Juan or Ponce?" repeat the tool's or
 right direction; a browser run of the Bad Bunny question, the control (list goes from five fan matches to the town's
 eight best known, no affinity line left) and the Adjuntas card; `check-demo --journeys` 0 failed; 447 tests locally.
 One defect found live and fixed in the second cut: the figure check read "La Familia Bakery 2, Panadería…" as a count
-and dropped the Río Grande note twice; the names the note was given are masked before the check. Real phones not
-tested. Screenshots 02, 05 and 07 retaken from the second cut.
+and dropped the Río Grande note twice; the names the note was given are masked before the check. Third cut (after
+the fourth panel's second report): a directory loaded for one town is never offered under another town's name (Opus
+saw "Ver los 323 lugares en Maricao" open Caguas's catalog after a model answer moved the map); browser-checked live
+(Caguas then Maricao: the directory hides), journeys 0 failed. Fourth cut (after the fourth panel's third report,
+`JUDGE-PANEL-2026-10-24c.md`): the control clears the picks row and the list heading before the town's own catalog
+returns (Grok saw "Bad Bunny fans in San Juan" and three top picks survive the control); a withheld Census count
+reaches the model with no rate, only its range (Grok saw "la tasa es 0 por cada 10,000"). Browser-checked live (after
+the control: picks hidden, heading "Best known", eight catalog cards, no affinity line); journeys 0 failed; hashes
+equal; 448 tests. Tried and reverted in the same cut: quoting the spoken verdict per 10,000 with one decimal to match
+the card; the speech checker forbids decimals and large numbers in spoken lines, so the verdict keeps "about 5 per
+hundred thousand" and the card "0.5 per 10,000", recorded as a tradeoff. Real phones not tested. Screenshots 02, 05
+and 07 retaken from the second cut.
 
 ## Decide release (2026-10-24, evening)
 
@@ -600,6 +610,10 @@ the evaluators not to read a local directory by its path; the script now rewrite
 had published it. Scanned for the VM address, local paths, `_secrets`, key prefixes and the Gmail id (only the scan
 patterns in tests and this file match); the clone installs and passes 445 tests with four skips; README (445 tests), the
 panel record, the brief and LICENSE answer 200 logged out and `data/compare-qloo.json` 404.
+
+**Re-exported October 24, night** from `ef63000` (the trust release records) as public `b549d9a` with the same script.
+Scanned as before (only the scan patterns in tests and this file, and an evaluator's quoted question, match); the clone
+passes 447 tests with four skips; README (447 tests) answers 200 logged out.
 
 Re-exporting from now on: run the same script against a new private commit, then commit and push with `gh`'s credential
 helper (`git -c credential.helper= -c "credential.helper=!gh auth git-credential" push`).

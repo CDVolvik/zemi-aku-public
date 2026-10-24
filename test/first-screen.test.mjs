@@ -44,3 +44,10 @@ test("polish: titles read as titles, hovers are gated, a phone shows two chips, 
 test("with the panel open on a desktop the ask bar moves off the panel", () => {
   assert.match(app, /body:has\(#panel:not\(\[hidden\]\):not\(\[data-collapsed="true"\]\)\) #dockbar \{[^}]*left: calc\(\(212px \+ var\(--left\) \+ 100%\) \/ 2\); width: min\(620px, calc\(100% - 460px - var\(--left\)\)\);/);
 });
+
+test("a directory loaded for one town is never offered under another town's name", () => {
+  const app = fs.readFileSync(new URL('../app/index.html', import.meta.url), 'utf8');
+  assert.match(app, /directory = \{ \.\.\.data, town \};/, 'the directory remembers its town');
+  assert.match(app, /if \(!directory\?\.total \|\| pinsWide \|\| \(pickedId && directory\.town !== pickedId\)\) \{\s*box\.hidden = true;/,
+    "judge panel 10/24 round 4: 'Ver los 323 lugares en Maricao' opened the previous town's catalog");
+});

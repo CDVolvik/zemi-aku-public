@@ -1716,7 +1716,9 @@ async function loadDirectory(town) {
 
 function renderDirectory() {
   const box = $("directory");
-  if (!directory?.total || pinsWide) {
+  // A directory belongs to one town; after a model answer moves the map it never offers the previous town's
+  // places under the new town's name (judge panel 10/24 round 4: "Ver los 323 lugares en Maricao" opened Caguas).
+  if (!directory?.total || pinsWide || (pickedId && directory.town !== pickedId)) {
     box.hidden = true;
     return;
   }
@@ -2737,7 +2739,9 @@ async function runControl(button) {
 function clearAnswerPlaces() {
   openPlaces = [];
   leadNames = [];
+  listTitle = "";
   focusedIndex = -1;
+  showPicks([]);
   drawPlaces([]);
   resetCategory();
   showListTitle("");
@@ -2761,8 +2765,8 @@ async function showControl(withText, data) {
   const actions = Array.isArray(data.actions) ? data.actions : [];
   if (actions.length) await applyMapActions(actions, data.speech).catch((error) => console.warn("control actions", error));
   if (actions.some((action) => action.type === "show_places")) return;
+  clearAnswerPlaces(); // the picks row and the "fans in San Juan" heading go too (judge panel 10/24 round 4)
   if (pickedId && byName.has(pickedId)) await loadPlaces(byName.get(pickedId).record).catch(() => {}); // the town's own catalog, listed and drawn
-  else clearAnswerPlaces();
 }
 
 // converse.js writes its status to #talk-status; show it as the caption while a conversation runs.

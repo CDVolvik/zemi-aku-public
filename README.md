@@ -74,7 +74,7 @@ node scripts/check-demo.mjs http://127.0.0.1:4174
 node scripts/check-demo.mjs http://127.0.0.1:4174 --journeys
 ```
 
-There are 447 local automated tests. A fresh clone of the public repository skips four: the one
+There are 448 local automated tests. A fresh clone of the public repository skips four: the one
 that needs the Census cache and the three that read the saved Qloo results.
 Public HTTPS, Chrome journey/3D, private-path protection and capped WebSocket probes pass.
 Live speech and a real iPhone still require separate verification.
