@@ -540,6 +540,11 @@ try {
   /* iOS zooms the page into any field under 16px when it takes focus. */
   @media (pointer: coarse) { #q, #compare-find, .menu select { font-size: 16px; } }
 
+  /* Between a phone and a wide desktop the dock still sits centered, over the panel's last lines (judge panel 10/25
+     round 7: the sources summary could not be clicked at 960 px); the panel ends above it there. */
+  @media (min-width: 721px) and (max-width: 1023px) {
+    #panel { bottom: calc(84px + var(--caption-h, 0px) + var(--bottom)); }
+  }
   /* A short laptop window: the "Try one" chips sat on the tour row (judge panel 10/25 at 1455x639). While the first
      screen is up its own chips carry the same questions, so the row below it waits until the hero goes. */
   @media (min-width: 721px) and (max-height: 720px) {
@@ -664,7 +669,7 @@ try {
 
 <div id="hero">
   <h1 id="hero-title">Where should I open a business in Puerto Rico?</h1>
-  <p id="hero-lede">Qloo's taste for all 78 towns, against the businesses the Census already counts. Pick an industry.</p>
+  <p id="hero-lede">Qloo's taste town by town, against the businesses the Census already counts. Pick an industry.</p>
   <div id="decide-start" role="group" aria-label="Where should I open…"></div>
   <p class="small" id="hero-or">Or start with an artist</p>
   <div id="journey-start" role="group" aria-label="Discover places through an artist">
@@ -3369,8 +3374,8 @@ $("suggest").addEventListener("click", (event) => {
 });
 // ---------- Island hero: the decision question first, the artists as the on-ramp ----------
 const HERO = {
-  en: { title: "Where should I open a business in Puerto Rico?", lede: "Qloo's taste for all 78 towns, against the businesses the Census already counts. Pick an industry.", or: "Or start with an artist" },
-  es: { title: "¿Dónde abro un negocio en Puerto Rico?", lede: "El gusto de Qloo en los 78 pueblos, frente a los negocios que el Census ya cuenta. Escoja una industria.", or: "O empiece por un artista" },
+  en: { title: "Where should I open a business in Puerto Rico?", lede: "Qloo's taste town by town, against the businesses the Census already counts. Pick an industry.", or: "Or start with an artist" },
+  es: { title: "¿Dónde abro un negocio en Puerto Rico?", lede: "El gusto de Qloo pueblo por pueblo, frente a los negocios que el Census ya cuenta. Escoja una industria.", or: "O empiece por un artista" },
 };
 // Everything on the first screen follows the picked language (judge panel 10/23: after Español the tours,
 // the example questions, the search placeholder and the voice preview still read in English).

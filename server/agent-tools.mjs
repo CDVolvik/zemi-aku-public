@@ -1,4 +1,4 @@
-import { fold, affinityWhy } from "./lib.mjs";
+import { fold, affinityWhy, audienceLines } from "./lib.mjs";
 import { INDUSTRIES } from "./opportunity.mjs";
 import { CATEGORIES, categoryOf } from "./catalog.mjs";
 // One read-only tool registry shared by the text agent and future voice/MCP transports.
@@ -133,7 +133,7 @@ export function agentTools(api) {
         const places = catalog.places.filter((row) => category === "all" || row.category === category).sort(api.byPopularity);
         return list(town, places.slice(0, 20).map(api.publishPlace), `${category} in ${town}`, { count: places.length, measured: catalog.measured });
       }),
-    tool("find_places", "Find a named place in a town, or search a strict food/taste tag. Do not invent results.",
+    tool("find_places", "Find a named place in a town (mode name: matches names and kinds such as bakery, panadería, café), or search a strict Qloo taste tag (mode taste). A taste miss does not mean the town has none of that kind; use mode name or town_catalog before saying so. Do not invent results.",
       { town, query: text, mode: { type: "string", enum: ["name", "taste"] } }, ["town", "query", "mode"], async ({ town, query, mode }) => {
         if (mode === "taste") {
           const result = await api.tasteAnswer(query, town, query, "en", { strictOnly: true });
@@ -152,6 +152,17 @@ export function agentTools(api) {
       const published = api.publishPlace(place);
       return { data: { source: "Qloo + Overture", ...compact(published) }, action: { type: "open_place", town, place: published } };
     }),
+    tool("place_audience", "Who likes a verified place, from Qloo: age bands and gender compared with Qloo's average audience. Use it for who goes there, what customers, which ages. Affinity, not a customer count.",
+      { town, id }, ["town", "id"], async ({ town, id }) => {
+        const place = (await api.catalogFor(town)).places.find((row) => row.id === id);
+        if (!place) return { error: "Place is not in this town's verified catalog." };
+        const envelope = await api.callQloo("qloo_audience_demographics", { entity: id, entity_type: "place" });
+        if (envelope?.status !== "ok" && envelope?.status !== "empty") return { error: "Qloo could not answer this request. Do not guess." };
+        const lines = audienceLines(envelope.results?.[0]?.query);
+        const any = lines.age.length || lines.gender.length;
+        return { data: { source: "Qloo audience demographics", place: place.name, status: any ? "ok" : "empty", ...lines,
+          note: any ? "Compared with Qloo's average audience: positive leans toward that group, negative away. Not a customer count." : "Qloo had no audience data for this place." } };
+      }),
     tool("fans_also_love", "Artists and destinations liked by fans of a verified place. These are affinities, not sponsorships.",
       { town, id }, ["town", "id"], async ({ town, id }) => {
         if (!(await api.catalogFor(town)).places.some((row) => row.id === id)) return { error: "Unknown place ID." };

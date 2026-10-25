@@ -367,6 +367,36 @@ the dock at 769, the island's west and east tips project to x 41 and 383 at y 17
 the ion token's origin restriction, not a live condition), the five nav links are 12 px tall each; `check-demo --journeys`
 0 failed. 341 tests.
 
+## Round-seven release (2026-10-25, late night)
+
+Live as `zemi-aku:round7-20261025`, source `89ca990` (four commits on `766b4b9`), layered on `round6-20261025` with
+`app/`, `server/` and `scripts/serve-eagle.mjs` (`tmp/deploy-round7-20261025.sh`, local only). Rollback set
+`/opt/zemi-aku/round7-20261025-rollback` (previous image `round6-20261025`). The seventh blind panel on the round-six
+release (`JUDGE-PANEL-2026-10-25c.md`: GPT 18, Opus 15, Grok 15, mean 16.0) and a Codex review of the diff. No key,
+cap, cache, Caddy, env or connector change.
+
+What changed on the site:
+
+- **A `place_audience` tool.** Who goes to a place, what customers, which ages: the model reads the same Qloo
+  audience demographics the card shows under "Who likes it" and never says Qloo lacks them (Opus's High). Absent
+  from the no-Qloo control.
+- **A refused tool "was off for this run"**, never "returned nothing" (Opus); a condition the tools cannot test
+  (vegan, kosher, parking, a budget, rent as the priority) is named in one sentence before the covered part (GPT).
+- **Between 721 and 1023 px the panel ends above the dock**, so "Sources and the record behind this answer" can be
+  clicked (GPT; Opus the round before at 953 px).
+- **"Qloo's taste town by town"** on the first screen; the front page gives the 76-to-78 range (GPT: "all 78 towns"
+  against "76 of 78 with taste data").
+- **A money question leaves the siting template** so the model says the data carries no income first (Grok: the gap
+  verdict repeated for "¿cuánto ganaría…?"). "Median household income" stays a research topic.
+- The opportunity evidence line says "not enough data", never a raw "unknown" (Opus).
+
+Checks: container healthy; five changed-file SHA-256 hashes in the container equal the commit's; live browser runs
+(the Don Nico customer question calls find_places then place_audience and answers with age bands; the Spanish income
+question answers "no hay dato de ganancias" first; the sources summary clicks at 960×895; the town-state and polish
+paths); `check-demo --journeys` 0 failed; 459 tests. Codex review of the first three commits (`tmp/codex-review-round7-20261025.md`):
+two Mediums (the answer caption still over the panel at 721–1023 px; a strict taste-tag miss read as "no bakeries in Ponce")
+and two Lows (the meta descriptions' "all 78"; the 16-tool inventory), all fixed in the fourth commit. Real phones not tested.
+
 ## Round-six release (2026-10-25, night)
 
 Live as `zemi-aku:round6-20261025`, source `4235303`, layered on `polish-20261025` with `app/`, `server/` and
@@ -397,7 +427,8 @@ What changed on the site:
 Checks: container healthy; seven changed-file SHA-256 hashes in the container equal the commit's; live browser runs
 (Culebra bakery question: one bakery card, no hours in the text; Las Marías salon: two withheld codes, no rank; San
 Juan's comparison Loíza, Maricao's the top row; the control's title; the town-state and comparison paths; the 390 px
-island frame); `check-demo --journeys` 0 failed; 456 tests. Real phones not tested.
+island frame); `check-demo --journeys` 0 failed; 456 tests. Real phones not tested. Public snapshot re-exported from
+`766b4b9` as `a50eb2f` (the sixth panel record and its four evidence files added; scanned; the record reads logged out).
 
 ## Polish release (2026-10-25, later)
 

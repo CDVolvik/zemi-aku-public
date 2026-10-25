@@ -665,4 +665,9 @@ test('the prompt tells the model how to answer a siting or comparison question a
   assert.match(PROMPT, /A town with no taste rank is unranked:\s+never give it a position/);
   assert.match(PROMPT, /without quotation marks/);
   assert.match(PROMPT, /call find_places with that word in the town so the cards are that kind/);
+  // Round 7: the model denied Qloo audience data the card shows; the control run called a refused tool "returned nothing".
+  assert.match(PROMPT, /call place_audience with its catalog id: Qloo carries age and\s+gender affinities for places, so never say it lacks them/);
+  assert.match(PROMPT, /A tool refused as unavailable did not run: say that tool was\s+off for this run, never that it returned nothing/);
+  assert.match(PROMPT, /a condition the tools cannot test \(vegan,\s+kosher, parking, a budget, rent as the priority\), say so in one sentence/);
+  assert.match(PROMPT, /A strict taste-tag miss is not catalog absence/);
 });

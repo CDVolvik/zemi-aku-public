@@ -60,3 +60,11 @@ test("on a phone the voice button shows the language code alone, so the ask fiel
   assert.match(app, /const narrow = window\.matchMedia\("\(max-width: 480px\)"\)\.matches;\s*\$\("voice-btn"\)\.textContent = name && !narrow \? `\$\{code\} · \$\{name\}` : code;/);
   assert.match(app, /window\.matchMedia\("\(max-width: 480px\)"\)\.addEventListener\("change", voiceLabel\);/);
 });
+
+test("between a phone and a wide desktop the panel ends above the dock, and the hero claims taste town by town, not for all 78 (judge panel 10/25 round 7)", () => {
+  assert.match(app, /@media \(min-width: 721px\) and \(max-width: 1023px\) \{\s*#panel \{ bottom: calc\(84px \+ var\(--caption-h, 0px\) \+ var\(--bottom\)\); \}/);
+  assert.doesNotMatch(app, /taste for all 78 towns|en los 78 pueblos, frente/);
+  assert.match(app, /Qloo's taste town by town, against the businesses the Census already counts/);
+  const home = fs.readFileSync(new URL("../app/home.html", import.meta.url), "utf8");
+  assert.doesNotMatch(home, /scores all 78 (?:Puerto Rico )?towns/, 'the meta descriptions too');
+});

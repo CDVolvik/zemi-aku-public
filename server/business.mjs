@@ -72,6 +72,8 @@ const namedTowns = (text, towns) => towns.filter(town => new RegExp(`\\b${fold(t
 // which-is-better follow-up once two towns are in play. A standalone "best" or "mejor" ("the best bakery
 // to open in Ponce") is one-town research and stays on the template.
 const comparing = /\b(?:compare|comparing|comparison|comparar|compara|comparacion|versus|vs|which town|what town|better town|best town|cual pueblo|que pueblo|mejor pueblo|cual municipio|que municipio|o en|or in)\b/;
+// Money questions leave the template: the verdict never says what a business would earn (judge panel 10/25 round 7).
+const MONEY_ASK = /\b(?:ganar(?:ia|e|ias|an|ian)?|ganancias?|facturar(?:ia)?|facturacion|rentabilidad|rentable|cuanto (?:gana|vende|factura|deja|produce)|profits?|profitable|revenue|earn(?:s|ings)?|make (?:per|a|each) (?:month|year|week)|roi|payback)\b/;
 const choosing = /\b(?:which|better|best|cual|cuales|mejor|conviene mas)\b/;
 export function comparesTowns(text, towns, history = []) {
   const folded = fold(text);
@@ -196,7 +198,7 @@ function evidenceOf(context, request) {
 function opportunityCall(file, industry, group) {
   const towns = Array.isArray(file.towns) ? file.towns.length : 0;
   return { tool: 'opportunity_map', args: { industry }, ok: true, source: 'Qloo heatmap · Census County Business Patterns 2023',
-    note: [towns ? `${towns} towns` : '', group].filter(Boolean).join(' · ') };
+    note: [towns ? `${towns} towns` : '', { gap: 'gap', competitive: 'competitive', quiet: 'quiet', crowded: 'crowded', unknown: 'not enough data' }[group] || ''].filter(Boolean).join(' · ') };
 }
 
 // The saved opportunity row for one town, with the island figure beside it.
@@ -236,6 +238,7 @@ export function createBusinessDiscovery({ towns, catalog, context = async () => 
       const outside = outsidePlace(text, towns);
       if (outside) return { chat: true, kind: 'outside', speech: spoken('outside', { place: outside }, es ? 'es' : 'en') };
       if (!force && comparesTowns(text, towns, body.history || [])) return null;
+      if (!force && MONEY_ASK.test(fold(text))) return null; // income, profit or sales: the model says the data has none
     }
     const { town, category } = request;
     const industry = industryOf(request);

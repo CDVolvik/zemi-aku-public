@@ -246,6 +246,10 @@ test('a business question about a place outside Puerto Rico says so instead of a
   // A known town, "Puerto Rico" itself, a generic place word, a determiner or a source keeps the normal flow.
   assert.equal((await withMap({ question: 'Where should I open a bakery in Ponce?', lang: 'en' })).town, 'Ponce');
   assert.equal((await withMap({ question: 'Where should I open a bakery in Puerto Rico?', lang: 'en' })).kind, 'opportunity');
+  // A money question leaves the template so the model can say the data carries no income (judge panel 10/25 round 7).
+  assert.equal(await withMap({ question: '¿Cuánto ganaría una panadería en San Juan al mes?', lang: 'es', town: 'San Juan' }), null);
+  assert.equal(await withMap({ question: 'How much would a bakery in Ponce make per month?', lang: 'en' }), null);
+  assert.equal((await withMap({ question: 'Should I open a bakery in Ponce?', lang: 'en' })).town, 'Ponce', 'a siting question stays on the template');
   // The island question asked from an open town is still the island question (Codex review 10/25).
   assert.equal((await withMap({ question: 'Where should I open a bar in Puerto Rico?', lang: 'en', town: 'Caguas' })).kind, 'opportunity');
   assert.equal((await withMap({ question: '¿Dónde debería abrir una barra en Puerto Rico?', lang: 'es', town: 'Caguas' })).kind, 'opportunity');

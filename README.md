@@ -10,7 +10,7 @@ separately. An affinity is not evidence of an artist visit or a forecast of busi
 
 **Status, October 17, 2026:** the [live demo](https://zemi.r21digital.com) runs on an
 isolated Always Free Oracle VM with HTTPS and OSM 3D. Typed and spoken questions go to the
-in-app model agent (DeepSeek V4.1 Flash via OpenRouter, 16 read-only tools, two dollars a day,
+in-app model agent (DeepSeek V4.1 Flash via OpenRouter, 17 read-only tools, two dollars a day,
 forty turns per visitor) with Deepgram Aura-2 voices in five languages under a daily cap; see the
 [model agent release](docs/PUBLIC-AGENT-2026-10-11.md) and the
 [voices release](docs/PUBLIC-VOICES-2026-10-11.md). Every model answer carries a folded evidence
@@ -74,15 +74,15 @@ node scripts/check-demo.mjs http://127.0.0.1:4174
 node scripts/check-demo.mjs http://127.0.0.1:4174 --journeys
 ```
 
-There are 456 local automated tests. A fresh clone of the public repository skips four: the one
+There are 459 local automated tests. A fresh clone of the public repository skips four: the one
 that needs the Census cache and the three that read the saved Qloo results.
 Public HTTPS, Chrome journey/3D, private-path protection and capped WebSocket probes pass.
 Live speech and a real iPhone still require separate verification.
 
 ## Use it from Claude Code or Codex (local)
 
-The MCP connector serves 13 of the app's 16 read-only tools (all but map_town, town_weather and
-qloo_trends), from your own machine with
+The MCP connector serves 13 of the app's 17 read-only tools (all but map_town, town_weather,
+qloo_trends and place_audience), from your own machine with
 your own Qloo key. It is off unless `ZEMI_MCP_ENABLED=1`; the public site keeps it off until
 Qloo confirms in writing that a hosted endpoint is allowed.
 
@@ -111,7 +111,7 @@ connector never calls a model or a speech provider; its Qloo use counts against 
 | app/home.html | Field-atlas landing page |
 | server/discovery.mjs, server/catalog.mjs | Validated artist entry and municipality catalogs |
 | app/coastal.js, server/coastal.mjs, server/ships.mjs | Port discovery and optional bounded AIS feed |
-| server/agent.mjs, server/agent-tools.mjs | Conversation and 16 read-only tools |
+| server/agent.mjs, server/agent-tools.mjs | Conversation and 17 read-only tools |
 | server/business.mjs | Saved business context, demographic/taste research and listed-peer proximity |
 | scripts/serve-eagle.mjs | Single-origin HTTP/WebSocket server and provider boundary |
 | server/limits.mjs, server/agent.mjs | Visitor limits and persisted model reservations |

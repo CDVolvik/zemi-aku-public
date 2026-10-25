@@ -1,6 +1,7 @@
+import fs from 'node:fs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { agentTools, catalogOnly, CATALOG_ONLY_TOOLS } from '../server/agent-tools.mjs';
+import { agentTools, catalogOnly, withoutQloo, CATALOG_ONLY_TOOLS } from '../server/agent-tools.mjs';
 import { fold } from '../server/lib.mjs';
 test('name lookup folds accented input and empty results do not reset the map',async()=>{
   let upstream=0;
@@ -166,8 +167,36 @@ test('opportunity_map with a town returns that town’s row beside the island fi
 });
 
 test('the catalog-only control keeps Qloo places and loses every affinity tool', () => {
-  const names = ['map_town', 'town_catalog', 'find_places', 'place_details', 'fans_also_love', 'artist_places', 'town_profile', 'landmarks', 'town_history', 'qloo_describe', 'qloo_recommend', 'qloo_compare_audiences', 'qloo_entity_tags', 'qloo_trends', 'opportunity_map', 'town_weather'];
+  const names = ['map_town', 'town_catalog', 'find_places', 'place_details', 'place_audience', 'fans_also_love', 'artist_places', 'town_profile', 'landmarks', 'town_history', 'qloo_describe', 'qloo_recommend', 'qloo_compare_audiences', 'qloo_entity_tags', 'qloo_trends', 'opportunity_map', 'town_weather'];
   const kept = catalogOnly(names.map((name) => ({ name }))).map((t) => t.name);
   assert.deepEqual(kept.sort(), [...CATALOG_ONLY_TOOLS].sort());
-  for (const gone of ['artist_places', 'fans_also_love', 'qloo_recommend', 'qloo_compare_audiences', 'qloo_entity_tags', 'qloo_trends', 'town_profile', 'opportunity_map', 'qloo_describe']) assert.ok(!kept.includes(gone), gone);
+  for (const gone of ['artist_places', 'fans_also_love', 'place_audience', 'qloo_recommend', 'qloo_compare_audiences', 'qloo_entity_tags', 'qloo_trends', 'town_profile', 'opportunity_map', 'qloo_describe']) assert.ok(!kept.includes(gone), gone);
+});
+
+test('place_audience returns the age and gender leans the card shows, from a verified catalog id (judge panel 10/25 round 7)', async () => {
+  const place = { id: 'q1', name: 'Panadería Don Nico', category: 'food' };
+  const calls = [];
+  const registry = agentTools({ towns: ['Río Grande'], categories: [], catalogFor: async () => ({ places: [place] }), publishPlace: p => p,
+    callQloo: async (name, args) => { calls.push([name, args]); return { status: 'ok', results: [{ query: { age: { '24_and_younger': 0.21, '35_to_44': -0.1 }, gender: { female: 0.12, male: -0.12 } } }] }; } });
+  const tool = registry.find(t => t.name === 'place_audience');
+  assert.ok(tool, 'the tool is registered');
+  const out = await tool.run({ town: 'Río Grande', id: 'q1' });
+  assert.deepEqual(calls, [['qloo_audience_demographics', { entity: 'q1', entity_type: 'place' }]]);
+  assert.equal(out.data.place, 'Panadería Don Nico');
+  assert.equal(out.data.status, 'ok');
+  assert.ok(out.data.age.length >= 1 && out.data.gender.length === 2, JSON.stringify(out.data));
+  assert.match(out.data.note, /Not a customer count/);
+  assert.deepEqual(await tool.run({ town: 'Río Grande', id: 'nope' }), { error: "Place is not in this town's verified catalog." });
+  assert.ok(!withoutQloo(registry).some(t => t.name === 'place_audience'), 'the control run has no audience tool');
+});
+
+test('the public inventory counts the registry: 17 tools with weather, 13 through MCP (Codex review 10/25 round 7)', async () => {
+  const { mcpTools } = await import('../server/mcp.mjs');
+  const registry = agentTools({ towns: ['Ponce'], categories: [], weather: {}, catalogFor: async () => ({ places: [] }), publishPlace: p => p, callQloo: async () => ({ status: 'empty' }) });
+  assert.equal(registry.length, 17);
+  assert.equal(mcpTools(registry).length, 13);
+  const readme = fs.readFileSync(new URL('../README.md', import.meta.url), 'utf8');
+  assert.match(readme, /17 read-only tools/);
+  assert.match(readme, /13 of the app's 17 read-only tools \(all but map_town, town_weather,\s+qloo_trends and place_audience\)/);
+  assert.doesNotMatch(readme, /16 read-only tools/);
 });
