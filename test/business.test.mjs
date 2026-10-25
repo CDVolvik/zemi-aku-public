@@ -2,14 +2,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
-import { smallTalkKind, guideKind, chatReply } from '../server/chat.mjs';
+import { smallTalkKind, guideKind, vagueKind, chatReply } from '../server/chat.mjs';
 import { businessRequest, createBusinessDiscovery } from '../server/business.mjs';
 
 test('purchase intent reaches its own handler before a place-name search', async () => {
   const source = fs.readFileSync(new URL('../scripts/serve-eagle.mjs', import.meta.url), 'utf8')
     .match(/async function patternAnswer\([^]*?\n}\n/)[0];
   const expected = { business: { town: 'Bayamón' }, speech: 'Which kind of business?' };
-  const context = { smallTalkKind, guideKind, chatReply, catalogTotal: 7717,
+  const context = { smallTalkKind, guideKind, vagueKind, chatReply, catalogTotal: 7717,
     surveyByTown: new Map([['bayamon', { town: 'Bayamón' }]]),
     knownTown: () => '', splitTown: () => ({ town: 'Bayamón' }),
     businessAnswer: async () => expected,
@@ -140,6 +140,26 @@ test('a town question adds the industry opportunity evidence',async()=>{
   assert.deepEqual(evidence.notes,files.cafe.notes.en);
 });
 
+test('a siting verdict carries the town taste profile when a locality read is available (judge panel 10/25)',async()=>{
+  const withTaste=createBusinessDiscovery({towns,catalog:async()=>rows,opportunity:{get:id=>files[id]||null},
+    culture:async town=>({vibe:[{name:'Puerto Rican'},{name:'Casual'}],music:[],tv:[]})});
+  const data=await withTaste({question:'Should I open a café in Bayamón?',lang:'en'});
+  assert.equal(data.business.evidence.taste.status,'ready');
+  assert.deepEqual(data.business.evidence.taste.profile.vibe,[{name:'Puerto Rican'},{name:'Casual'}]);
+  assert.equal((await withMap({question:'Should I open a café in Bayamón?',lang:'en'})).business.evidence.taste,null,'no locality read: no profile');
+  // Tags are trimmed and deduplicated; a slow read does not hold the verdict (Codex review 10/25).
+  const messy=createBusinessDiscovery({towns,catalog:async()=>rows,opportunity:{get:id=>files[id]||null},
+    culture:async town=>({vibe:[{name:' Casual '},{name:'casual'},{name:'Nightlife'}],music:[],tv:[]})});
+  assert.deepEqual((await messy({question:'Should I open a café in Bayamón?',lang:'en'})).business.evidence.taste.profile.vibe,[{name:'Casual'},{name:'Nightlife'}]);
+  const slow=createBusinessDiscovery({towns,catalog:async()=>rows,opportunity:{get:id=>files[id]||null},
+    culture:()=>new Promise(resolve=>setTimeout(()=>resolve({vibe:[{name:'Late'}],music:[],tv:[]}),2500))});
+  const started=Date.now();
+  const late=await slow({question:'Should I open a café in Bayamón?',lang:'en'});
+  assert.equal(late.business.evidence.taste,null,'the verdict went on without the slow read');
+  assert.ok(Date.now()-started<2400,'the verdict did not wait for the slow read');
+  assert.equal(late.business.evidence.opportunity.industry,'cafe');
+});
+
 test('the town evidence carries the saved build sources so the readout can spell out its definitions',async()=>{
   const data=await withMap({question:'Should I open a café in Bayamón?',lang:'en'});
   assert.deepEqual(data.business.evidence.opportunity.sources,opportunitySources);
@@ -212,6 +232,10 @@ test('a business question about a place outside Puerto Rico says so instead of a
   // A known town, "Puerto Rico" itself, a generic place word, a determiner or a source keeps the normal flow.
   assert.equal((await withMap({ question: 'Where should I open a bakery in Ponce?', lang: 'en' })).town, 'Ponce');
   assert.equal((await withMap({ question: 'Where should I open a bakery in Puerto Rico?', lang: 'en' })).kind, 'opportunity');
+  // The island question asked from an open town is still the island question (Codex review 10/25).
+  assert.equal((await withMap({ question: 'Where should I open a bar in Puerto Rico?', lang: 'en', town: 'Caguas' })).kind, 'opportunity');
+  assert.equal((await withMap({ question: '¿Dónde debería abrir una barra en Puerto Rico?', lang: 'es', town: 'Caguas' })).kind, 'opportunity');
+  assert.equal((await withMap({ question: 'Where in Puerto Rico should I open a bakery, Ponce?', lang: 'en', town: 'Caguas' })).town, 'Ponce');
   for (const question of ['Where should I open a bakery in Qloo data?', 'Where should I open a bakery in a small town?', 'Where should I open a bakery in downtown?',
     '¿Dónde abro una panadería en la isla?', '¿Dónde abro una panadería en el centro?', 'Vivo en Ponce. ¿Me conviene abrir una panadería allí?']) {
     assert.notEqual((await withMap({ question, lang: 'es' }))?.kind, 'outside', question);

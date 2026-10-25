@@ -33,6 +33,12 @@ test('show() fetches the industry once and maps towns to groups',async()=>{
   await partial.show('bakery');
   assert.ok(e2['opportunity-gaps'].innerHTML.includes('taste #1 of 2'),e2['opportunity-gaps'].innerHTML);
   assert.ok(e2['opportunity-gaps'].innerHTML.includes('Ranks are among the 2 of 3 towns with Qloo taste data.'),e2['opportunity-gaps'].innerHTML);
+  assert.ok(!e2['opportunity-gaps'].innerHTML.includes('not here'),'a town with no taste rank is not a withheld one');
+  // A withheld high-taste town is named under the list (judge panel 10/25: Vieques, #1, missing without a word).
+  const {Z:Z3,elements:e3}=load();
+  const held=Z3.mount({...base,fetchJson:async()=>file('bakery',[{town:'Vieques',group:'unknown',tasteRank:1,suppressed:true,perTenThousand:0},{town:'Río Grande',group:'gap',tasteRank:2,perTenThousand:.7},{town:'Ponce',group:'quiet',tasteRank:3,perTenThousand:.2}])});
+  await held.show('bakery');
+  assert.ok(e3['opportunity-gaps'].innerHTML.includes('Vieques (taste #1) is not here: the Census withholds its count, so few or many cannot be told.'),e3['opportunity-gaps'].innerHTML);
   assert.equal(ui.groupOf('Mayaguez'),'gap');assert.equal(ui.groupOf('Ponce'),'quiet');assert.equal(ui.groupOf('Caguas'),null);
   assert.ok(changes>=1);
   ui.hide();assert.equal(ui.active(),null);assert.equal(ui.groupOf('Ponce'),null);
@@ -174,7 +180,7 @@ test('leaving for anything else clears the opportunity view, and map taps only a
   const html=fs.readFileSync(new URL('../app/index.html',import.meta.url),'utf8');
   assert.match(html,/if \(opportunityUI\?\.panelOpen\(\)\) opportunityUI\.pickTown\(town\);/);
   assert.match(html,/function leaveOpportunity\(\) \{ if \(!keepOpportunity\) opportunityUI\?\.hide\(\); \}/);
-  for(const fn of [/function select\(name, opts = \{\}\) \{\n  if \(!opts\.fromHistory\) mapHistory\.beginUserNav\(\);\n  leaveOpportunity\(\);/,/async function runJourney\(artist\) \{\n  leaveOpportunity\(\);/])
+  for(const fn of [/function select\(name, opts = \{\}\) \{\n  if \(!opts\.fromHistory\) mapHistory\.beginUserNav\(\);\n  if \(!opts\.keepOpportunity\) leaveOpportunity\(\);/,/async function runJourney\(artist\) \{\n  leaveOpportunity\(\);/])
     assert.match(html,fn);
   assert.match(html,/if \(data\.opportunity\) \{[^]*?return data;\n  \}\n  leaveOpportunity\(\);/);
   assert.match(html,/keepOpportunity = true;/);

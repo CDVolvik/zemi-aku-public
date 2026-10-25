@@ -51,3 +51,12 @@ test("a directory loaded for one town is never offered under another town's name
   assert.match(app, /if \(!directory\?\.total \|\| pinsWide \|\| \(pickedId && directory\.town !== pickedId\)\) \{\s*box\.hidden = true;/,
     "judge panel 10/24 round 4: 'Ver los 323 lugares en Maricao' opened the previous town's catalog");
 });
+
+test("on a short laptop window the suggestion row waits while the first screen is up (judge panel 10/25)", () => {
+  assert.match(app, /@media \(min-width: 721px\) and \(max-height: 720px\) \{\s*body:has\(#hero:not\(\[hidden\]\)\) #suggest \{ display: none; \}/);
+});
+
+test("on a phone the voice button shows the language code alone, so the ask field keeps its width (judge panel 10/25)", () => {
+  assert.match(app, /const narrow = window\.matchMedia\("\(max-width: 480px\)"\)\.matches;\s*\$\("voice-btn"\)\.textContent = name && !narrow \? `\$\{code\} · \$\{name\}` : code;/);
+  assert.match(app, /window\.matchMedia\("\(max-width: 480px\)"\)\.addEventListener\("change", voiceLabel\);/);
+});

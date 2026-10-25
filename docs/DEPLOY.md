@@ -367,6 +367,80 @@ the dock at 769, the island's west and east tips project to x 41 and 383 at y 17
 the ion token's origin restriction, not a live condition), the five nav links are 12 px tall each; `check-demo --journeys`
 0 failed. 341 tests.
 
+## Polish release (2026-10-25, later)
+
+Live as `zemi-aku:polish-20261025`, source `d4e239d`, layered on `state-20261025` with `app/`, `server/` and
+`scripts/serve-eagle.mjs` (`tmp/deploy-polish-20261025.sh`, local only). Rollback set
+`/opt/zemi-aku/polish-20261025-rollback` (previous image `state-20261025`). The fifth blind panel on the state release
+(`JUDGE-PANEL-2026-10-25.md`: GPT 18, Opus 16, Grok 15, mean 16.3) and the Codex review of this diff
+(`tmp/codex-review-polish-20261025.md`: no High, six Mediums, three Lows; the exact-pick fallback, the reselect rule on
+`open_place` and voice frames, the locality read on the verdict path, the withheld note's cap and tag trimming fixed
+before deploy; open: a slow same-town load overwriting a newer answer, the comparison sentence rendered by the model,
+the records' test count). No key, cap, cache, Caddy, env or connector change.
+
+What changed on the site:
+
+- **No stale cards under a new sentence.** A model answer about the open town that brings no place list of its own
+  reloads the town's catalog (Grok's High: restaurant cards under a bakery correction). A voice turn, one frame at a
+  time, keeps what its earlier frames showed; an answer with its own place or list keeps it.
+- **The control restores the town's own heading** ("San Juan", its lede) before its catalog returns, not "Bad Bunny
+  fans in San Juan · Qloo places" (GPT).
+- **A short desktop window** (1455×639) hides the suggestion chips while the first screen is up (GPT).
+- **The comparison sentence names the other town for what it is:** "Río Grande, the next gap-group town, has more
+  businesses of this type per resident than San Juan"; a withheld count says whose (Opus).
+- **"Today 12:00 am–12:00 am" reads "Open 24 hours"** / "Abierto 24 horas" (Opus, Grok).
+- **The decision card** names the places the note names, in the note's order, matched on whole names only (Opus: two
+  visit lists), and says what the rank rests on: "Qloo tags the town's taste as Puerto Rican, Resort Like, Casual"
+  from the same locality read, which a verdict waits 1.5 s for and then goes on without (Opus: "one opaque number").
+- **The gap list names the high-taste towns the Census withholds:** "Vieques (taste #1), Culebra (taste #8), Maunabo
+  (taste #10) are not here: the Census withholds its count, so few or many cannot be told" (Grok).
+- **On a phone the voice button shows the language code alone**; the ask field grows from 159 to 227 px at 390 px
+  (Grok, GPT).
+
+Checks: container healthy; six changed-file SHA-256 hashes in the container equal the commit's; live browser runs of
+the San Juan verdict (tags, visit line, comparison wording), Maricao (withheld wording), the control's title, the
+bakery correction after a restaurant verdict, the town-state path at 390 px, the gap-list note in both languages,
+the phone field width; `check-demo --journeys` 0 failed; 453 tests. Real phones not tested.
+
+## State release (2026-10-25)
+
+Superseded the same day by the polish release above. Live as `zemi-aku:state-20261025`, source `83e164a` (cuts `4a19565`, `83e164a`), layered on `trust-20261024` with `app/`,
+`server/` and `scripts/serve-eagle.mjs` (`tmp/deploy-state-20261025.sh` and `-b.sh`, local only). Rollback set
+`/opt/zemi-aku/state-20261025-rollback` (previous image `trust-20261024`). Carlos: "can you drive 1, 2, 3 and 4?" after
+the fourth blind panel (`JUDGE-PANEL-2026-10-24c.md`): the next build items the panel agreed on. Codex adversarial
+review of the diff (`tmp/codex-review-townstate-20261025.md`): no High, five Mediums (a shared `keepOpportunity` flag
+that was not re-entrant; the selector hidden for island and comparison answers; a comparison or a passing mention
+flown to; the Census sentence naming both catalogs on one count or a withheld lower bound; the clarification only in
+the prompt), three Lows (voice and control answers leaving industry colors; history without the industry; the README
+count). The Mediums and the count are fixed; the two Lows on colors and history are open. No key, cap, cache, Caddy,
+env or connector change.
+
+What changed on the site:
+
+- **A model answer that names another town moves everything with it.** The `opportunity_map` action carries the
+  town it was asked about (and the towns of a comparison); the client opens that town under the island colors, so
+  the URL, the composer placeholder, the map and the panel follow San Juan after a Ponce answer (judge panel 10/24
+  round 4, GPT's first ask). The industry selector gives way only to a target town; an island or comparison answer
+  keeps it. A question naming exactly one other town still gets its flight; two towns do not.
+- **An ambiguous ask gets a question back.** "¿Dónde está lo bueno?", "Where's the good stuff?" and their bounded
+  kin are answered before the model and in the rules fallback with one question (food, nightlife, beaches and
+  outdoors, culture, or a business to open), labeled "a question back, no record read". The prompt keeps the general
+  rule for other phrasings.
+- **The decision card names the Census scope.** "The Census counts only retail bakeries, with paid employees (NAICS
+  311811); Qloo's and Overture's lists include places without employees and under other tags, so they run longer,
+  and the group reads on the Census axis." Only a catalog longer than the published count, or a withheld count's
+  upper bound, is named.
+- **"Where should I open a bar in Puerto Rico?" asked from an open town is the island question**, not that town's
+  verdict. The first cut's regex carried backspace bytes from a patch heredoc and did nothing; the second cut fixed it.
+
+Checks: container healthy; eight changed-file SHA-256 hashes in the container equal the commit's after each cut; live
+browser runs at 1366 and 390 px (Ponce answer, then the San Juan profit question: hash `#town=San Juan`, "Ask about
+San Juan…", the San Juan panel, no Vico C text visible; the clarification; Maricao still answers); a Caguas/Cayey
+comparison from Adjuntas repeats the tool's order in Spanish; `check-demo --journeys` 0 failed; 450 tests. Android
+emulator (Chrome 128, 412 px) on the trust build: first screen, sheet, chips, legend, verdict caption, fold and
+cards work; the 3D map stays black on the emulator's SwiftShader translator with no console error, recorded in
+`tmp/shots-20261024/ANDROID-NOTES.md` as not a real-device result. Real phones not tested.
+
 ## Trust release (2026-10-24, night)
 
 Live as `zemi-aku:trust-20261024`, source `898a3d7` (cuts `7c0be3b`, `46e8092`, `9346372`, `898a3d7`), layered on `decide-20261024` with `app/`,
@@ -614,6 +688,10 @@ panel record, the brief and LICENSE answer 200 logged out and `data/compare-qloo
 **Re-exported October 24, night** from `ef63000` (the trust release records) as public `b549d9a` with the same script.
 Scanned as before (only the scan patterns in tests and this file, and an evaluator's quoted question, match); the clone
 passes 447 tests with four skips; README (447 tests) answers 200 logged out.
+
+**Re-exported October 24, late night** from `97c5f1e` (the fourth panel records) as public `b291764`, with the fourth
+panel record and its four evidence reports added to the script's `EXTRA` list. Scanned as before; the clone passes 448
+tests with four skips; README, the panel record, its reports and `app/index.html` answer 200 logged out.
 
 Re-exporting from now on: run the same script against a new private commit, then commit and push with `gh`'s credential
 helper (`git -c credential.helper= -c "credential.helper=!gh auth git-credential" push`).

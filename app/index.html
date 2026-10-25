@@ -540,6 +540,12 @@ try {
   /* iOS zooms the page into any field under 16px when it takes focus. */
   @media (pointer: coarse) { #q, #compare-find, .menu select { font-size: 16px; } }
 
+  /* A short laptop window: the "Try one" chips sat on the tour row (judge panel 10/25 at 1455x639). While the first
+     screen is up its own chips carry the same questions, so the row below it waits until the hero goes. */
+  @media (min-width: 721px) and (max-height: 720px) {
+    body:has(#hero:not([hidden])) #suggest { display: none; }
+    #hero { top: calc(8% + var(--top)); }
+  }
   @media (max-width: 720px) {
     #hero { top: calc(11% + var(--top)); width: min(560px, calc(100% - 24px)); }
     #hero h1 { font-size: 26px; }
@@ -1856,7 +1862,7 @@ async function enrichPlaces(town, taste, query) {
 
 function select(name, opts = {}) {
   if (!opts.fromHistory) mapHistory.beginUserNav();
-  leaveOpportunity();
+  if (!opts.keepOpportunity) leaveOpportunity(); // an opportunity answer keeps its colors while its town opens
   const entry = byName.get(name);
   if (!entry) return Promise.resolve();
   $("coast-return").hidden = true;
@@ -1932,7 +1938,13 @@ function showCatalog(data, opts = {}) {
   listTitle = focus.charAt(0).toUpperCase() + focus.slice(1);
   $("town-title").textContent = listTitle;
   $("town-lede").textContent = data.note || "";
-  researchPlaces = Array.isArray(data.places) ? data.places : [];
+  // The decision card's visit line names the places the answer names, in that order (judge panel 10/25: the panel
+  // and the bubble listed different places for the same question).
+  const listed = Array.isArray(data.places) ? data.places : [];
+  const spoken = data.speech ? ZemiMarks.picks(listed, data.speech, 3, { exact: true }).map((p) => p.name) : [];
+  const order = spoken.length ? spoken : leadNames; // exact picks are empty when the speech names none of the list
+  const named = new Set(order);
+  researchPlaces = [...order.map((name) => listed.find((p) => p.name === name)).filter(Boolean), ...listed.filter((p) => !named.has(p.name))];
   showBusinessResearch(data.business);
   $("town-tools").hidden = true;
   $("compare-box").hidden = true;
@@ -1967,10 +1979,29 @@ function decisionCard(business, o, places, es) {
     ? (Number.isFinite(o.perTenThousandMax) ? (es ? `hasta ${fix(o.perTenThousandMax)} por cada 10,000 residentes${median}` : `up to ${fix(o.perTenThousandMax)} per 10,000 residents${median}`) : "")
     : Number.isFinite(o.perTenThousand) ? (es ? `${fix(o.perTenThousand)} por cada 10,000 residentes${median}` : `${fix(o.perTenThousand)} per 10,000 residents${median}`) : "";
   const supply = business.evidence?.supply;
+  // Why Qloo and Overture list more than the Census counts: the group reads on the Census axis alone.
+  const scope = typeof ZemiOpportunity.censusScope === "function" ? ZemiOpportunity.censusScope(l, o.sources) : "";
+  // Only a catalog longer than the published count, or a withheld count's upper bound, is named (Codex review 10/25).
+  const bound = o.suppressed ? Number(o.establishmentsMax ?? 2) : (Number(o.establishments) || 0);
+  const longer = [[Number(business.total) || 0, es ? "la lista de Qloo" : "Qloo's list"], [Number(supply?.count) || 0, es ? "la lista de Overture" : "Overture's list"]]
+    .filter(([n]) => n > bound).map(([, name]) => name);
+  const two = longer.length === 2;
+  const subject = two ? (es ? "las listas de Qloo y Overture" : "Qloo's and Overture's lists") : longer[0] || "";
+  const axis = scope && subject
+    ? (es ? `El Census cuenta solo ${esc(scope)}; ${subject} ${two ? "incluyen" : "incluye"} lugares sin empleados y con otras etiquetas, por eso ${two ? "son más largas" : "es más larga"}, y el grupo se lee en el eje del Census.`
+      : `The Census counts only ${esc(scope)}; ${subject} ${two ? "include" : "includes"} places without employees and under other tags, so ${two ? "they run" : "it runs"} longer, and the group reads on the Census axis.`)
+    : "";
+  // What Qloo's taste rank rests on, in words an owner can read (judge panel 10/25, Opus: "in the business path Qloo is
+  // one opaque number"): the town's own taste tags from the same record.
+  const vibe = (business.evidence?.taste?.status === "ready" ? business.evidence.taste.profile?.vibe || [] : []).slice(0, 3)
+    .map((row) => String(row?.name || "").trim()).filter(Boolean).map((name) => (name.length > 40 ? `${name.slice(0, 39)}…` : name));
+  const tags = vibe.length ? (es ? `Qloo etiqueta el gusto del pueblo como ${vibe.map(esc).join(", ")}.` : `Qloo tags the town's taste as ${vibe.map(esc).join(", ")}.`) : "";
   const says = [
     `${esc(ZemiOpportunity.LABELS[l][o.group] || "")}${Number.isFinite(o.tasteRank) ? (es ? ` · gusto #${o.tasteRank} de ${o.ranked}` : ` · taste #${o.tasteRank} of ${o.ranked}`) : ""}.`,
+    tags,
     [count, rate].filter(Boolean).join(", ") + (count || rate ? "." : ""),
     es ? `Qloo registra ${business.total} lugares de este tipo; Overture, ${supply ? supply.count : "—"}.` : `Qloo lists ${business.total} places of this type; Overture, ${supply ? supply.count : "—"}.`,
+    axis,
   ].filter(Boolean).join(" ");
   const cannot = es
     ? "Demanda, ventas, rentas, tráfico peatonal, permisos ni ganancias. Los horarios son una foto del catálogo en su fecha."
@@ -2766,7 +2797,15 @@ async function showControl(withText, data) {
   if (actions.length) await applyMapActions(actions, data.speech).catch((error) => console.warn("control actions", error));
   if (actions.some((action) => action.type === "show_places")) return;
   clearAnswerPlaces(); // the picks row and the "fans in San Juan" heading go too (judge panel 10/24 round 4)
-  if (pickedId && byName.has(pickedId)) await loadPlaces(byName.get(pickedId).record).catch(() => {}); // the town's own catalog, listed and drawn
+  if (pickedId && byName.has(pickedId)) {
+    // The town's own heading and lede, not the with-Qloo question's "Bad Bunny fans in San Juan · Qloo places"
+    // (judge panel 10/25), then the town's own catalog, listed and drawn.
+    const record = byName.get(pickedId).record;
+    listTitle = record.town;
+    $("town-title").textContent = record.town;
+    $("town-lede").textContent = townLede(record);
+    await loadPlaces(record).catch(() => {});
+  }
 }
 
 // converse.js writes its status to #talk-status; show it as the caption while a conversation runs.
@@ -2791,8 +2830,12 @@ function voiceLabel() {
   const voice = ZemiConverse.voice();
   const name = (voice.name || "").replace(/Microsoft |Google /g, "").split(" - ")[0];
   const code = (voice.lang || "en").toUpperCase();
-  $("voice-btn").textContent = name ? `${code} · ${name}` : code;
+  // A phone keeps the field wide: the code alone on the button, the voice name in its title (judge panel 10/25).
+  const narrow = window.matchMedia("(max-width: 480px)").matches;
+  $("voice-btn").textContent = name && !narrow ? `${code} · ${name}` : code;
+  $("voice-btn").title = name ? `${code} · ${name}` : (ZemiConverse.voice().lang === "es" ? "Idioma y voz" : "Language and voice");
 }
+window.matchMedia("(max-width: 480px)").addEventListener("change", voiceLabel);
 new MutationObserver(voiceLabel).observe($("talk-voice-name"), { childList: true, characterData: true, subtree: true });
 // The picker is re-rendered on every language or gender change; the note alone does not change for a gender switch.
 new MutationObserver(voiceLabel).observe($("talk-voice"), { childList: true });
@@ -3102,7 +3145,7 @@ function syncAnswerCards(actions = []) {
   wireResultLogos(caption);
 }
 
-async function applyMapActions(actions = [], speech = "") {
+async function applyMapActions(actions = [], speech = "", { reload = true } = {}) {
     const priority = { fly_town: 0, show_places: 1, open_place: 2, show_opportunity: 3, show_weather: 4 };
     // Several place lists in one answer become one panel: the union in first-seen order, under the
     // first list's title, so a place the answer names from an earlier tool call is never dropped.
@@ -3110,14 +3153,18 @@ async function applyMapActions(actions = [], speech = "") {
     const merged = lists.length > 1 ? [{ ...lists[0], places: lists.flatMap((list) => list.places)
       .filter((place, index, all) => all.findIndex((other) => (other.id || other.name) === (place.id || place.name)) === index) }] : [];
     const queue = merged.length ? [...actions.filter((action) => !lists.includes(action)), ...merged] : [...actions];
+    // An opportunity answer keeps the island colors while the town it names opens (judge panel 10/24 round 4: the
+    // URL, composer and panel stayed on Ponce under a San Juan bakery answer). Passed per call, never a shared flag.
+    const keep = queue.some((action) => action.type === "show_opportunity");
+    let flown = ""; // the town a flight in this batch opened
     for (const action of queue.sort((a, b) => (priority[a.type] ?? 9) - (priority[b.type] ?? 9))) {
       if (action.type === "show_weather") {
-        if (byName.has(action.town) && pickedId !== action.town && step === "island") await select(action.town);
+        if (byName.has(action.town) && pickedId !== action.town && step === "island") await select(action.town, { keepOpportunity: keep });
         if (await setWeatherLayer("radar", true)) { toast("Rain radar · RainViewer"); setTimeout(() => toast(""), 4000); }
         continue;
       }
       if (action.type === "fly_town" && byName.has(action.town)) {
-        if (pickedId !== action.town) await select(action.town);
+        if (pickedId !== action.town) { await select(action.town, { keepOpportunity: keep }); flown = action.town; }
         else if (step === "town") frameWholeTown(action.town);
       }
       if (action.type === "show_places" && Array.isArray(action.places)) {
@@ -3128,7 +3175,17 @@ async function applyMapActions(actions = [], speech = "") {
       if (action.type === "open_place" && byName.has(action.town) && action.place?.id) {
         await openFoundPlace(action.place, action.town);
       }
-      if (action.type === "show_opportunity") await opportunityUI.show(action.industry);
+      if (action.type === "show_opportunity") {
+        await opportunityUI.show(action.industry);
+        // Only a target town takes the selector's place: an island or comparison answer keeps it open (Codex review 10/25).
+        const town = byName.has(action.town) ? action.town : flown;
+        // The open town with no list of its own in this answer: reload its catalog, so the previous industry's cards
+        // never sit under the new sentence (judge panel 10/25: restaurant cards under a bakery correction). A voice
+        // turn arrives one frame at a time and keeps what its earlier frames showed (reload: false).
+        const ownList = queue.some((other) => other.type === "show_places" || other.type === "open_place");
+        if (town && (pickedId !== town || (reload && !ownList && town !== flown))) await select(town, { keepOpportunity: true });
+        if (town) $("opportunity-panel").hidden = true; // the town's own view opens in its place; the colors stay
+      }
     }
     if (typeof syncAnswerCards === "function") syncAnswerCards(actions);
 }

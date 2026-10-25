@@ -28,7 +28,8 @@
   const kindLabel = (kind, lang = pageLang()) => (lang === "es" ? kind.es : kind.label);
   // Qloo's hours line is English ("Today 5:00 pm–12:00 am", "Closed today", "Open 24 hours").
   function hoursText(hours, lang = pageLang()) {
-    const text = String(hours || "");
+    // A midnight-to-midnight window is a day-long one (judge panel 10/25: "Today 12:00 am–12:00 am" read as a bug).
+    const text = String(hours || "").replace(/^Today 12:00 am\s*[–-]\s*12:00 am$/i, "Open 24 hours");
     if (lang !== "es" || !text) return text;
     return text.replace(/^Closed today$/i, "Cerrado hoy").replace(/^Open 24 hours$/i, "Abierto 24 horas").replace(/^Today\b/, "Hoy")
       .replace(/\bClosed\b/, "Cerrado");
@@ -84,24 +85,29 @@
   const fold = (s) => String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .replace(/&/g, " and ").replace(/[^a-z0-9]+/g, " ").trim();
   const ARTICLES = new Set(["la", "el", "los", "las", "the", "de", "del", "un", "una", "san", "santa", "casa", "cafe", "bar", "restaurante", "restaurant"]);
-  function namedAt(text, name) {
+  function namedAt(text, name, exact = false) {
     const whole = fold(name);
     if (!whole) return -1;
     const at = text.indexOf(` ${whole} `);
-    if (at >= 0) return at;
+    if (at >= 0 || exact) return at;
     const words = whole.split(" ");
     const lead = ARTICLES.has(words[0]) ? 3 : 2;
     return words.length > lead ? text.indexOf(` ${words.slice(0, lead).join(" ")} `) : -1;
   }
-  function picks(places, speech, max = 3) {
+  // exact: only a whole name counts (the decision card's visit line; judge panel 10/25: the lead-words fallback made
+  // every "Panadería y Repostería …" a match, so the card and the note named different places).
+  function picks(places, speech, max = 3, { exact = false } = {}) {
     const list = places || [];
     const text = ` ${fold(speech)} `;
+    const seen = new Set();
     const named = list
-      .map((place) => ({ place, at: namedAt(text, place?.name) }))
+      .map((place) => ({ place, at: namedAt(text, place?.name, exact) }))
       .filter((row) => row.at >= 0)
       .sort((a, b) => a.at - b.at)
-      .map((row) => row.place);
-    return (named.length ? named : list).slice(0, max);
+      .map((row) => row.place)
+      .filter((place) => { const key = place?.id || fold(place?.name || ""); if (seen.has(key)) return false; seen.add(key); return true; });
+    // Exact mode answers "which listed places does the speech name", so no match is an empty answer, never the list.
+    return (named.length || exact ? named : list).slice(0, max);
   }
 
   // Photo cards for the picks: each carries data-index, the place's position in the open list.

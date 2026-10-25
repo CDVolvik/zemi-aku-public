@@ -153,7 +153,7 @@ test('opportunity_map with a town returns that town’s row beside the island fi
   assert.equal(out.data.town.ranked, 5);
   assert.match(out.data.town.reading, /^San Juan is a gap for bakery: taste rank 5 of 5; 16 establishments with employees, 0\.5 per 10,000 residents against (?:the median of [\d.]+ the groups split on \(island average 0\.68\)|0\.68 island-wide)\. Taste above the median, few businesses/);
   assert.doesNotMatch(out.data.town.reading, /strong taste/i);
-  assert.deepEqual(out.action, { type: 'show_opportunity', industry: 'bakery' });
+  assert.deepEqual(out.action, { type: 'show_opportunity', industry: 'bakery', town: 'San Juan' }, 'the action names the town asked about');
   const withheld = await tool.run({ industry: 'bakery', town: 'Vieques' });
   assert.equal(withheld.data.town.perTenThousand, null, 'a withheld count is never a rate of zero');
   assert.equal(withheld.data.town.perTenThousandMax, 2.1);

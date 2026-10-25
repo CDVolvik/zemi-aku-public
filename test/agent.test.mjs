@@ -480,6 +480,17 @@ test('the map follows the town the question names when the model moved nothing, 
   assert.deepEqual(townFlight('What about the rent on Calle Loíza?', 'Adjuntas', towns, []), []);
   const moved = [{ type: 'fly_town', town: 'San Juan' }];
   assert.equal(townFlight('Compare Culebra and San Juan', 'Adjuntas', towns, moved), moved);
+  // An opportunity action with no town has not moved the map; one with a town has (judge panel 10/24 round 4).
+  assert.deepEqual(townFlight('Guaranteed profit for a bakery in San Juan?', 'Adjuntas', towns, [{ type: 'show_opportunity', industry: 'bakery' }]),
+    [{ type: 'fly_town', town: 'San Juan' }, { type: 'show_opportunity', industry: 'bakery' }]);
+  const placed = [{ type: 'show_opportunity', industry: 'bakery', town: 'San Juan' }];
+  assert.equal(townFlight('Guaranteed profit for a bakery in San Juan?', 'Adjuntas', towns, placed), placed);
+  // A comparison names two towns and carries them on the action: no flight either way (Codex review 10/25).
+  const compared = [{ type: 'show_opportunity', industry: 'bakery', towns: ['Culebra', 'San Juan'] }];
+  assert.equal(townFlight('Compare Culebra and San Juan for a bakery', 'Adjuntas', towns, compared), compared);
+  const townless = [{ type: 'show_opportunity', industry: 'bakery' }];
+  assert.equal(townFlight('Compare Culebra and San Juan for a bakery', 'Adjuntas', towns, townless), townless);
+  assert.deepEqual(townFlight('Is a bakery like the one in San Juan a good idea in Culebra?', 'Adjuntas', towns, []), []);
   const places = [{ type: 'show_places', town: 'Culebra', places: [] }];
   assert.equal(townFlight('Culebra bakeries', 'Adjuntas', towns, places), places);
   assert.match(PROMPT, /call map_town for that town/);
@@ -553,8 +564,11 @@ test('the verdict note is one plain model call on the data given, charged to the
   const server = fs.readFileSync(new URL('../scripts/serve-eagle.mjs', import.meta.url), 'utf8');
   assert.match(server, /r\.group === "gap" && r\.town !== business\.town/);
   assert.match(server, /const comparison = !gap \?/, 'the comparison with the first gap town is written by the route, in words');
-  assert.match(server, /has fewer \$\{label\} per resident than \$\{business\.town\}/);
-  assert.match(server, /tiene menos \$\{label\} por residente que \$\{business\.town\}/);
+  assert.match(server, /\$\{gap\.town\}, the next gap-group town, has fewer \$\{label\} per resident than \$\{business\.town\}/);
+  assert.match(server, /\$\{gap\.town\}, el siguiente pueblo del grupo brecha, tiene menos \$\{label\} por residente que \$\{business\.town\}/);
+  // A withheld count says whose count is withheld and who the other town is (judge panel 10/25).
+  assert.match(server, /The Census withholds \$\{business\.town\}'s count, so it cannot be ordered against \$\{gap\.town\}, the next gap-group town\./);
+  assert.doesNotMatch(server, /asi que no se compara con|así que no se compara con/);
   assert.doesNotMatch(server, /rate: lakh\(/, 'no figure reaches the note');
   assert.match(server, /if \(!\["en", "es"\]\.includes\(asked\.lang\)\) return \{ \.\.\.business, evidence: \{ \.\.\.business\.evidence, note: \{ fallback: "language" \} \} \};/);
   assert.match(server, /spoken: spokenExcerpt\(speech, 300\)/);
@@ -606,4 +620,7 @@ test('the prompt tells the model how to answer a siting or comparison question a
   assert.match(PROMPT, /opportunity_map with the industry and the town\. For a comparison of\s+two to four towns, call opportunity_map once with the industry and towns/);
   assert.match(PROMPT, /never say few when its figure is at or\s+above the median/i);
   assert.match(PROMPT, /category food/);
+  // An ambiguous ask gets a question back, not food in the open town (judge panels 10/24).
+  assert.match(PROMPT, /names no kind of place and no purpose[^]*gets one short question back and no tool call/);
+  assert.match(PROMPT, /¿dónde está lo\s+bueno\?/);
 });

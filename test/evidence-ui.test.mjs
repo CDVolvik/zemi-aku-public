@@ -158,7 +158,7 @@ test('a model answer offers the control run and a control run is labeled instead
   // The control replaces the with-Qloo places on the map and in the list (judge panel 10/24 round 3: the cards stayed).
   assert.match(show, /clearJourney\(\);/);
   assert.match(show, /if \(actions\.length\) await applyMapActions\(actions, data\.speech\)/, 'every control action applies, not only a place list');
-  assert.match(show, /clearAnswerPlaces\(\);[^\n]*\n\s*if \(pickedId && byName\.has\(pickedId\)\) await loadPlaces\(byName\.get\(pickedId\)\.record\)/, "the answer places, picks and heading clear, then the town's own catalog returns");
+  assert.match(show, /clearAnswerPlaces\(\);[^]*?const record = byName\.get\(pickedId\)\.record;\s*listTitle = record\.town;\s*\$\("town-title"\)\.textContent = record\.town;\s*\$\("town-lede"\)\.textContent = townLede\(record\);\s*await loadPlaces\(record\)/, "the answer places, picks and heading clear, the town's own title and lede return, then its catalog (judge panel 10/25)");
   assert.match(html.match(/async function runControl\([^]*?\n}\n/)[0], /try \{ await showControl\(asked\.speech, data\); \}/);
   // The clearing helper runs: an island-wide answer's places leave the list and the map.
   const clear = html.match(/function clearAnswerPlaces\(\) \{[^]*?\n}\n/)[0];

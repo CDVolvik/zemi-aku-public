@@ -45,6 +45,15 @@
     "812112": { en: "beauty salons only; nail salons are a separate code the build leaves out", es: "salones de belleza solamente; los salones de uñas son otro código que no se suma" },
   };
   const industryById = id => INDUSTRIES.find(i => i.id === id);
+  // The Census axis in one phrase for the decision card: the codes the build sums, employers only (judge panel
+  // 10/24 round 4: "Gap" beside 37 Qloo and 64 Overture bakeries for 16 Census employers read as a contradiction).
+  function censusScope(lang, sources) {
+    const l = lang2(lang), es = l === "es";
+    const codes = sources?.cbp?.naics || [];
+    if (!codes.length) return "";
+    const names = codes.map(code => NAICS[code]?.[l] || (es ? "este código" : "this code")).join(es ? " y " : " and ");
+    return es ? `${names}, con empleados (NAICS ${codes.join(" + ")})` : `${names}, with paid employees (NAICS ${codes.join(" + ")})`;
+  }
 
   // The six industries as chips: the hero's first row and the readout's "change the question" row share it.
   function industryChips(lang, { attr, current } = {}) {
@@ -101,7 +110,7 @@
       per: es ? `${fix(row.perTenThousand)}–${fix(row.perTenThousandMax)} por cada 10,000 residentes` : `${fix(row.perTenThousand)}–${fix(row.perTenThousandMax)} per 10,000 residents` };
   }
 
-  window.ZemiOpportunity = { GROUP_COLORS, LABELS, legendHtml, definitionsHtml, supplyText, industryChips, townQuestion, mount({ fetchJson, lang, onChange, onAsk }) {
+  window.ZemiOpportunity = { GROUP_COLORS, LABELS, legendHtml, definitionsHtml, supplyText, industryChips, townQuestion, censusScope, mount({ fetchJson, lang, onChange, onAsk }) {
     const loaded = new Map();
     let current = null, generation = 0;
     const industryOf = industryById;
@@ -119,11 +128,18 @@
       $("opportunity-gaps-heading").textContent = text.gaps;
       const gaps = current.data.towns.filter(row => row.group === "gap").sort((a, b) => a.tasteRank - b.tasteRank).slice(0, 8);
       const ranked = current.data.towns.filter(row => Number.isFinite(row.tasteRank)).length;
+      // A high-taste town with a withheld Census count is not in this list; say so (judge panel 10/25: Vieques, #1, missing).
+      const withheld = current.data.towns.filter(row => row.group === "unknown" && Number.isFinite(row.tasteRank) && row.tasteRank <= (gaps[gaps.length - 1]?.tasteRank ?? 0))
+        .sort((a, b) => a.tasteRank - b.tasteRank);
+      const withheldNote = withheld.length
+        ? `<p class="note">${l === "es" ? `${withheld.map(row => `${esc(row.town)} (gusto #${row.tasteRank})`).join(", ")} no ${withheld.length > 1 ? "están" : "está"} aquí: el Census no publica su conteo, así que no se sabe si tiene pocos negocios.`
+          : `${withheld.map(row => `${esc(row.town)} (taste #${row.tasteRank})`).join(", ")} ${withheld.length > 1 ? "are" : "is"} not here: the Census withholds its count, so few or many cannot be told.`}</p>`
+        : "";
       $("opportunity-gaps").innerHTML = gaps.map(row => {
         const facts = [Number.isFinite(row.tasteRank) ? text.rank(row.tasteRank, ranked) : "",
           Number.isFinite(row.perTenThousand) ? supplyText(row, l).per : ""].filter(Boolean).join(" · ");
         return `<button type="button" class="coast-card" data-opportunity-town="${esc(row.town)}"><strong>${esc(row.town)}</strong><span>${esc(facts)}</span></button>`;
-      }).join("") + (ranked < current.data.towns.length
+      }).join("") + withheldNote + (ranked < current.data.towns.length
         ? `<p class="note">${l === "es" ? `Los puestos son entre los ${ranked} de ${current.data.towns.length} pueblos con datos de gusto de Qloo.` : `Ranks are among the ${ranked} of ${current.data.towns.length} towns with Qloo taste data.`}</p>` : "");
     }
 

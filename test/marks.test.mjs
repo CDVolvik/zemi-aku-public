@@ -67,6 +67,16 @@ test('a Spanish answer gets Spanish chips, legend and hours; English stays as th
   assert.match(en, /cat-chip[^>]*>Food</);
   assert.match(en, /Today 5:00 pm–12:00 am/);
   assert.equal(marks.hoursText('Open 24 hours', 'es'), 'Abierto 24 horas');
+  // Exact picks: only a whole name counts, so sister bakeries sharing a prefix are not pulled in (judge panel 10/25).
+  const sisters = [{ name: 'Panadería y Repostería Sabrosón y Palermo' }, { name: 'El Horno de Pane' }, { name: 'Panadería y Repostería la Ceiba' }];
+  const said = 'Visite El Horno de Pane y Panadería y Repostería la Ceiba; revise sus horarios.';
+  assert.deepEqual(marks.picks(sisters, said, 3, { exact: true }).map((p) => p.name), ['El Horno de Pane', 'Panadería y Repostería la Ceiba']);
+  assert.deepEqual(marks.picks(sisters, said).map((p) => p.name).length, 3, 'the loose match still pulls the sister in');
+  assert.deepEqual(marks.picks(sisters, 'Visit somewhere else entirely.', 3, { exact: true }), [], 'exact mode never invents a match (Codex review 10/25)');
+  assert.deepEqual(marks.picks([{ id: 'x', name: 'El Horno de Pane' }, { id: 'x', name: 'El Horno de Pane' }, { name: 'La Ceiba' }], 'El Horno de Pane and El Horno de Pane', 3, { exact: true }).length, 1, 'a duplicate record counts once');
+  assert.equal(marks.hoursText('Today 12:00 am–12:00 am', 'en'), 'Open 24 hours', 'midnight to midnight is a day-long window (judge panel 10/25)');
+  assert.equal(marks.hoursText('Today 12:00 am–12:00 am', 'es'), 'Abierto 24 horas');
+  assert.equal(marks.hoursText('Today 12:00 am–3:00 am', 'en'), 'Today 12:00 am–3:00 am');
   assert.equal(marks.hoursText('', 'es'), '');
   // The legend and the pin card follow <html lang>.
   context.document = { documentElement: { lang: 'es' } };

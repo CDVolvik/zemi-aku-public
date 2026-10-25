@@ -55,7 +55,9 @@ above the median, and end with one concrete next step (which places to visit). W
 than the open one, call map_town for that town so the map follows the answer.
 When the question is where an artist's fans eat, pass category food to artist_places; for nightlife, drinks.
 Use map tools to show relevant towns and verified places. Ask a clarification when town or intent
-is unclear. Keep every answer under 90 words and name at most three places unless asked for more;
+is unclear: a question that names no kind of place and no purpose ("where is the good stuff", "¿dónde está lo
+bueno?", "what's good here") gets one short question back and no tool call, asking whether they mean food,
+nightlife, beaches and outdoors, culture, or a business to open. Keep every answer under 90 words and name at most three places unless asked for more;
 the map shows the rest. Write plain sentences for speech: no Markdown, bold, headings, bullet lists,
 emoji or bare URLs.`;
 
@@ -224,10 +226,12 @@ export function eatingPlaces(question, actions) {
 // The map follows the town the question names (judge panel 10/24: Adjuntas stayed on screen under a Culebra answer).
 // Only when the model moved nothing itself, and only to a known town other than the open one.
 export function townFlight(question, town, towns, actions) {
-  const moved = (actions || []).some((a) => ["fly_town", "show_places", "open_place", "show_opportunity"].includes(a?.type) && (a.town || a.type === "show_opportunity"));
+  // An opportunity action without a town has not moved the map (judge panel 10/24 round 4); a comparison (towns) has.
+  const moved = (actions || []).some((a) => ["fly_town", "show_places", "open_place", "show_opportunity"].includes(a?.type) && (a.town || Array.isArray(a.towns)));
   if (moved) return actions;
-  const named = (towns || []).filter((t) => t !== town && namesTown(question, t)).sort((a, b) => b.length - a.length)[0];
-  return named ? [{ type: "fly_town", town: named }, ...(actions || [])] : actions;
+  // Two towns named is a comparison or a contrast, not a destination (Codex review 10/25).
+  const named = (towns || []).filter((t) => t !== town && namesTown(question, t));
+  return named.length === 1 ? [{ type: "fly_town", town: named[0] }, ...(actions || [])] : actions;
 }
 
 // One closing note after the rule-based business verdict (judge panels 10/23 and 10/24: the headline siting

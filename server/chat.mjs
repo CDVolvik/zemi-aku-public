@@ -15,6 +15,10 @@ const KINDS = [
   ["greet", /\b(hi|hello|hey|hiya|good morning|good afternoon|good evening|greetings|hola|buenos dias|buenas tardes|buenas noches|buenas|saludos|bonjour|salut|bonsoir|ciao|buongiorno|buonasera|salve|hallo|guten morgen|guten tag|guten abend|servus|moin)\b/],
 ];
 const YES = /^ (yes|yeah|yep|sure|ok|okay|si|claro|dale|oui|certo|ja|genau) $/;
+// An ask with no kind of place and no purpose gets one question back before the model or the records
+// (judge panels 10/24: "¿Dónde está lo bueno?" came back as food in the open town). Bounded forms only.
+const VAGUE = /^ (where s the good stuff|where is the good stuff|what s good|what s good here|what s good around here|what s good there|anything good|anything good here|anything good around here|donde esta lo bueno|donde esta lo bueno por aqui|que hay de bueno|que hay de bueno por aqui|que hay bueno|que hay bueno por aqui|donde esta lo mejor|que es lo bueno|que es lo bueno de aqui) $/;
+export function vagueKind(text) { return VAGUE.test(clean(text)) ? "vague" : null; }
 
 // Words that can sit around small talk without making it a question.
 const FILLER = new Set(("zemi aku please por favor there today and you u i im m fine good great well doing very so oh "
@@ -67,10 +71,12 @@ const REPLIES = {
     yes: () => "Tell me the town you have in mind, and we’ll start there.",
     business: () => "Which town are you thinking about? I can help you explore the area and point you to business-sale directories.",
     dinner: () => "Sounds like a good night. Which town are you in? Tell me and I'll show you where people eat there, from bakeries to Puerto Rican restaurants.",
+    vague: () => "What are you after: food, nightlife, beaches and outdoors, culture, or a business to open? Name that and a town, and I'll point to places with a record behind them.",
   },
   es: {
     greet: () => "Hola, soy Zemi-Aku. Vamos a explorar Puerto Rico. ¿Le gustaría buscar dónde comer, un lugar para visitar o conocer mejor algún pueblo?",
     how: () => "Aquí, lista para explorar con usted. ¿Cómo le va hoy?",
+    vague: () => "¿Qué busca: comida, vida nocturna, playas y aire libre, cultura, o un negocio para abrir? Dígame eso y el pueblo, y le señalo lugares con registro.",
     who: (n) => `Soy Zemi-Aku, un mapa que piensa con los datos de gusto de Qloo. Conozco miles de lugares en los 78 pueblos y solo le digo lo que dicen los registros. ¿Qué quiere explorar?`,
     help: () => "Pregúnteme lo que quiera sobre un pueblo: dónde se come en Ponce, qué hoteles hay en Vieques o quién ya hace negocio en Mayagüez. También puede decir un plato, como mofongo, o un tipo de lugar, como panaderías. ¿Por dónde empezamos?",
     thanks: () => "Con mucho gusto.",

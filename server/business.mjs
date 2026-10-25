@@ -53,7 +53,10 @@ export function businessRequest(body, towns) {
     }
   }
   const selection = typeOf(text) || [...segment].reverse().map(row => typeOf(fold(row.content))).find(Boolean);
-  const town = named(text) || named(body.town || '') || [...segment].reverse().map(row => named(row.content)).find(Boolean) || '';
+  // "In Puerto Rico" or "the whole island" asked from an open town is the island question, not that town's
+  // (Codex review 10/25: a Caguas bar verdict for "¿Dónde debería abrir una barra en Puerto Rico?").
+  const islandWide = /\b(puerto rico|toda la isla|en la isla|the island|island wide|islandwide)\b/.test(text);
+  const town = named(text) || (islandWide ? '' : named(body.town || '') || [...segment].reverse().map(row => named(row.content)).find(Boolean) || '');
   const mode = purchase.test(text) || (!opening.test(text) && segment.some(row => purchase.test(fold(row.content)))) ? 'buy' : 'research';
   return { town, category: selection?.category || 'all', type: selection?.type || 'all', mode,
     topic: topic || 'overview', nearby: /\b(?:near|nearby|cerca|cercanos|alrededor)\b/.test(text) };
@@ -210,6 +213,7 @@ function labelFor(request, es) {
   return TYPE_LABELS[l][request.type] || CATEGORY_LABELS[l][request.category] || CATEGORY_LABELS[l].all;
 }
 
+const PROFILE_WAIT_MS = 1500; // how long a siting verdict waits for the town's locality read
 export function createBusinessDiscovery({ towns, catalog, context = async () => ({}), culture, publish = p => p, opportunity }) {
   return async (body, { force = false } = {}) => {
     const request = businessRequest(body, towns);
@@ -239,12 +243,28 @@ export function createBusinessDiscovery({ towns, catalog, context = async () => 
     try { local = await context(town) || {}; } catch { /* Missing evidence stays unknown. */ }
     const evidence = evidenceOf(local, request);
     if (saved) evidence.opportunity = opportunityEvidence(saved, town, es);
-    if (culture && ['taste', 'demand'].includes(request.topic)) {
+    // A siting verdict carries the town's taste tags too, so the card can say what the rank rests on (judge panel
+    // 10/25: "in the business path Qloo is one opaque number"); the profile is the same cached locality read.
+    if (culture && (['taste', 'demand'].includes(request.topic) || evidence.opportunity)) {
+      const wanted = ['taste', 'demand'].includes(request.topic);
       try {
-        const result = await culture(town);
-        const profile = Object.fromEntries(['music', 'vibe', 'tv'].map(kind => [kind,
-          (Array.isArray(result?.[kind]) ? result[kind] : []).filter(row => typeof row?.name === 'string' && row.name.trim()).slice(0, 8).map(({ name }) => ({ name }))]));
-        evidence.taste = { source: 'Qloo locality affinities', status: Object.values(profile).some(rows => rows.length) ? 'ready' : 'empty', profile };
+        const read = Promise.resolve(culture(town));
+        read.catch(() => {});
+        // A verdict waits a moment for the locality read and goes on without it; the read keeps warming the cache
+        // (Codex review 10/25: a cold town is three serial Qloo rounds). A taste question waits for it.
+        let timer;
+        const deadline = new Promise(resolve => { timer = setTimeout(() => resolve(undefined), PROFILE_WAIT_MS); });
+        const result = wanted ? await read : await Promise.race([read, deadline]);
+        clearTimeout(timer);
+        if (result !== undefined) {
+          const profile = Object.fromEntries(['music', 'vibe', 'tv'].map(kind => {
+            const seen = new Set();
+            const names = (Array.isArray(result?.[kind]) ? result[kind] : []).map(row => (typeof row?.name === 'string' ? row.name.trim() : ''))
+              .filter(name => name && !seen.has(fold(name)) && seen.add(fold(name)));
+            return [kind, names.slice(0, 8).map(name => ({ name }))];
+          }));
+          evidence.taste = { source: 'Qloo locality affinities', status: Object.values(profile).some(rows => rows.length) ? 'ready' : 'empty', profile };
+        }
       } catch { evidence.taste = { source: 'Qloo locality affinities', status: 'unavailable', profile: null }; }
     }
     let proximity = null;

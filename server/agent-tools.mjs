@@ -200,7 +200,9 @@ export function agentTools(api) {
           // A withheld count is a range, never a rate of zero (judge panel 10/24 round 4: "la tasa es 0 por cada 10,000").
           topGaps: byRank.filter((row) => row.group === "gap").slice(0, 5).map(({ town, tasteRank, suppressed, perTenThousand, perTenThousandMax }) =>
             ({ town, tasteRank, suppressed, perTenThousand: suppressed ? null : perTenThousand, perTenThousandMax })) },
-        action: { type: "show_opportunity", industry } };
+        // The town the tool was asked about rides on the action, so the map, URL and composer follow it
+        // (judge panel 10/24 round 4: a San Juan bakery answer left the page on Ponce).
+        action: { type: "show_opportunity", industry, ...(asked && api.towns.includes(asked) ? { town: asked } : {}), ...(comparison ? { towns: compared } : {}) } };
       }),
   ];
 }

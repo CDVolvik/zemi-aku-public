@@ -1,6 +1,24 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { smallTalkKind, guideKind, chatReply } from "../server/chat.mjs";
+import fs from "node:fs";
+import { smallTalkKind, guideKind, vagueKind, chatReply } from "../server/chat.mjs";
+
+test("an ask with no kind of place and no purpose gets one question back, before the model (judge panels 10/24)", () => {
+  for (const q of ["¿Dónde está lo bueno?", "Where's the good stuff?", "what's good here", "¿Qué hay de bueno por aquí?", "Anything good around here?"]) assert.equal(vagueKind(q), "vague", q);
+  for (const q of ["What is there to do in Maricao?", "Where do Bad Bunny fans eat in San Juan?", "what's good about Qloo", "¿Dónde abro una panadería?", "Where's the good coffee in Ponce?"]) assert.equal(vagueKind(q), null, q);
+  assert.match(chatReply("en", "vague"), /^What are you after: food, nightlife, beaches and outdoors, culture, or a business to open\?/);
+  assert.match(chatReply("es", "vague"), /^¿Qué busca: comida, vida nocturna, playas y aire libre, cultura, o un negocio para abrir\?/);
+  assert.equal(chatReply("fr", "vague"), chatReply("en", "vague"));
+  // The server answers it deterministically before the model turn and in the rules fallback.
+  const server = fs.readFileSync(new URL("../scripts/serve-eagle.mjs", import.meta.url), "utf8");
+  const vague = server.indexOf("if (vagueKind(checked.value.question)) return sendJson(res, 200, clarification(checked.value));");
+  assert.ok(vague > 0 && vague < server.indexOf("answer = await textAgent(checked.value)"), "the clarification comes before the model turn");
+  assert.match(server, /if \(vagueKind\(question\)\) return clarification\(body\);/);
+  assert.match(server, /evidence: \{ mode: "rules", reason: "clarify", at: new Date\(\)\.toISOString\(\) \}/);
+  const evidence = fs.readFileSync(new URL("../app/evidence.js", import.meta.url), "utf8");
+  assert.match(evidence, /clarify: "a question back, no record read"/);
+  assert.match(evidence, /clarify: "una pregunta de vuelta, sin leer registros"/);
+});
 
 test("small talk is recognised in all five languages", () => {
   assert.equal(smallTalkKind("Hi!"), "greet");

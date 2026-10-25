@@ -280,7 +280,7 @@
       if (socket !== ws || mode === "off") return;
       if (mode === "paused") { pausedMapActions.push(...actions); return; }
       // applyMapActions updates the map and syncs answer cards once when the caption is Zemi's.
-      return Promise.resolve(app().applyMapActions(actions));
+      return Promise.resolve(app().applyMapActions(actions, "", { reload: false })); // frames of one turn keep each other's cards
     }).catch(() => status("I couldn't update the map. Try opening the town again."));
   }
 

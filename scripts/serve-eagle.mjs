@@ -13,7 +13,7 @@ import { createLimiter, dailyCap, rateGate, ROUTE_LIMITS } from "../server/limit
 import { VOICES, DEFAULT_VOICE, voiceFor } from "../server/voices.mjs";
 import { speechFor, firstSentence } from "../server/brain.mjs";
 import { CATEGORIES, categoryOf, summarize } from "../server/catalog.mjs";
-import { smallTalkKind, guideKind, chatReply } from "../server/chat.mjs";
+import { smallTalkKind, guideKind, vagueKind, chatReply } from "../server/chat.mjs";
 import { createBusinessDiscovery } from "../server/business.mjs";
 import { checkTester, testersCsv } from "../server/testers.mjs";
 import { createTesterDelivery } from "../server/tester-delivery.mjs";
@@ -1512,11 +1512,13 @@ async function withVerdictNote(business, asked, ip) {
     .map((r) => ({ town: r.town, group: "gap", suppressed: Boolean(r.suppressed) }));
   const gap = (file?.towns || []).find((r) => r.town === topGaps[0]?.town);
   const comparison = !gap ? (es ? "No hay otro pueblo del grupo brecha con el que comparar." : "No other gap-group town to compare with.")
-    : row.suppressed ? (es ? `${business.town} no tiene cifra publicada (el Census retiene los conteos pequeños), así que no se compara con ${gap.town}.` : `${business.town} has no published count (the Census withholds small counts), so it cannot be compared with ${gap.town}.`)
-    : gap.suppressed ? (es ? `${gap.town} no tiene cifra publicada (el Census retiene los conteos pequeños).` : `${gap.town} has no published count (the Census withholds small counts).`)
-    : rate(gap) < rate(row) ? (es ? `${gap.town} tiene menos ${label} por residente que ${business.town}.` : `${gap.town} has fewer ${label} per resident than ${business.town}.`)
-    : rate(gap) > rate(row) ? (es ? `${gap.town} tiene más ${label} por residente que ${business.town}.` : `${gap.town} has more ${label} per resident than ${business.town}.`)
-    : (es ? `${gap.town} y ${business.town} tienen la misma cifra por residente.` : `${gap.town} and ${business.town} have the same figure per resident.`);
+    // The other town is introduced as what it is, the next gap-group town (judge panel 10/25: "no se compara con Río
+    // Grande" at the end of a Maricao answer read as a non sequitur).
+    : row.suppressed ? (es ? `El Census retiene el conteo de ${business.town}, así que no se puede ordenar frente a ${gap.town}, el siguiente pueblo del grupo brecha.` : `The Census withholds ${business.town}'s count, so it cannot be ordered against ${gap.town}, the next gap-group town.`)
+    : gap.suppressed ? (es ? `${gap.town}, el siguiente pueblo del grupo brecha, no tiene cifra publicada (el Census retiene los conteos pequeños), así que los dos no se pueden ordenar.` : `${gap.town}, the next gap-group town, has no published count (the Census withholds small counts), so the two cannot be ordered.`)
+    : rate(gap) < rate(row) ? (es ? `${gap.town}, el siguiente pueblo del grupo brecha, tiene menos ${label} por residente que ${business.town}.` : `${gap.town}, the next gap-group town, has fewer ${label} per resident than ${business.town}.`)
+    : rate(gap) > rate(row) ? (es ? `${gap.town}, el siguiente pueblo del grupo brecha, tiene más ${label} por residente que ${business.town}.` : `${gap.town}, the next gap-group town, has more ${label} per resident than ${business.town}.`)
+    : (es ? `${gap.town}, el siguiente pueblo del grupo brecha, y ${business.town} tienen la misma cifra por residente.` : `${gap.town}, the next gap-group town, and ${business.town} have the same figure per resident.`);
   const places = business.places.slice(0, 6).map((p) => ({ name: p.name, genre: p.genre || null, rating: p.rating ?? null, hours: p.hours || null }));
   const note = await verdictNote({ lang: asked.lang, town: business.town, industry: row.industry, verdict: business.speech, topGaps, places, comparison,
     row: { group: row.group, groupEs: GROUP_ES[row.group] || row.group, suppressed: Boolean(row.suppressed),
@@ -1527,12 +1529,21 @@ async function withVerdictNote(business, asked, ip) {
   return { ...business, speech, spoken: spokenExcerpt(speech, 300), evidence: { ...business.evidence, note: { model: note.model, ms: note.ms } } };
 }
 
+// One question back for an ask with no kind of place and no purpose, before the model and before the records
+// (judge panels 10/24). A fixed reply, labeled as the rules router with the reason "clarify".
+function clarification(body) {
+  const lang = String(body.lang || "en");
+  return { chat: true, kind: "vague", question: String(body.question || "").slice(0, 240), speech: chatReply(lang, "vague", { places: catalogTotal }),
+    evidence: { mode: "rules", reason: "clarify", at: new Date().toISOString() } };
+}
+
 async function patternAnswer(body) {
   const question = String(body.question || "").slice(0, 240);
   const lang = String(body.lang || "en");
   // Conversation first: a greeting, "how are you", thanks. No Qloo call needed.
   const facts = { places: catalogTotal };
   if (body.greet) return ({ chat: true, kind: "greet", speech: chatReply(lang, "greet", facts) });
+  if (vagueKind(question)) return clarification(body);
   const talk = smallTalkKind(question);
   const business = await businessAnswer(body, { force: true });
   if (business) return business;
@@ -1928,6 +1939,7 @@ window.ZEMI_PHOTOREAL_ENABLED = ${process.env.ZEMI_PHOTOREAL_ENABLED === "1"};
       }
       const business = await businessAnswer(checked.value);
       if (business) return sendJson(res, 200, await withVerdictNote(business, checked.value, ip));
+      if (vagueKind(checked.value.question)) return sendJson(res, 200, clarification(checked.value));
       let answer;
       if (limiter.spend(`chat-turns:${ip}`, 1, CHAT_TURNS_PER_VISITOR)) answer = await textAgent(checked.value);
       else { console.warn("agent fallback: visitor-cap"); answer = { fallback: true, reason: "visitor-cap" }; }
