@@ -269,6 +269,7 @@ try {
   }
   .result-credit { font-size: 10px; color: var(--muted); }
   .result-why { margin: 0; font-size: 12px; line-height: 1.35; color: var(--soft); }
+  .cards-note { margin: 6px 0 0; font-size: 12px; line-height: 1.35; color: var(--muted); }
   .result-why .why-label { color: var(--muted); font: 11px/1.3 var(--mono); }
   .result-meta { margin: 0; font-size: 12px; color: var(--muted); }
   .result-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
@@ -449,8 +450,11 @@ try {
   #caption .evidence code { font: inherit; color: var(--ink); }
   /* With the panel open on a desktop, the ask bar centres on the free map area right of the ~400px dock. */
   @media (min-width: 1024px) {
-    body:has(#panel:not([hidden]):not([data-collapsed="true"])) #dockbar {
-      left: calc((212px + var(--left) + 100%) / 2); width: min(620px, calc(100% - 460px - var(--left)));
+    body:has(#panel:not([hidden]):not([data-collapsed="true"])) #dockbar,
+    body:has(#opportunity-panel:not([hidden])) #dockbar {
+      /* Centred on the map right of the 400 px panel (12 px margins each side); the old 212 px centre came from a
+         layout with a side rail, and at 1024 px the bar and the answer started inside the panel. */
+      left: calc((424px + var(--left) + 100%) / 2); width: min(620px, calc(100% - 448px - var(--left)));
     }
   }
   #ask {
@@ -543,7 +547,7 @@ try {
   /* Between a phone and a wide desktop the dock still sits centered, over the panel's last lines (judge panel 10/25
      round 7: the sources summary could not be clicked at 960 px); the panel ends above it there. */
   @media (min-width: 721px) and (max-width: 1023px) {
-    #panel { bottom: calc(84px + var(--caption-h, 0px) + var(--bottom)); }
+    #panel, body #opportunity-panel { bottom: calc(96px + var(--caption-h, 0px) + var(--bottom)); }
   }
   /* A short laptop window: the "Try one" chips sat on the tour row (judge panel 10/25 at 1455x639). While the first
      screen is up its own chips carry the same questions, so the row below it waits until the hero goes. */
@@ -581,12 +585,22 @@ try {
     .chips, .dir, .badges, .tools { max-width: 100%; }
     .card { grid-template-columns: 56px 1fr 12px; gap: 8px; min-width: 0; }
     .picks { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .answer-cards {
-      flex-direction: row; overflow-x: auto; scroll-snap-type: x mandatory;
-      padding-bottom: 4px; overscroll-behavior-x: contain; gap: 8px;
+    /* One scroll surface (judge panels 10/24-10/25: a sideways card strip inside the scrolling answer, beside the
+       details sheet). The cards stack inside the answer, smaller; the aerial thumbnail stays on wider screens. */
+    .answer-cards { gap: 6px; }
+    .answer-cards .result-card { padding: 8px 10px; gap: 6px; }
+    .answer-cards .result-top { grid-template-columns: 44px 1fr; }
+    .answer-cards .result-logo { width: 44px; height: 44px; }
+    .answer-cards .result-location { display: none; }
+    /* The sheets take turns: with the details open, the answer folds to a short bar, and a tap on it brings the
+       answer back and folds the details. The camera buttons stay off an open answer. */
+    #caption[data-folded="true"] {
+      max-height: 64px; overflow: hidden; cursor: pointer;
+      -webkit-mask-image: linear-gradient(#000 55%, transparent); mask-image: linear-gradient(#000 55%, transparent);
     }
-    .answer-cards > li { display: flex; flex: 0 0 min(280px, 82vw); scroll-snap-align: start; }
-    .answer-cards .result-card { flex: 1; }
+    #caption[data-folded="true"] .answer-cards, #caption[data-folded="true"] .evidence, #caption[data-folded="true"] .x { display: none; }
+    body:has(#caption:not([hidden]):not([data-folded="true"])) #map-chrome { display: none; }
+    body:has(#caption:not([hidden]):not([data-folded="true"])) #opportunity-panel { display: none; }
   }
   @media (max-width: 390px) {
     #hero h1 { font-size: 22px; }
@@ -910,7 +924,10 @@ let keepOpportunity = false;
 let opportunityFramed = false;
 function leaveOpportunity() { if (!keepOpportunity) opportunityUI?.hide(); }
 
-function toast(text) {
+// A toast that carries both languages can be redrawn by a language switch while it shows.
+let toastPair = null;
+function toast(text, pair = null) {
+  toastPair = text ? pair : null;
   $("toast").textContent = text || "";
 }
 
@@ -920,7 +937,10 @@ if (window.ZEMI_ION_TOKEN) {
   const terrainReady = viewer.scene.setTerrain(Cesium.Terrain.fromWorldTerrain());
   terrainReady.errorEvent.addEventListener(() => {
     viewer.scene.globe.terrainProvider = new Cesium.EllipsoidTerrainProvider();
-    toast("Terrain is unavailable. Showing the map without elevation.");
+    // This can fail before the voice module restores the saved language; the saved pick and the page decide then.
+    const savedEs = (() => { try { return localStorage.getItem("zemi-voice-lang") === "es"; } catch { return false; } })();
+    const terrain = { en: "Terrain is unavailable. Showing the map without elevation.", es: "El relieve no está disponible. El mapa se muestra sin elevación." };
+    toast((typeof ZemiConverse !== "undefined" && ZemiConverse.voice().lang === "es") || (typeof document !== "undefined" && document.documentElement.lang === "es") || savedEs ? terrain.es : terrain.en, terrain);
   });
 } else {
   for (const style of ["buildings", "photo"]) document.querySelector(`[data-style="${style}"]`).hidden = true;
@@ -1113,6 +1133,9 @@ function drawPlaces(places) {
     pin.walkTo = { lon: place.lon, lat: place.lat };
     pin.placeIndex = index;
   });
+  renderLegend(places);
+}
+function renderLegend(places) {
   const legend = $("legend");
   // The chips count what is on the map; when the catalog holds more, the legend says so (judge panel 10/24:
   // "941 places" in the text beside "Food 50" in the chips).
@@ -1287,11 +1310,22 @@ function goHome(opts = {}) {
 // Town header in plain words.
 function townLede(record) {
   if (!record) return "";
+  if (ZemiConverse.voice().lang === "es") return record.band === "thin"
+    ? `Qloo conoce solo ${record.total} lugares en ${record.town}. Algunas respuestas pueden llegar al pueblo vecino; cada lugar dice dónde está.`
+    : `${record.town} de un vistazo: lo que le gusta a su gente y luego cada lugar que Qloo conoce allí.`;
   return record.band === "thin"
     ? `Qloo knows only ${record.total} places in ${record.town}. Some answers may reach into the next town; each place says where it is.`
     : `${record.town} at a glance, what its people love, then every place Qloo knows there.`;
 }
 
+let lastWeather = null;
+function paintWeather() {
+  if (!lastWeather || !townView || pickedId !== lastWeather.town) return;
+  const text = ZemiWeather.line(lastWeather.data, ZemiConverse.voice().lang);
+  if (!text) return;
+  $("town-weather").textContent = ZemiConverse.voice().lang === "es" ? text : `${text} National Weather Service.`;
+  $("town-weather").hidden = false;
+}
 function openTownView(record) {
   // The town loaders below arrive later; they draw only while the panel is still the town view.
   townView = true;
@@ -1301,11 +1335,11 @@ function openTownView(record) {
   $("town-lede").textContent = townLede(record);
   // One National Weather Service line under the lede; it arrives after the town opens.
   $("town-weather").hidden = true;
+  lastWeather = null;
   fetch("/api/weather?town=" + encodeURIComponent(record.town)).then((res) => (res.ok ? res.json() : null)).then((data) => {
-    const text = data ? ZemiWeather.line(data) : "";
-    if (!text || !townView || pickedId !== record.town) return;
-    $("town-weather").textContent = `${text} National Weather Service.`;
-    $("town-weather").hidden = false;
+    if (!data || !townView || pickedId !== record.town) return;
+    lastWeather = { town: record.town, data };
+    paintWeather();
   }).catch(() => {});
   $("business-research").hidden = true;
   $("town-say").hidden = true;
@@ -1326,8 +1360,8 @@ function initial(name) {
 
 function metaLine(place) {
   const home = place.municipality || place.city || "";
-  const bits = [place.genre, place.price, place.rating != null ? `★ ${place.rating}` : ""];
-  if (Number.isFinite(place.distanceKm)) bits.push(`${place.distanceKm.toFixed(1)} km from ${place.distanceFrom || "harbor"}`);
+  const bits = [ZemiMarks.genreName(place), place.price, place.rating != null ? `★ ${place.rating}` : ""];
+  if (Number.isFinite(place.distanceKm)) bits.push(ZemiConverse.voice().lang === "es" ? `a ${place.distanceKm.toFixed(1)} km de ${place.distanceFrom || "el puerto"}` : `${place.distanceKm.toFixed(1)} km from ${place.distanceFrom || "harbor"}`);
   if (pinsWide || (pickedId && home && norm(home) !== norm(pickedId))) bits.push(home);
   return bits.filter(Boolean).join(" · ");
 }
@@ -1415,7 +1449,7 @@ function onResultCardClick(event) {
     const place = placeFromResultCard(card);
     const name = place?.name || card.dataset.name || "";
     qInput.value = ZemiConverse.voice().lang === "es"
-      ? `Cuéntame más sobre ${name}`
+      ? `Cuénteme más sobre ${name}`
       : `Tell me more about ${name}`;
     qInput.focus({ preventScroll: true });
     return;
@@ -1431,7 +1465,7 @@ function onResultCardClick(event) {
 function renderList() {
   const box = $("places");
   if (!openPlaces.length) {
-    box.innerHTML = `<p class="small">Qloo has no places to show here. That does not mean there are none.</p>`;
+    box.innerHTML = `<p class="small">${ZemiConverse.voice().lang === "es" ? "Qloo no tiene lugares para mostrar aquí. Eso no quiere decir que no haya." : "Qloo has no places to show here. That does not mean there are none."}</p>`;
     return;
   }
   if (!townView) {
@@ -1449,7 +1483,7 @@ function renderList() {
     const thumb = picture.letter
       ? `<span class="thumb letter" style="--chip:var(--${picture.tone})" aria-hidden="true">${esc(picture.initial)}</span>`
       : `<img class="thumb${picture.logo ? " logo" : ""}" alt="" src="${esc(picture.src)}" referrerpolicy="no-referrer" loading="lazy">`;
-    const lead = leadNames.includes(place.name) ? `<span class="tag">Top pick</span>` : "";
+    const lead = leadNames.includes(place.name) ? `<span class="tag">${ZemiConverse.voice().lang === "es" ? "Recomendado" : "Top pick"}</span>` : "";
     const meta = esc(metaLine(place)).replace("★", `<span class="star" aria-hidden="true">★</span>`);
     return `<button type="button" class="card" data-index="${index}" aria-current="${index === focusedIndex}">${thumb}<span><span class="name">${esc(place.name)}${lead}</span><span class="meta">${meta}</span></span><span class="chev" aria-hidden="true">›</span></button>`;
   }).join("");
@@ -1489,7 +1523,9 @@ $("places").addEventListener("click", (event) => {
 // The top picks: photo cards for the places an answer names, above the list. Each opens its place.
 let pickIds = [];
 let pickNames = [];
+let shownPickNames = [];
 function showPicks(names) {
+  shownPickNames = names || [];
   const rows = (names || []).map((name) => {
     const index = openPlaces.findIndex((place) => place.name === name);
     return index < 0 ? null : { ...openPlaces[index], index };
@@ -1603,7 +1639,7 @@ async function loadPlaces(record) {
   if (pickedId !== record.town) return;
   openPlaces = data.places || [];
   orderByLead();
-  showListTitle(directory?.total ? "Best known" : "");
+  showListTitle(directory?.total ? bestKnown() : "");
   renderList();
   drawPlaces(openPlaces);
   if (openPlaces.some((place) => place.osm === "skipped")) enrichPlaces(record.town, taste, query);
@@ -1635,17 +1671,22 @@ async function loadProfile(town) {
   }
   if (!townView || pickedId !== town || !data?.stats) return;
   const s = data.stats;
-  $("town-stats").innerHTML = statTile(s.population, "people · Wikidata")
-    + statTile(s.ground, "places on the ground · Overture")
-    + statTile(s.qloo, "places Qloo knows by taste")
-    + statTile(s.landmarks, "landmarks with photos · Wikidata");
+  const es = ZemiConverse.voice().lang === "es";
+  $("town-stats").innerHTML = statTile(s.population, es ? "habitantes · Wikidata" : "people · Wikidata")
+    + statTile(s.ground, es ? "lugares en el terreno · Overture" : "places on the ground · Overture")
+    + statTile(s.qloo, es ? "lugares que Qloo conoce por gusto" : "places Qloo knows by taste")
+    + statTile(s.landmarks, es ? "lugares emblemáticos con fotos · Wikidata" : "landmarks with photos · Wikidata");
   $("town-stats").hidden = false;
   const p = data.profile;
   if (!p) return;
   const any = [...(p.vibe || []), ...(p.music || []), ...(p.tv || [])].some((item) => item.standout);
-  $("town-profile").innerHTML = `<p class="group-title">What ${esc(town)} loves <span class="src">Qloo</span></p>`
-    + profileRow("The feel of its places", p.vibe, true) + profileRow("Music", p.music, false) + profileRow("On TV", p.tv, false)
-    + `<p class="note">${any ? "● stands out here: not in Puerto Rico's own top list. " : ""}From Qloo's taste data for the town, not a survey of its residents.</p>`;
+  $("town-profile").innerHTML = es
+    ? `<p class="group-title">Lo que le gusta a ${esc(town)} <span class="src">Qloo · en inglés</span></p>`
+      + profileRow("El ambiente de sus lugares", p.vibe, true) + profileRow("Música", p.music, false) + profileRow("En TV", p.tv, false)
+      + `<p class="note">${any ? "● se destaca aquí: no está en la lista principal de Puerto Rico. " : ""}Según los datos de gusto de Qloo para el pueblo, no una encuesta a sus residentes.</p>`
+    : `<p class="group-title">What ${esc(town)} loves <span class="src">Qloo</span></p>`
+      + profileRow("The feel of its places", p.vibe, true) + profileRow("Music", p.music, false) + profileRow("On TV", p.tv, false)
+      + `<p class="note">${any ? "● stands out here: not in Puerto Rico's own top list. " : ""}From Qloo's taste data for the town, not a survey of its residents.</p>`;
   $("town-profile").hidden = false;
 }
 
@@ -1707,8 +1748,19 @@ function showListTitle(text) {
 function categoryLabel() {
   if (dirCat === "all") return "";
   const category = dirCat && directory?.categories.find((item) => item.id === dirCat);
-  return category ? dirKind || category.label : "";
+  if (!category) return "";
+  if (dirKind) return ZemiMarks.genreName({ genre: dirKind, category: dirCat });
+  return ZemiMarks.KINDS[category.id] ? ZemiMarks.kindLabel(ZemiMarks.KINDS[category.id]) : category.label;
 }
+function dirListTitle() {
+  return ZemiConverse.voice().lang === "es" ? `${categoryLabel() || "Todos los lugares"} · ${dirCount}, los más populares primero`
+    : `${categoryLabel() || "All places"} · ${dirCount}, most popular first`;
+}
+function dirMoreLabel() {
+  const left = Math.min(50, dirCount - openPlaces.length);
+  return ZemiConverse.voice().lang === "es" ? `Ver ${left} más de ${dirCount}` : `Show ${left} more of ${dirCount}`;
+}
+const bestKnown = () => (ZemiConverse.voice().lang === "es" ? "Los más conocidos" : "Best known");
 
 async function loadDirectory(town) {
   directory = null;
@@ -1720,8 +1772,8 @@ async function loadDirectory(town) {
     directory = { ...data, town }; // the town it belongs to, so a later answer's legend never borrows its total
     renderDirectory();
     // A category opened from a link may have arrived first; it gets its name now.
-    if (dirCat) showListTitle(`${categoryLabel() || "All places"} · ${dirCount}, most popular first`);
-    else if (openPlaces.length) showListTitle("Best known");
+    if (dirCat) showListTitle(dirListTitle());
+    else if (openPlaces.length) showListTitle(bestKnown());
     renderCrumbs();
   } catch { /* the best-known list still works */ }
 }
@@ -1749,9 +1801,11 @@ function renderDirectory() {
   $("dir-cats").hidden = asking;
   if (asking) {
     const t = pickedId;
-    $("dir-ask").innerHTML = [`Where do people eat in ${t}?`, `Bakeries in ${t}`, `Where would I stay in ${t}?`, `Bad Bunny fans in ${t}`, `What do people like in ${t}?`]
-      .map((q) => `<button type="button" data-q="${esc(q)}">${esc(q)}</button>`).join("")
-      + `<p class="note">Or type your own question below, or press the orb and talk.</p>`;
+    const asks = esDir
+      ? [`¿Dónde comer en ${t}?`, `Muéstreme panaderías en ${t}`, `¿Dónde quedarse en ${t}?`, `Fans de Bad Bunny en ${t}`, `¿Qué hay en ${t}?`]
+      : [`Where do people eat in ${t}?`, `Bakeries in ${t}`, `Where would I stay in ${t}?`, `Bad Bunny fans in ${t}`, `What do people like in ${t}?`];
+    $("dir-ask").innerHTML = asks.map((q) => `<button type="button" data-q="${esc(q)}">${esc(q)}</button>`).join("")
+      + `<p class="note">${esDir ? "O escriba su propia pregunta abajo, o toque el orbe y hable." : "Or type your own question below, or press the orb and talk."}</p>`;
   }
   $("dir-cats").innerHTML = `<button type="button" data-cat="all" aria-pressed="${dirCat === "all"}">${esDir ? "Todos" : "All"}<b>${directory.total}</b></button>` + directory.categories.map((category) =>
     `<button type="button" data-cat="${category.id}" aria-pressed="${category.id === dirCat}">${esc(ZemiMarks.KINDS[category.id] ? ZemiMarks.kindLabel(ZemiMarks.KINDS[category.id], esDir ? "es" : "en") : category.label)}<b>${category.count}</b></button>`).join("");
@@ -1761,9 +1815,9 @@ function renderDirectory() {
   const shown = dirAllKinds || all.length <= 8 ? all : all.filter((kind, i) => i < 7 || kind.name === dirKind);
   $("dir-kinds").hidden = !all.length || asking;
   $("dir-kinds").innerHTML = all.length
-    ? [`<button type="button" data-kind="" aria-pressed="${!dirKind}">All<b>${category.count}</b></button>`,
-      ...shown.map((kind) => `<button type="button" data-kind="${esc(kind.name)}" aria-pressed="${kind.name === dirKind}">${esc(kind.name)}<b>${kind.count}</b></button>`),
-      shown.length < all.length ? `<button type="button" data-more-kinds>${all.length - shown.length} more kinds</button>` : ""].join("")
+    ? [`<button type="button" data-kind="" aria-pressed="${!dirKind}">${esDir ? "Todos" : "All"}<b>${category.count}</b></button>`,
+      ...shown.map((kind) => `<button type="button" data-kind="${esc(kind.name)}" aria-pressed="${kind.name === dirKind}">${esc(ZemiMarks.genreName({ genre: kind.name, category: category.id }, esDir ? "es" : "en"))}<b>${kind.count}</b></button>`),
+      shown.length < all.length ? `<button type="button" data-more-kinds>${all.length - shown.length} ${esDir ? "tipos más" : "more kinds"}</button>` : ""].join("")
     : "";
 }
 
@@ -1804,17 +1858,17 @@ async function openCategory(category, kind = "", { more = false } = {}) {
   try {
     data = await (await fetch("/api/catalog?" + params)).json();
   } catch {
-    return toast("The category did not load. Try again.");
+    return toast(ZemiConverse.voice().lang === "es" ? "La categoría no cargó. Intente otra vez." : "The category did not load. Try again.");
   }
   if (!townView || token !== dirToken || pickedId !== town || !data?.places) return;
   openPlaces = more ? [...openPlaces, ...data.places] : data.places;
   dirCount = data.count;
-  showListTitle(`${categoryLabel() || "All places"} · ${dirCount}, most popular first`);
+  showListTitle(dirListTitle());
   renderList();
   drawPlaces(openPlaces);
   const left = dirCount - openPlaces.length;
   $("dir-more").hidden = left <= 0;
-  $("dir-more").textContent = `Show ${Math.min(50, left)} more of ${dirCount}`;
+  $("dir-more").textContent = dirMoreLabel();
 }
 
 $("dir-title").addEventListener("click", (event) => {
@@ -2040,7 +2094,9 @@ function localFocus(focus) {
   const kind = typeof ZemiMarks !== "undefined" && ZemiMarks.KINDS[key] ? ZemiMarks.kindLabel(ZemiMarks.KINDS[key], "es").toLowerCase() : key === "all" ? "todos" : /fans$/.test(key) ? `fanáticos de ${m[1].replace(/ fans$/, "")}` : m[1];
   return `${kind} en ${m[2]}`;
 }
+let lastBusiness = null;
 function showBusinessResearch(business) {
+  lastBusiness = business || null;
   $("business-research").hidden = !business;
   if (business?.evidence?.opportunity) $("panel").scrollTop = 0; // a new verdict starts at its card, not mid-scroll
   if (!business) return;
@@ -2125,7 +2181,7 @@ $("business-research").addEventListener("click", event => {
     const q = ZemiOpportunity.townQuestion(ZemiConverse.voice().lang, industry, currentTown());
     if (q) { unlockAudio(); keepOpportunity = true; window.ZemiApp.ask(q).then(narrate).finally(() => { keepOpportunity = false; }); }
   }
-  if (event.target.closest("[data-business-map]")) { const id = $("business-rerun").dataset.industry; goHome(); opportunityUI.show(id); }
+  if (event.target.closest("[data-business-map]")) { const id = $("business-rerun").dataset.industry; goHome(); showOpportunityList(id); }
 });
 // The town the readout is about; null anywhere else.
 function currentTown() { return byName.has(pickedId) ? pickedId : null; }
@@ -2147,7 +2203,9 @@ function safePage(value) {
   }
 }
 
+let lastHistory = null;
 function showAbout(history) {
+  lastHistory = history || null;
   if (!history?.extract) {
     $("town-about").hidden = true;
     return;
@@ -2161,14 +2219,17 @@ function showAbout(history) {
 
 function recordTable(packet) {
   if (!packet) return "";
-  const rows = [["Question", packet.question], ["Qloo call", packet.qloo]];
+  const es = ZemiConverse.voice().lang === "es";
+  const rows = [[es ? "Pregunta" : "Question", packet.question], [es ? "Llamada a Qloo" : "Qloo call", packet.qloo]];
   for (const card of [...(packet.places || []), ...(packet.landmarks || [])]) {
-    const score = card.popularity > 0 ? ` · popularity ${Number(card.popularity).toFixed(2)}` : "";
-    rows.push(["Place", `${card.name} — ${card.record}${score}`]);
+    const score = card.popularity > 0 ? ` · ${es ? "popularidad" : "popularity"} ${Number(card.popularity).toFixed(2)}` : "";
+    rows.push([es ? "Lugar" : "Place", `${card.name} — ${card.record}${score}`]);
   }
-  if (packet.history?.title) rows.push(["History", `${packet.history.title} · Wikipedia`]);
-  if (packet.note) rows.push(["Note", packet.note]);
-  return `<table>${rows.filter(([, value]) => value).map(([key, value]) => `<tr><th>${esc(key)}</th><td>${esc(value)}</td></tr>`).join("")}</table>`;
+  if (packet.history?.title) rows.push([es ? "Historia" : "History", `${packet.history.title} · Wikipedia`]);
+  if (packet.note) rows.push([es ? "Nota" : "Note", packet.note]);
+  // The record's values are the server's own, in English; a Spanish page says so and marks them.
+  return (es ? `<p class="small">Registro técnico, tal como lo guarda el servidor (en inglés).</p>` : "")
+    + `<table>${rows.filter(([, value]) => value).map(([key, value]) => `<tr><th>${esc(key)}</th><td${es ? ' lang="en"' : ""}>${esc(value)}</td></tr>`).join("")}</table>`;
 }
 
 function briefText(data) {
@@ -2177,6 +2238,16 @@ function briefText(data) {
   for (const card of data?.cards || []) lines.push(`- ${card.name} (${card.line})`);
   if (data?.history?.extract) lines.push(data.history.extract);
   if (data?.note) lines.push(data.note);
+  // Spanish under a Spanish answer (Opus, Grok 10/24-10/25: "Sources: / Observed supply: / Demographics:").
+  if ((typeof ZemiConverse !== "undefined" && ZemiConverse.voice().lang === "es")) {
+    lines.push(data?.business
+      ? "Fuentes: el catálogo guardado de Qloo para el contexto local." + (data.business.mode === 'buy' ? " Se enlazan directorios externos de ventas; sus anuncios no se han consultado." : '')
+      : data?.history?.extract ? "Fuentes: registros de lugares de Qloo y Wikipedia." : "Fuentes: registros de lugares de Qloo.");
+    if (data?.business?.evidence?.supply) lines.push(`Oferta observada: Overture, versión ${data.business.evidence.supply.release || 'sin fecha'}. Cobertura del conjunto de datos, no un censo verificado de la competencia.`);
+    if (data?.business?.evidence?.demographics) lines.push(`Demografía: Census PRCS ${data.business.evidence.demographics.period || 'periodo sin fecha'}. Estimados por municipio, no ventas de negocios.`);
+    if (data?.business?.evidence?.taste?.status === 'ready') lines.push('Afinidades culturales: señal de localidad de Qloo. No es demanda medida.');
+    return lines.join("\n");
+  }
   lines.push(data?.business
     ? "Sources: Qloo’s saved catalog for local context." + (data.business.mode === 'buy' ? " External sale directories are linked; their listings have not been searched." : '')
     : data?.history?.extract ? "Sources: Qloo place records and Wikipedia." : "Sources: Qloo place records.");
@@ -2186,8 +2257,10 @@ function briefText(data) {
   return lines.join("\n");
 }
 
+let lastSources = [];
 function showSources(...packs) {
   const real = packs.filter(Boolean);
+  lastSources = real;
   if (!real.length) {
     $("town-sources").hidden = true;
     return;
@@ -2200,9 +2273,9 @@ function showSources(...packs) {
   $("copy-brief").addEventListener("click", async (event) => {
     try {
       await navigator.clipboard.writeText($("brief-text").textContent);
-      event.target.textContent = "Copied";
+      event.target.textContent = esRecord ? "Copiado" : "Copied";
     } catch {
-      event.target.textContent = "Select the text above to copy";
+      event.target.textContent = esRecord ? "Seleccione el texto de arriba para copiarlo" : "Select the text above to copy";
     }
   });
 }
@@ -2513,7 +2586,7 @@ $("compare-find").addEventListener("keydown", (event) => {
 async function runCompare(townName) {
   const resolved = townName || resolveTown($("compare-find").value).town;
   if (!pickedId || !resolved || norm(resolved) === norm(pickedId)) {
-    toast(resolved ? "Pick a different town." : "Type a town to compare.");
+    toast(ZemiConverse.voice().lang === "es" ? (resolved ? "Escoja otro pueblo." : "Escriba un pueblo para comparar.") : (resolved ? "Pick a different town." : "Type a town to compare."));
     setTimeout(() => toast(""), 2500);
     return;
   }
@@ -2525,9 +2598,23 @@ async function runCompare(townName) {
     askTown(pickedId, question, { pinTown: true }),
     askTown(resolved, question, { pinTown: true }),
   ]);
-  const column = (data, town) => `<div class="compare-col"><h3>${esc(town)}</h3><p class="lede">${esc(townLede(byName.get(town)?.record))}</p>${(data.cards || []).map((card) => `<p class="small"><b>${esc(card.name)}</b> · ${esc(card.line)}</p>`).join("") || `<p class="small">Qloo had nothing to compare here.</p>`}</div>`;
-  $("compare-out").innerHTML = column(left, pickedId) + column(right, resolved);
+  lastCompare = { left, right, a: pickedId, b: resolved };
+  paintCompare();
   showSources(left, right);
+}
+// The comparison is kept so a language switch redraws it.
+let lastCompare = null;
+function paintCompare() {
+  if (!lastCompare || lastCompare.a !== pickedId || $("compare-out").hidden) return;
+  const none = ZemiConverse.voice().lang === "es" ? "Qloo no tenía nada que comparar aquí." : "Qloo had nothing to compare here.";
+  const es = ZemiConverse.voice().lang === "es";
+  const line = (card, town) => {
+    if (card.genre === undefined) return card.line; // an older saved answer
+    if (card.elsewhere) return card.home ? (es ? `El registro dice ${card.home}, no ${town}` : card.line) : (es ? "Pueblo no registrado" : card.line);
+    return [ZemiMarks.genreName(card, es ? "es" : "en"), card.home].filter(Boolean).join(", ") || (es ? "Pueblo no registrado" : card.line);
+  };
+  const column = (data, town) => `<div class="compare-col"><h3>${esc(town)}</h3><p class="lede">${esc(townLede(byName.get(town)?.record))}</p>${(data.cards || []).map((card) => `<p class="small"><b>${esc(card.name)}</b> · ${esc(line(card, town))}</p>`).join("") || `<p class="small">${none}</p>`}</div>`;
+  $("compare-out").innerHTML = column(lastCompare.left, lastCompare.a) + column(lastCompare.right, lastCompare.b);
 }
 
 // ---------- Search and ask, one bar ----------
@@ -2711,12 +2798,14 @@ function showCaption(who, text, evidence, places) {
   const cards = rows.length
     ? ZemiMarks.resultCards(rows, { from: distanceOrigin(), lang, focusedIndex })
     : "";
-  caption.innerHTML = `<span class="who">${who === "you" ? "You" : "Zemi-Aku"}</span>${esc(text)}<button type="button" class="x" aria-label="Dismiss">×</button>${ZemiEvidence.answerBody(lang, evidence, cards)}`;
+  caption.innerHTML = `<span class="who">${who === "you" ? (lang === "es" ? "Usted" : "You") : "Zemi-Aku"}</span>${esc(text)}<button type="button" class="x" aria-label="${lang === "es" ? "Cerrar" : "Dismiss"}">×</button>${ZemiEvidence.answerBody(lang, evidence, cards)}`;
   wireResultLogos(caption);
   // A phone shows one sheet at a time (judge panels 10/23, 10/24): an answer folds the open panel to its
   // handle; dismissing the answer unfolds it again. Status lines while listening never fold anything.
-  const panel = $("panel");
-  if (who === "zemi" && (evidence || rows.length) && window.innerWidth <= 720 && !panel.hidden && panel.dataset.collapsed !== "true") setPanelCollapsed(true, { byCaption: true });
+  caption.dataset.who = who;
+  caption.dataset.text = text;
+  if (who === "zemi" && (evidence || rows.length)) answerTakesStage();
+  else foldCaption(phoneSheetOpen());
   // Only the appearance animates; text updates while listening must not (they come many per second).
   if (caption.hidden) {
     caption.hidden = false;
@@ -2728,8 +2817,41 @@ function showCaption(who, text, evidence, places) {
 }
 function hideCaption() {
   $("caption").hidden = true;
+  foldCaption(false);
   if ($("panel").dataset.foldedByCaption === "true") setPanelCollapsed(false);
 }
+// A phone shows one sheet at a time (judge panels 10/24-10/25: the details and the answer each scrolled, over
+// the whole map). Opening the details or the opportunity list folds a visible answer to a bar; a tap on the bar,
+// or folding the details, unfolds it. While folded the bar is a button named "Show answer".
+function foldCaption(on) {
+  const caption = $("caption");
+  on = on && window.innerWidth <= 720;
+  if (on) {
+    caption.dataset.folded = "true"; caption.tabIndex = 0; caption.setAttribute("role", "button"); caption.setAttribute("aria-expanded", "false");
+    caption.setAttribute("aria-label", ZemiConverse.voice().lang === "es" ? "Mostrar la respuesta" : "Show the answer");
+  } else {
+    delete caption.dataset.folded;
+    for (const attr of ["tabindex", "role", "aria-label", "aria-expanded"]) caption.removeAttribute(attr);
+  }
+}
+// A sheet is open on a phone: the details unfolded, the opportunity list or the coast panel.
+function phoneSheetOpen() {
+  if (window.innerWidth > 720) return false;
+  const panel = $("panel");
+  return (!panel.hidden && panel.dataset.collapsed !== "true") || !$("opportunity-panel").hidden || !$("coastal-panel").hidden;
+}
+// An answer with places or evidence takes the phone's screen: it unfolds and the details fold. The opportunity
+// list stays open underneath and returns when the answer is folded or closed (CSS).
+function answerTakesStage() {
+  foldCaption(false);
+  const panel = $("panel");
+  if (window.innerWidth <= 720 && !panel.hidden && panel.dataset.collapsed !== "true") setPanelCollapsed(true, { byCaption: true });
+}
+// Across the 720 px line the folded state is applied or dropped, so a desktop never keeps a phone's bar.
+matchMedia("(max-width: 720px)").addEventListener("change", () => {
+  const caption = $("caption");
+  foldCaption(!caption.hidden && phoneSheetOpen());
+});
 // On a phone the caption rises from the dock over the readout's last lines; the readout lifts by the caption's
 // height instead (--caption-h feeds the phone rules for #panel and #opportunity-panel). Zero while dismissed.
 new ResizeObserver(() => {
@@ -2739,6 +2861,11 @@ new ResizeObserver(() => {
 // An answer stays on screen until the next question, a reset, or this tap.
 $("caption").addEventListener("click", (event) => {
   if (event.target.closest(".x")) return hideCaption();
+  if ($("caption").dataset.folded === "true") {
+    foldCaption(false);
+    if ($("panel").dataset.collapsed !== "true") setPanelCollapsed(true, { byCaption: true });
+    return;
+  }
   if (event.target.closest("[data-control-run]")) return runControl(event.target.closest("[data-control-run]"));
   if (event.target.closest(".result-card")) onResultCardClick(event);
 });
@@ -2795,7 +2922,7 @@ async function showControl(withText, data) {
   const cleared = lastAgentPlaces.length ? `<p class="control-verdict">${esc(t.cleared)}</p>` : "";
   caption.innerHTML = `<span class="who">Zemi-Aku</span><p class="control-pair"><b>${t.with}:</b> ${esc(withText)}</p>`
     + `<p class="control-pair"><b>${t.without}:</b> ${esc(data.speech)}</p>`
-    + `<p class="control-verdict">${esc(changed.length ? t.changed(changed) : t.nothing)}</p>${cleared}<button type="button" class="x" aria-label="Dismiss">×</button>`
+    + `<p class="control-verdict">${esc(changed.length ? t.changed(changed) : t.nothing)}</p>${cleared}<button type="button" class="x" aria-label="${ZemiConverse.voice().lang === "es" ? "Cerrar" : "Dismiss"}">×</button>`
     + ZemiEvidence.answerBody(lang, data.evidence, "");
   caption.hidden = false;
   // The control replaces the with-Qloo places on the map and in the list, not only the caption (judge panel 10/24
@@ -2976,8 +3103,10 @@ function clearJourney() {
 
 function updateJourney() {
   $("journey-trail").hidden = !journeyData;
+  const es = ZemiConverse.voice().lang === "es";
   $("journey-progress").textContent = journeyData
-    ? `${journeyData.journey.artist} → Qloo taste matches → ${step === "place" ? "Explore this place" : "Choose a place"}` : "";
+    ? (es ? `${journeyData.journey.artist} → afinidades de Qloo → ${step === "place" ? "Explore este lugar" : "Escoja un lugar"}`
+      : `${journeyData.journey.artist} → Qloo taste matches → ${step === "place" ? "Explore this place" : "Choose a place"}`) : "";
   $("journey-return").hidden = !journeyData || step !== "place";
   $("journey-return").textContent = ZemiConverse.voice().lang === "es" ? "Volver a las afinidades" : "Back to taste matches";
 }
@@ -2989,7 +3118,7 @@ async function runJourney(artist) {
   const timeout = setTimeout(() => request.abort(), 30000);
   let received = false;
   journeyRequest = request;
-  $("journey-status").textContent = `Reading Qloo's taste connections for ${artist}…`;
+  $("journey-status").textContent = ZemiConverse.voice().lang === "es" ? `Leyendo las conexiones de gusto de Qloo para ${artist}…` : `Reading Qloo's taste connections for ${artist}…`;
   try {
     const res = await fetch("/api/ask", {
       method: "POST", headers: { "content-type": "application/json" },
@@ -3004,9 +3133,10 @@ async function runJourney(artist) {
     showCatalog(data);
   } catch (err) {
     if (journeyRequest !== request && !received) return;
+    const es = ZemiConverse.voice().lang === "es";
     $("journey-status").textContent = received
-      ? "The places loaded, but the map could not display them. Please try again or reload the map."
-      : "Qloo's connections could not load. Please try again, or tap a town to explore.";
+      ? (es ? "Los lugares cargaron, pero el mapa no pudo mostrarlos. Intente otra vez o recargue el mapa." : "The places loaded, but the map could not display them. Please try again or reload the map.")
+      : (es ? "Las conexiones de Qloo no cargaron. Intente otra vez, o toque un pueblo para explorar." : "Qloo's connections could not load. Please try again, or tap a town to explore.");
   } finally {
     clearTimeout(timeout);
     if (journeyRequest === request) journeyRequest = null;
@@ -3062,7 +3192,7 @@ async function runQuestion(question) {
   // The guesser only knows EN/ES; a chosen French, Italian or German voice keeps its language.
   const guessed = ZemiLang.guessLang(question);
   const spokenNow = ZemiConverse.voice().lang;
-  if (guessed && ["en", "es"].includes(spokenNow) && guessed !== spokenNow) { ZemiConverse.choose(guessed, ZemiConverse.voice().gender); voiceLabel(); renderHero(); }
+  if (guessed && ["en", "es"].includes(spokenNow) && guessed !== spokenNow) { ZemiConverse.choose(guessed, ZemiConverse.voice().gender, { persist: false }); voiceLabel(); renderHero(); relabel(); }
   if (step !== "island") skeleton(3);
   clearTimeout(waitingTimer);
   let waiting = false;
@@ -3151,6 +3281,7 @@ function syncAnswerCards(actions = []) {
     else caption.insertAdjacentHTML("beforeend", html);
   }
   wireResultLogos(caption);
+  answerTakesStage(); // a voice turn's first cards take the stage like a typed answer's
 }
 
 async function applyMapActions(actions = [], speech = "", { reload = true } = {}) {
@@ -3198,21 +3329,33 @@ async function applyMapActions(actions = [], speech = "", { reload = true } = {}
     if (typeof syncAnswerCards === "function") syncAnswerCards(actions);
 }
 
+const voiceTurnActions = [];
 window.ZemiApp = {
   ask(question) {
     showCaption("you", question);
     return runQuestion(question);
   },
-  say: (text) => showCaption("zemi", text),
+  // The voice reads an answer the page already shows with its cards; it must not replace it with plain text.
+  say: (text) => {
+    const caption = $("caption");
+    if (!caption.hidden && caption.dataset.who === "zemi" && caption.dataset.text === text) return;
+    showCaption("zemi", text);
+  },
   speak,
   stopSpeaking,
   unlockAudio,
   outputLevel,
-  applyMapActions,
+  // A live voice turn's map actions are kept until its text arrives, so the text does not wipe their cards.
+  applyMapActions: (actions = [], speech = "", options) => {
+    voiceTurnActions.push(...actions);
+    return applyMapActions(actions, speech, options);
+  },
   syncAnswerCards,
   context: () => ({ town: pickedId || "", taste: currentTaste() }),
   voiceText(role, content) {
+    if (role === "user") voiceTurnActions.length = 0;
     showCaption(role === "user" ? "you" : "zemi", content);
+    if (role !== "user" && voiceTurnActions.length) syncAnswerCards(voiceTurnActions);
     conversation.push({ role, content: content.slice(0, role === "user" ? 1200 : 2000) });
     conversation.splice(0, Math.max(0, conversation.length - 12));
   },
@@ -3344,13 +3487,33 @@ function setPanelCollapsed(collapsed, { byCaption = false } = {}) {
   if (byCaption && collapsed) panel.dataset.foldedByCaption = "true"; else delete panel.dataset.foldedByCaption;
   $("panel-collapse").setAttribute("aria-expanded", String(!collapsed));
   $("panel-collapse").textContent = collapsed ? "›" : "‹";
-  $("panel-collapse").setAttribute("aria-label", collapsed ? "Expand panel" : "Collapse panel");
+  $("panel-collapse").setAttribute("aria-label", ZemiConverse.voice().lang === "es" ? (collapsed ? "Abrir el panel" : "Plegar el panel") : (collapsed ? "Expand panel" : "Collapse panel"));
+  if (collapsed) foldCaption(false);
+  else if (window.innerWidth <= 720 && !$("caption").hidden) foldCaption(true);
 }
+$("caption").addEventListener("keydown", (event) => {
+  if (event.target !== event.currentTarget || $("caption").dataset.folded !== "true" || !["Enter", " "].includes(event.key)) return;
+  event.preventDefault();
+  foldCaption(false);
+  if ($("panel").dataset.collapsed !== "true") setPanelCollapsed(true, { byCaption: true });
+});
 $("panel-collapse").addEventListener("click", () => setPanelCollapsed($("panel").dataset.collapsed !== "true"));
 // popstate alone: hashchange also fires on the same traversal and would double-restore.
 // Every Back/Forward goes through restoreHash (including the no-town / home case).
 window.addEventListener("popstate", () => { mapHistory.onHistoryNav(); });
 
+// A person asking for the list (an industry chip, "Compare towns on the map") brings it forward on a phone, even
+// when it was already open behind an answer. A list an answer opens stays behind that answer.
+function showOpportunityList(id) {
+  const shown = opportunityUI.show(id);
+  if (!$("caption").hidden) foldCaption(true);
+  return shown;
+}
+// The opportunity list opening on a phone folds an open answer, whichever code opens it: the list's own
+// controller, a model action or a town pick all set the same attribute.
+new MutationObserver(() => {
+  if (!$("opportunity-panel").hidden && !$("caption").hidden) foldCaption(true);
+}).observe($("opportunity-panel"), { attributes: true, attributeFilter: ["hidden"] });
 opportunityUI = ZemiOpportunity.mount({
   fetchJson: (url) => fetch(url).then((res) => (res.ok ? res.json() : Promise.reject(new Error(String(res.status))))),
   lang: () => ZemiConverse.voice().lang,
@@ -3370,7 +3533,7 @@ opportunityUI = ZemiOpportunity.mount({
 });
 $("suggest").addEventListener("click", (event) => {
   const button = event.target.closest("[data-opportunity]");
-  if (button) opportunityUI.show(button.dataset.opportunity);
+  if (button) showOpportunityList(button.dataset.opportunity);
 });
 // ---------- Island hero: the decision question first, the artists as the on-ramp ----------
 const HERO = {
@@ -3385,10 +3548,92 @@ const CHROME = {
   es: { tagline: "Puerto Rico, a través del gusto de Qloo", placeholder: "Pregunte por un pueblo o busque un lugar", preview: "Escuchar esta voz",
     jobs: { bakery: "Dónde abrir una panadería", ponce: "Abrir un restaurante en Ponce", surf: "Dónde surfear en Rincón", mofongo: "Dónde comer mofongo" } },
 };
+// Labels written into the page's markup (judge panels 10/24-10/25: "By category", "Ask Zemi-Aku", "All places",
+// "Compare with…" and the controls' accessible names stayed English in a Spanish session).
+const STATIC = [
+  ["#map-btn", "aria-label", "Map style and theme", "Estilo y tema del mapa"],
+  ["#map-chrome", "aria-label", "Map camera", "Cámara del mapa"],
+  ["#topdown-btn", "aria-label", "Top-down view", "Vista desde arriba"],
+  ["#home-view-btn", "aria-label", "Island home view", "Ver toda la isla"],
+  ["#decide-start", "aria-label", "Where should I open…", "¿Dónde abro…?"],
+  ["#journey-start", "aria-label", "Discover places through an artist", "Descubra lugares a través de un artista"],
+  ["#q", "aria-label", "Ask Zemi-Aku, or search a town or place", "Pregúntele a Zemi-Aku, o busque un pueblo o un lugar"],
+  ["#dictate", "aria-label", "Dictate your question", "Dicte su pregunta"],
+  ["#dictate", "title", "Speak, watch it type, then press Enter", "Hable, vea cómo se escribe y oprima Enter"],
+  ["#voice-btn", "title", "Language and voice", "Idioma y voz"],
+  ["#opportunity-panel", "aria-label", "Where to open a business", "Dónde abrir un negocio"],
+  ["#panel", "aria-label", "Details", "Detalles"],
+  ["#crumbs", "aria-label", "Where you are", "Dónde está"],
+  ["#business-research", "aria-label", "Business research", "Investigación de negocio"],
+  ["#business-types", "aria-label", "Business type", "Tipo de negocio"],
+  ["#picks", "aria-label", "Top picks", "Lo más destacado"],
+  ["#dir-mode", "aria-label", "How to browse", "Cómo explorar"],
+  ["#dir-mode [data-mode='cats']", "text", "By category", "Por categoría"],
+  ["#dir-mode [data-mode='ask']", "text", "Ask Zemi-Aku", "Pregúntele a Zemi-Aku"],
+  ["#legend", "aria-label", "Kinds of place on the map", "Tipos de lugar en el mapa"],
+  ["#town-tools .seg", "aria-label", "What Qloo should rank", "Qué debe ordenar Qloo"],
+  ["#town-tools [data-taste='']", "text", "All places", "Todos los lugares"],
+  ["#town-tools [data-taste='restaurant']", "text", "Restaurants", "Restaurantes"],
+  ["#compare-open", "text", "Compare with…", "Comparar con…"],
+  ["#compare-find", "placeholder", "Another town", "Otro pueblo"],
+  ["#compare-find", "aria-label", "Compare with a town", "Comparar con un pueblo"],
+  ["#compare-go", "text", "Compare", "Comparar"],
+  ["#heat-note", "text", "Orange glow on the map: where restaurant taste gathers in this town.", "Brillo anaranjado en el mapa: dónde se concentra el gusto por restaurantes en este pueblo."],
+  ["#landmarks .group-title", "lead", "Landmarks and history", "Lugares emblemáticos e historia"],
+  ["#coast-return", "text", "Back to port", "Volver al puerto"],
+  ["#journey-return", "text", "Back to taste matches", "Volver a las afinidades"],
+  ["#talk-pause", "text", "Pause", "Pausa"],
+  ["#talk-stop", "text", "End", "Terminar"],
+  ["#compass-btn", "aria-label", "Reset north", "Volver al norte"],
+  ["#map-menu > p:nth-of-type(1)", "text", "Explore", "Explorar"],
+  ["#explore-nav", "aria-label", "Explore Puerto Rico", "Explorar Puerto Rico"],
+  ["#explore-nav [data-explore='places']", "tail", "Places", "Lugares"],
+  ["#explore-nav [data-explore='ships']", "tail", "Ships", "Barcos"],
+  ["#explore-nav [data-explore='ports']", "tail", "Ports", "Puertos"],
+  ["#map-menu > p:nth-of-type(2)", "text", "Map", "Mapa"],
+  ["#map-menu [data-style='eagle']", "text", "Island view", "Vista de la isla"],
+  ["#map-menu [data-style='satellite']", "text", "Satellite", "Satélite"],
+  ["#map-menu [data-style='buildings']", "text", "3D buildings", "Edificios en 3D"],
+  ["#map-menu [data-style='photo']", "text", "Photoreal 3D", "3D fotorrealista"],
+  ["#map-menu > p:nth-of-type(3)", "text", "Theme", "Tema"],
+  ["#map-menu [data-theme-pick='night']", "text", "Night", "Noche"],
+  ["#map-menu [data-theme-pick='sea']", "text", "Sea", "Mar"],
+  ["#map-menu [data-theme-pick='paper']", "text", "Paper", "Papel"],
+  ["#map-menu > p:nth-of-type(4)", "text", "Weather", "Tiempo"],
+  ["#map-menu [data-layer='radar']", "text", "Rain radar", "Radar de lluvia"],
+  ["#map-menu [data-layer='clouds']", "text", "Clouds", "Nubes"],
+  ["#map-menu > p:nth-of-type(5)", "text", "Camera", "Cámara"],
+  ["#map-menu [data-motion]", "text", "Gentle motion over a town", "Movimiento suave sobre un pueblo"],
+  ["#coastal-panel", "aria-label", "Coastal discovery", "Descubrir la costa"],
+  ["#coastal-panel .small", "text", "PUERTO RICO · COASTAL DISCOVERY", "PUERTO RICO · DESCUBRIR LA COSTA"],
+  ["#tilt-btn", "aria-label", "Allow 3D tilt", "Permitir inclinación 3D"],
+  ["#missions", "aria-label", "Watch a tour", "Ver un recorrido"],
+  ["#suggest", "aria-label", "Try one", "Pruebe una"],
+  ["#voice-menu > p:nth-of-type(1)", "text", "Language", "Idioma"],
+  ["#voice-menu > p:nth-of-type(2)", "text", "Voice", "Voz"],
+  ["#talk-lang", "aria-label", "Language", "Idioma"],
+  ["#talk-voice", "aria-label", "Voice", "Voz"],
+  ["#wisp-button:is(:not([data-mode]), [data-mode='off'])", "aria-label", "Talk with Zemi-Aku", "Hablar con Zemi-Aku"],
+];
+function applyStatic(lang) {
+  const es = lang === "es";
+  for (const [selector, attr, en, esText] of STATIC) {
+    const el = document.querySelector(selector);
+    if (!el) continue;
+    const text = es ? esText : en;
+    if (attr === "text") el.textContent = text;
+    else if (attr === "tail") { if (el.lastChild?.nodeType === 3) el.lastChild.nodeValue = text; }
+    else if (attr === "lead") { if (el.firstChild?.nodeType === 3) el.firstChild.nodeValue = `${text} `; }
+    else el.setAttribute(attr, text);
+  }
+  const folded = $("panel").dataset.collapsed === "true";
+  $("panel-collapse").setAttribute("aria-label", es ? (folded ? "Abrir el panel" : "Plegar el panel") : (folded ? "Expand panel" : "Collapse panel"));
+}
 function renderHero(next) {
   const lang = (next || ZemiConverse.voice().lang) === "es" ? "es" : "en";
   const t = CHROME[lang];
   document.documentElement.lang = lang;
+  applyStatic(lang);
   $("hero-title").textContent = HERO[lang].title;
   $("hero-lede").textContent = HERO[lang].lede;
   $("hero-or").textContent = HERO[lang].or;
@@ -3404,13 +3649,40 @@ function renderHero(next) {
   if (typeof showMotion === "function" && typeof ZemiFlight !== "undefined") showMotion(); // the camera pill follows too
 }
 renderHero();
+// A language switch redraws what is open, not only the first screen (GPT 10/25: after Español the open town, its
+// list and its buttons stayed English). Answers already shown keep the language they were asked in.
+function relabel() {
+  const panel = $("panel"), scroll = panel.scrollTop;
+  if (opportunityUI?.panelOpen?.()) opportunityUI.render();
+  if (townView && pickedId && byName.has(pickedId)) {
+    $("town-lede").textContent = townLede(byName.get(pickedId).record);
+    renderDirectory();
+    if (dirCat) showListTitle(dirListTitle());
+    loadProfile(pickedId);
+    paintWeather();
+  }
+  if (openPlaces.length) { renderList(); renderLegend(openPlaces); }
+  if (!$("dir-more").hidden) $("dir-more").textContent = dirMoreLabel();
+  if (!$("picks").hidden) showPicks(shownPickNames);
+  if (lastBusiness && !$("business-research").hidden) showBusinessResearch(lastBusiness);
+  if (lastHistory && !$("town-about").hidden) showAbout(lastHistory);
+  if (lastSources.length && !$("town-sources").hidden) showSources(...lastSources);
+  if (step === "place" && openPlaces[focusedIndex]) openPlace(openPlaces[focusedIndex], { fly: false, fromHistory: true });
+  if ($("caption").dataset.folded === "true") foldCaption(true); // the bar's own name follows
+  if (journeyData) updateJourney();
+  paintCompare();
+  coastalUI?.relabel?.();
+  if (toastPair && $("toast").textContent) toast(ZemiConverse.voice().lang === "es" ? toastPair.es : toastPair.en, toastPair);
+  renderCrumbs();
+  panel.scrollTop = scroll;
+}
 // The voice menu's language pick is handled inside the voice module; the hero follows the picked value.
-$("talk-lang").addEventListener("change", (event) => { renderHero(event.target.value); toggleMenu($("voice-menu"), $("voice-btn"), false); });
+$("talk-lang").addEventListener("change", (event) => { renderHero(event.target.value); relabel(); toggleMenu($("voice-menu"), $("voice-btn"), false); });
 $("decide-start").addEventListener("click", (event) => {
   const button = event.target.closest("[data-opportunity]");
   if (!button) return;
   unlockAudio();
-  opportunityUI.show(button.dataset.opportunity);
+  showOpportunityList(button.dataset.opportunity);
 });
 coastalUI = ZemiCoastal.mount({ viewer, Cesium, onHome: goHome, onPlaces: showCatalog,
   onMapMode: mode => { if (mode !== "places" && styleName === "eagle") setStyle("satellite"); } });
@@ -3424,7 +3696,7 @@ const missions = ZemiMissions.create({
   fetchJson: (url, body) => fetch(url, body ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) } : undefined)
     .then((res) => (res.ok ? res.json() : Promise.reject(new Error(String(res.status))))),
   say: async (text) => { showCaption("zemi", text); await speak(text, ZemiConverse.voice()); },
-  voiceLang: (lang) => { if (ZemiConverse.voice().lang !== lang) { ZemiConverse.choose(lang, ZemiConverse.voice().gender); renderHero(); } },
+  voiceLang: (lang) => { if (ZemiConverse.voice().lang !== lang) { ZemiConverse.choose(lang, ZemiConverse.voice().gender, { persist: false }); renderHero(); relabel(); } },
   onStart: (mission) => {
     for (const button of document.querySelectorAll("[data-mission]")) button.setAttribute("aria-pressed", String(button.dataset.mission === mission.id));
     $("journey-status").textContent = "";

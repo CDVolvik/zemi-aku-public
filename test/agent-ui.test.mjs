@@ -30,8 +30,10 @@ test("agent answers render rich result cards in the caption and sync them after 
   assert.match(functionSource("renderList"), /ZemiMarks\.resultCards/);
   assert.match(functionSource("renderList"), /!townView/);
   assert.ok(ruleFor(cssRules, ".answer-cards"));
-  assert.equal(hasDeclaration(cssRules, ".answer-cards", "flex-direction", "row"), true);
-  assert.equal(hasDeclaration(cssRules, ".answer-cards", "overflow-x", "auto"), true);
+  // One scroll surface on a phone (judge panels 10/24-10/25): the cards stack inside the answer, never a sideways strip.
+  assert.equal(hasDeclaration(cssRules, ".answer-cards", "flex-direction", "row"), false);
+  assert.equal(hasDeclaration(cssRules, ".answer-cards", "overflow-x", "auto"), false);
+  assert.equal(hasDeclaration(cssRules, ".answer-cards", "flex-direction", "column"), true);
   assert.match(html, /<div id="caption" hidden><\/div>/);
   assert.match(marks, /maps\/dir\/\?api=1&destination/);
   assert.match(marks, /data-open-place/);
@@ -50,8 +52,7 @@ test("agent answers render rich result cards in the caption and sync them after 
     assert.equal(hasDeclaration(cssRules, selector, "position"), false, `${selector} must not raise above the card tap target`);
     assert.equal(hasDeclaration(cssRules, selector, "z-index"), false, `${selector} must not raise above the card tap target`);
   }
-  assert.equal(hasDeclaration(cssRules, ".answer-cards > li", "display", "flex"), true);
-  assert.equal(hasDeclaration(cssRules, ".answer-cards .result-card", "flex", "1"), true);
+  assert.equal(hasDeclaration(cssRules, ".answer-cards > li", "scroll-snap-align"), false);
   assert.match(functionSource("answerPlacesForCaption"), /index: index >= 0 \? index : null/);
   assert.match(functionSource("answerPlacesForCaption"), /place\.id \? openPlaces\.findIndex/);
   const agentBranch = functionSource("runQuestion").slice(
@@ -124,4 +125,26 @@ test("the picks offer 'More like these', which sends the picked Qloo ids as one 
   assert.match(more, /ids=\$\{encodeURIComponent\(pickIds\.join\(","\)\)\}/);
   assert.match(more, /showCatalog\(data\)/);
   assert.match(html, /\$\("picks-more"\)\.addEventListener\("click", moreLikeThese\)/);
+});
+
+test("a phone shows one sheet at a time: the details fold the answer to a bar, a tap on the bar folds the details (judge panels 10/24-10/25)", () => {
+  const collapse = functionSource("setPanelCollapsed");
+  assert.match(collapse, /if \(collapsed\) foldCaption\(false\);/);
+  assert.match(collapse, /else if \(window\.innerWidth <= 720 && !\$\("caption"\)\.hidden\) foldCaption\(true\);/);
+  assert.match(functionSource("hideCaption"), /foldCaption\(false\)/);
+  // Every caption decides its own state: a rich answer takes the stage, any other line is a bar while a sheet is open.
+  assert.match(functionSource("showCaption"), /if \(who === "zemi" && \(evidence \|\| rows\.length\)\) answerTakesStage\(\);\s+else foldCaption\(phoneSheetOpen\(\)\);/);
+  assert.match(functionSource("foldCaption"), /on = on && window\.innerWidth <= 720;/, 'never folded on a desktop');
+  assert.match(functionSource("foldCaption"), /caption\.setAttribute\("role", "button"\); caption\.setAttribute\("aria-expanded", "false"\);\s+caption\.setAttribute\("aria-label", ZemiConverse\.voice\(\)\.lang === "es" \? "Mostrar la respuesta" : "Show the answer"\);/);
+  assert.match(html, /#caption\[data-folded="true"\] \.x \{ display: none; \}|#caption\[data-folded="true"\] \.evidence, #caption\[data-folded="true"\] \.x \{ display: none; \}/, 'no control nested in the folded bar');
+  assert.match(html, /new MutationObserver\(\(\) => \{\s+if \(!\$\("opportunity-panel"\)\.hidden && !\$\("caption"\)\.hidden\) foldCaption\(true\);\s+\}\)\.observe\(\$\("opportunity-panel"\), \{ attributes: true, attributeFilter: \["hidden"\] \}\);/);
+  assert.match(functionSource("phoneSheetOpen"), /!\$\("opportunity-panel"\)\.hidden \|\| !\$\("coastal-panel"\)\.hidden/);
+  assert.match(html, /matchMedia\("\(max-width: 720px\)"\)\.addEventListener\("change", \(\) => \{\s+const caption = \$\("caption"\);\s+foldCaption\(!caption\.hidden && phoneSheetOpen\(\)\);/);
+  assert.match(functionSource("syncAnswerCards"), /answerTakesStage\(\);/, 'a voice turn\'s cards take the stage too');
+  const phone = html.slice(html.indexOf("@media (max-width: 720px) {"), html.indexOf("@media (max-width: 390px) {"));
+  assert.match(phone, /#caption\[data-folded="true"\] \{\s*max-height: 64px; overflow: hidden;/);
+  assert.match(phone, /#caption\[data-folded="true"\] \.answer-cards, #caption\[data-folded="true"\] \.evidence, #caption\[data-folded="true"\] \.x \{ display: none; \}/);
+  assert.match(phone, /body:has\(#caption:not\(\[hidden\]\):not\(\[data-folded="true"\]\)\) #map-chrome \{ display: none; \}/);
+  assert.match(phone, /body:has\(#caption:not\(\[hidden\]\):not\(\[data-folded="true"\]\)\) #opportunity-panel \{ display: none; \}/);
+  assert.doesNotMatch(phone, /overflow-x: auto/, "no sideways strip inside the answer");
 });

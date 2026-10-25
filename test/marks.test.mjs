@@ -197,3 +197,51 @@ test('result-why / result-meta ids stay unique across two renders and describedb
     }
   }
 });
+
+test('a card names the place by its own kind, in Spanish on a Spanish page; an unknown genre shows its category, never English (judge panels 10/24-10/25)', () => {
+  assert.equal(marks.genreName({ genre: 'Fast food restaurant', category: 'food' }, 'en'), 'Fast food restaurant');
+  assert.equal(marks.genreName({ genre: 'Fast food restaurant', category: 'food' }, 'es'), 'Comida rápida');
+  assert.equal(marks.genreName({ genre: 'Bakery', category: 'food' }, 'es'), 'Panadería');
+  assert.equal(marks.genreName({ genre: 'Puerto Rican restaurant', category: 'food' }, 'es'), 'Restaurante puertorriqueño');
+  assert.equal(marks.genreName({ genre: 'Gay bar', category: 'food' }, 'es'), 'Bar gay');
+  assert.equal(marks.genreName({ genre: 'Department of motor vehicles', category: 'other' }, 'es'), 'Servicios y más');
+  assert.equal(marks.genreName({ kind: 'Bar', category: 'food' }, 'es'), 'Bar', 'agent cards carry the genre as kind');
+  assert.equal(marks.genreName({ category: 'food' }, 'es'), '');
+});
+
+test('a food answer that holds bars says so: Qloo lists these bars under restaurants (Opus 10/25, "where do fans eat")', () => {
+  const bars = [
+    { name: 'La Victoria', genre: 'Bar', category: 'food' },
+    { name: 'Los Kings Lounge', genre: 'Fast food restaurant', category: 'food' },
+  ];
+  const en = marks.resultCards(bars, { lang: 'en' });
+  assert.match(en, /<span class="cat-chip"[^>]*>Bar<\/span>/);
+  assert.match(en, /<span class="cat-chip"[^>]*>Fast food restaurant<\/span>/);
+  assert.match(en, /<p class="cards-note">Qloo lists this bar under restaurants, which is why it appears here\.<\/p>$/);
+  const es = marks.resultCards(bars, { lang: 'es' });
+  assert.match(es, /<span class="cat-chip"[^>]*>Bar<\/span>/);
+  assert.match(es, /Qloo clasifica este bar como restaurante; por eso aparece aquí\./, 'one bar, singular');
+  // Every bar kind found under restaurants in the 78 catalogs gets the note; drinks-free "bars" do not.
+  for (const genre of ['Live music bar', 'Gastropub', 'Irish pub', 'Salsa bar', 'Piano bar', 'Karaoke bar', 'Beer hall', 'Sports bar', 'Bar & grill']) {
+    assert.match(marks.resultCards([{ name: 'X', genre, category: 'food' }], { lang: 'en' }), /this bar under restaurants/, genre);
+  }
+  for (const genre of ['Snack bar', 'Juice bar', 'Salad bar', 'Oyster bar']) assert.doesNotMatch(marks.resultCards([{ name: 'X', genre, category: 'food' }], { lang: 'en' }), /cards-note/, genre);
+  assert.match(marks.resultCards([{ name: 'A', genre: 'Bar', category: 'food' }, { name: 'B', genre: 'Pub', category: 'food' }], { lang: 'es' }), /estos bares como restaurantes/);
+  // A café called an espresso bar, or a bar filed under drinks, is not a bar in a food list.
+  assert.doesNotMatch(marks.resultCards([{ name: 'Cuatro Sombras', genre: 'Espresso bar', category: 'food' }], { lang: 'en' }), /cards-note/);
+  assert.doesNotMatch(marks.resultCards([{ name: 'La Factoría', genre: 'Cocktail bar', category: 'drinks' }], { lang: 'en' }), /cards-note/);
+});
+
+test('the match line and the weather line follow the page language (probe 10/25, Opus 10/24)', () => {
+  assert.equal(marks.whyLine('Strong match for Bad Bunny fans (88%)', 'es'), 'Fuerte afinidad para fans de Bad Bunny (88%)');
+  assert.equal(marks.whyLine('Good match for Vico C fans (52%)', 'es'), 'Buena afinidad para fans de Vico C (52%)');
+  assert.equal(marks.whyLine('Fuerte afinidad para fans de Bad Bunny (88%)', 'en'), 'Strong match for Bad Bunny fans (88%)');
+  assert.match(marks.resultCards([{ name: 'La Victoria', genre: 'Bar', category: 'food', why: 'Strong match for Bad Bunny fans (87%)' }], { lang: 'es' }), /Fuerte afinidad para fans de Bad Bunny \(87%\)/);
+  const weatherContext = { window: {} };
+  vm.createContext(weatherContext);
+  vm.runInContext(fs.readFileSync(new URL('../app/weather.js', import.meta.url), 'utf8'), weatherContext);
+  const data = { forecast: { periods: [{ daytime: true, name: 'This Afternoon', fahrenheit: 90, celsius: 32, rainChance: 20, forecast: 'Isolated Rain Showers' }] },
+    alerts: { alerts: [{ event: 'Rip Current Statement' }] } };
+  assert.equal(weatherContext.window.ZemiWeather.line(data, 'es'), 'Aviso vigente: Rip Current Statement (weather.gov, en inglés). Pronóstico de weather.gov: 90°F / 32°C, 20% de probabilidad de lluvia.');
+  assert.equal(weatherContext.window.ZemiWeather.line(data), 'Rip Current Statement in effect (weather.gov). This Afternoon: 90°F / 32°C, 20% chance of rain, isolated rain showers.');
+});

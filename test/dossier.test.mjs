@@ -69,3 +69,21 @@ test('a Commons photo beats a brand logo; Qloo image beats both; logo still beat
  assert.match(dossier.markup({...chain,id:'x',facts:[],details:{}}),/<img class="shot logo"/);
  assert.match(dossier.markup({...chain,id:'x',facts:[],details:{}}),/location-shot/);
 });
+
+test('on a Spanish page the place card speaks Spanish and marks Qloo text as English (judge panels 10/24-10/25)', () => {
+  context.document = { documentElement: { lang: 'es' } };
+  try {
+    const html = dossier.markup({ id: 'v', name: 'Kamal Bakery', genre: 'Bakery', category: 'food', description: 'Neighborhood bakery and casual eatery.',
+      details: { keywords: ['quiet'], amenities: 'Wi-Fi' }, rating: 4.4,
+      facts: [{ label: 'Phone', text: '123', href: 'tel:123', source: 'Qloo' }], sourceLine: 'Qloo record. No OpenStreetMap match at this pin.' }, { show3D: true });
+    for (const es of ['A sus fans también les gusta', 'Ver en 3D', 'Contacto y fuentes', 'Sobre este lugar', 'Teléfono: ', ' estrellas',
+      'Registro de Qloo. OpenStreetMap no tiene este lugar en este punto.', 'Qloo · en inglés', 'Público y mapa de gusto']) assert.ok(html.includes(es), es);
+    assert.match(html, /<span lang="en">Neighborhood bakery and casual eatery\.<\/span>/);
+    for (const en of ['Its fans also love', 'See in 3D', 'Contact and sources', 'About this place', '>Phone: ', ' stars<']) assert.ok(!html.includes(en), en);
+    const audience = dossier.audienceMarkup({ status: 'ok', age: [{ label: '24 and under', value: 0.2 }], gender: [{ label: 'Women', value: -0.1 }] });
+    for (const es of ['A quién le gusta', '24 o menos', 'Mujeres', 'sobre el promedio', 'bajo el promedio', 'No es un conteo de clientes']) assert.ok(audience.includes(es), es);
+    assert.match(dossier.cultureMarkup({ status: 'ok', artists: [{ name: 'Bad Bunny' }], trips: [] }), /Música/);
+    assert.match(dossier.footprintLine({ status: 'ok', points: [1, 2] }, 'Kamal Bakery'), /^Brillo violeta: las 2 zonas/);
+  } finally { delete context.document; }
+  assert.match(dossier.markup({ id: 'v', name: 'X', description: 'Y' }), /Its fans also love/, 'English stays English');
+});

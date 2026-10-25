@@ -74,3 +74,16 @@ test('an existing but corrupt coastal catalog fails without invoking the live ca
     assert.equal(upstreamCalls, 0);
   }
 });
+
+test('a Spanish page gets the coast answer, its errors and its heading in Spanish', async () => {
+  const port = PORTS[0];
+  const discover = createCoastalDiscovery({ catalog: async () => [], artist: async () => ({ places: [] }) });
+  assert.equal((await discover({ port: port.id, artist: 'BB', lang: 'es' })).error, 'Escriba el nombre de un artista de 3 a 80 caracteres.');
+  assert.equal((await discover({ port: 'nowhere', lang: 'es' })).error, 'Escoja un puerto de Puerto Rico de la lista.');
+  const es = await discover({ port: port.id, lang: 'es' });
+  assert.equal(es.focus, `En tierra, ${port.town}`);
+  assert.match(es.note, /^Lugares cercanos del catálogo guardado de Qloo para .+ A menos de 5 km/);
+  const en = await discover({ port: port.id });
+  assert.equal(en.focus, `Ashore in ${port.town}`);
+  assert.match(en.note, /^Nearby places from Qloo's saved/);
+});

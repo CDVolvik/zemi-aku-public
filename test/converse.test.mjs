@@ -66,15 +66,21 @@ test('the menu is Female / Male per language, remembers the gender and ignores a
  assert.match(b.elements.get('talk-voice').innerHTML,/value="female"[^]*value="male"/);
  assert.doesNotMatch(b.elements.get('talk-voice').innerHTML,/browser|Deepgram|nestor/);
  assert.equal(b.converse.voice().id,'aura-2-andromeda-en');
- b.converse.choose('es','male');
+ b.converse.choose('es','male',{persist:'gender'});
  assert.equal(b.converse.voice().id,'aura-2-aquila-es'); assert.equal(b.stored['zemi-voice-gender'],'male');
+ assert.equal(b.stored['zemi-voice-lang'],undefined,'a voice pick saves the gender only');
+ b.converse.choose('es','male',{persist:'lang'});
  assert.match(b.elements.get('talk-voice').innerHTML,/Voz femenina[^]*Voz masculina/);
  assert.match(b.elements.get('talk-voice-name').textContent,/Deepgram/);
  assert.equal(b.stored['zemi-voice-lang'],'es');
  const again=browser(true,undefined,undefined,undefined,{'zemi-voice-gender':'male','zemi-voice-lang':'es'});
- await again.converse.loadVoices(); assert.equal(again.converse.voice().id,'aura-2-aquila-es');
+ again.converse.restoreChoice(); await again.converse.loadVoices(); assert.equal(again.converse.voice().id,'aura-2-aquila-es');
  const odd=browser(true,undefined,undefined,undefined,{'zemi-voice-lang':'klingon'});
- await odd.converse.loadVoices(); assert.equal(odd.converse.voice().lang,'en');
+ odd.converse.restoreChoice(); await odd.converse.loadVoices(); assert.equal(odd.converse.voice().lang,'en');
+ // A question's language is this visit's only, and the voice list arriving later does not undo a switch.
+ const visit=browser(true,undefined,undefined,undefined,{'zemi-voice-lang':'en'});
+ visit.converse.restoreChoice(); visit.converse.choose('es','female');
+ assert.equal(visit.stored['zemi-voice-lang'],'en'); await visit.converse.loadVoices(); assert.equal(visit.converse.voice().lang,'es');
 });
 test('with speech disabled the menu still offers Female / Male and the device voice is used', async () => {
  const zira={voiceURI:'zira',name:'Microsoft Zira',lang:'en-US'};

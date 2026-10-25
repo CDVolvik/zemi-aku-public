@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { createAgent, createSpendLedger, checkChat, plainSpeech, spokenExcerpt, PROMPT, validArgs, industryIn, namesTown, townFlight, createNote, wholeSentences, echoes, checkNote, noteLanguage, kindPlaces } from "../server/agent.mjs";
+import { createAgent, createSpendLedger, checkChat, plainSpeech, spokenExcerpt, PROMPT, validArgs, industryIn, namesTown, townFlight, createNote, wholeSentences, echoes, checkNote, noteLanguage, kindPlaces, dropUnaskedConditions } from "../server/agent.mjs";
 
 test('a question about one kind of place keeps cards of that kind (judge panel 10/25 round 6)', () => {
   const list = { type: 'show_places', town: 'Culebra', places: [{ name: 'Pan Café', genre: 'Bakery' }, { name: "Zaco's Tacos", genre: 'Mexican restaurant' }, { name: 'Dinghy Dock', genre: 'Seafood' }] };
@@ -668,6 +668,38 @@ test('the prompt tells the model how to answer a siting or comparison question a
   // Round 7: the model denied Qloo audience data the card shows; the control run called a refused tool "returned nothing".
   assert.match(PROMPT, /call place_audience with its catalog id: Qloo carries age and\s+gender affinities for places, so never say it lacks them/);
   assert.match(PROMPT, /A tool refused as unavailable did not run: say that tool was\s+off for this run, never that it returned nothing/);
-  assert.match(PROMPT, /a condition the tools cannot test \(vegan,\s+kosher, parking, a budget, rent as the priority\), say so in one sentence/);
+  assert.match(PROMPT, /names a condition the tools cannot test\s+\(vegan, kosher, parking, a budget, rent as the priority\), say so in one sentence/);
+  assert.match(PROMPT, /Never raise a condition the question did not\s+name\./);
   assert.match(PROMPT, /A strict taste-tag miss is not catalog absence/);
+});
+
+test("a disclaimer for a condition the question never named is dropped; a named one stays (live 10/25, Taylor Swift in Ponce)", () => {
+  const answer = "Taylor Swift fans in Ponce like Melao Coffee Shop and El Rastro. These are affinity matches. Note: Qloo has no data on vegan, budget or parking here.";
+  assert.equal(dropUnaskedConditions("Where do Taylor Swift fans eat in Ponce?", answer),
+    "Taylor Swift fans in Ponce like Melao Coffee Shop and El Rastro. These are affinity matches.");
+  assert.equal(dropUnaskedConditions("¿Dónde abro una panadería vegana en San Juan?", answer), answer, "a named condition keeps its sentence");
+  assert.equal(dropUnaskedConditions("Quiero abrir una panadería pero no tengo mucho dinero", answer), answer, "money counts as a named budget");
+  const spanish = "Los fans comen en La Placita. No hay datos de estacionamiento ni presupuesto.";
+  assert.equal(dropUnaskedConditions("¿Dónde comen los fans de Bad Bunny?", spanish), "Los fans comen en La Placita.");
+  // A place that is vegan, mentioned without a disclaimer, stays; so does a fact about a place.
+  const vegan = "Try Vegan Planet, a vegan café downtown.";
+  assert.equal(dropUnaskedConditions("Where to eat in Ponce?", vegan), vegan);
+  assert.equal(dropUnaskedConditions("Where should I eat?", "Vegan Planet is not open today. Try Cafe X."), "Vegan Planet is not open today. Try Cafe X.");
+  // A cost or rent question names a budget, in Spanish too.
+  assert.equal(dropUnaskedConditions("¿Cuánto cuesta alquilar un local?", "No hay datos de presupuesto. Compare las zonas."), "No hay datos de presupuesto. Compare las zonas.");
+  // An answer that was only the unasked disclaimer comes back empty, so the empty-answer fallback runs.
+  assert.equal(dropUnaskedConditions("Hi", "There is no parking data."), "");
+  assert.equal(dropUnaskedConditions("¿Dónde comen en Ponce?", "Comen en El Rastro. Qloo no tiene datos de accesibilidad para silla de ruedas."), "Comen en El Rastro.");
+  assert.equal(dropUnaskedConditions("Where should I eat?", "Vegan Planet is known for vegan lunches, but it is not open today. Try Cafe X."),
+    "Vegan Planet is known for vegan lunches, but it is not open today. Try Cafe X.", "a venue fact with a negation is not a data gap");
+  assert.equal(dropUnaskedConditions("Where can I eat cheaply?", "Qloo has no vegan data for this town. Try Cafe X."), "Try Cafe X.",
+    "a budget question does not license a vegan disclaimer");
+  // Passive wording is a data gap too; a place called Costa is not a cost question.
+  assert.equal(dropUnaskedConditions("Where should I eat?", "Parking isn't tracked by Qloo. Try Cafe X."), "Try Cafe X.");
+  assert.equal(dropUnaskedConditions("Where should I eat?", "Parking details are unavailable. Try Cafe X."), "Try Cafe X.");
+  assert.equal(dropUnaskedConditions("Tell me about Costa Azul", "There is no budget data. Try Costa Azul."), "Try Costa Azul.");
+  assert.equal(dropUnaskedConditions("¿Cuánto cuesta abrir aquí?", "No hay datos de presupuesto. Vea dos locales."), "No hay datos de presupuesto. Vea dos locales.");
+  // The siting caveat about rents and sales is not a budget disclaimer and stays under any question.
+  const caveat = "Río Grande está en el grupo brecha. Alquileres, tráfico y ventas no están en estos datos.";
+  assert.equal(dropUnaskedConditions("¿Dónde abro una panadería?", caveat), caveat);
 });

@@ -367,6 +367,37 @@ the dock at 769, the island's west and east tips project to x 41 and 383 at y 17
 the ion token's origin restriction, not a live condition), the five nav links are 12 px tall each; `check-demo --journeys`
 0 failed. 341 tests.
 
+## Round-eight release (2026-10-25, overnight)
+
+Live as `zemi-aku:round8-20261025`, source `c78a6d1` (five commits on `128fa83`), layered on `round7-20261025` with
+`app/`, `server/` and `scripts/serve-eagle.mjs` (`tmp/deploy-round8-20261025.sh`, local only). Rollback set
+`/opt/zemi-aku/round8-20261025-rollback` (previous image `round7-20261025`). The three open items from the seventh
+panel, then three Codex review rounds on them (round 1: 7 Med, 2 Low; round 2: 4 Med, 3 Low; round 3: 3 Med, 1 Low;
+every finding fixed). No key, cap, cache, Caddy, env or connector change.
+
+What changed on the site:
+
+- **One scroll surface on a phone.** Answer cards stack inside the answer instead of a sideways strip. The details
+  panel, the opportunity list and the answer take turns: opening one folds the answer to a bar named "Show the
+  answer", and a tap or Enter brings it back. A person asking for the list brings it forward; a list an answer opens
+  stays behind it. Above 720 px nothing stays folded. The camera buttons stay off an open answer.
+- **Cards named by their own kind.** The chip says Bar, Fast food restaurant or Coffee shop (Spanish on a Spanish
+  page), and a food list holding bars says Qloo lists them under restaurants.
+- **A Spanish session reads Spanish.** Only a language-menu pick is saved, so a reload after an English question
+  comes back in Spanish; a language switch redraws the open town, weather, legend, place card, sources,
+  comparison, coast view and journey line. Map menu, voice notes, tours, contact values, the record table and the
+  coast endpoint follow the page language; Qloo's own English text is labelled "en inglés"; usted throughout.
+- **No unasked conditions.** A sentence disclaiming vegan, diet, parking, budget or accessibility data is dropped
+  when the question did not name that kind (round seven's prompt made the model volunteer one).
+- **At 721–1440 px** the ask bar centres right of the 400 px panel and both side panels end above the answer (the
+  old 212 px centre dated from a side-rail layout; at 1024 px the bar overlapped the panel).
+- Spanish ask-mode suggestions are phrasings the rules fallback also routes.
+
+Checks: container healthy; ten changed-file SHA-256 hashes in the container equal the commit's; on the live site
+`scripts/check-ui-states.mjs` (new, Playwright) 27 checks 0 failed, `check-demo --journeys` 0 failed, the Spanish
+session sweep flags only names and attributed source text, the reload stays Spanish after an English question;
+469 tests. Real phones, a microphone turn and a screen reader not tested.
+
 ## Round-seven release (2026-10-25, late night)
 
 Live as `zemi-aku:round7-20261025`, source `89ca990` (four commits on `766b4b9`), layered on `round6-20261025` with
@@ -395,7 +426,7 @@ Checks: container healthy; five changed-file SHA-256 hashes in the container equ
 question answers "no hay dato de ganancias" first; the sources summary clicks at 960×895; the town-state and polish
 paths); `check-demo --journeys` 0 failed; 459 tests. Codex review of the first three commits (`tmp/codex-review-round7-20261025.md`):
 two Mediums (the answer caption still over the panel at 721–1023 px; a strict taste-tag miss read as "no bakeries in Ponce")
-and two Lows (the meta descriptions' "all 78"; the 16-tool inventory), all fixed in the fourth commit. Real phones not tested.
+and two Lows (the meta descriptions' "all 78"; the 16-tool inventory), all fixed in the fourth commit. Real phones not tested. Public snapshot re-exported from `741cd5c` as `fc4c6b5` (the seventh panel record and its four evidence files added; scanned; the record and the README's counts read logged out).
 
 ## Round-six release (2026-10-25, night)
 

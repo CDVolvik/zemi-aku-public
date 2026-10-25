@@ -16,7 +16,7 @@ test("the edge lets this origin frame its pages, and no other", () => {
 test("an answer is not hidden on a timer; a tap on its close hides it", () => {
   assert.doesNotMatch(app, /setTimeout\(hideCaption, 4000 \+ data\.speech\.length \* 45\)/);
   assert.doesNotMatch(app, /then\(\(\) => \{\s*if \(\$\("talk"\)\.dataset\.mode === "off"\) captionTimer = setTimeout\(hideCaption, 5000\)/);
-  assert.match(app, /<button type="button" class="x" aria-label="Dismiss">×<\/button>/);
+  assert.match(app, /<button type="button" class="x" aria-label="\$\{lang === "es" \? "Cerrar" : "Dismiss"\}">×<\/button>/);
   assert.match(app, /\$\("caption"\)\.addEventListener\("click", \(event\) => \{/);
   assert.match(app, /if \(event\.target\.closest\("\.x"\)\) return hideCaption\(\);/);
 });
@@ -42,7 +42,7 @@ test("polish: titles read as titles, hovers are gated, a phone shows two chips, 
 });
 
 test("with the panel open on a desktop the ask bar moves off the panel", () => {
-  assert.match(app, /body:has\(#panel:not\(\[hidden\]\):not\(\[data-collapsed="true"\]\)\) #dockbar \{[^}]*left: calc\(\(212px \+ var\(--left\) \+ 100%\) \/ 2\); width: min\(620px, calc\(100% - 460px - var\(--left\)\)\);/);
+  assert.match(app, /body:has\(#panel:not\(\[hidden\]\):not\(\[data-collapsed="true"\]\)\) #dockbar,\s*body:has\(#opportunity-panel:not\(\[hidden\]\)\) #dockbar \{[^}]*left: calc\(\(424px \+ var\(--left\) \+ 100%\) \/ 2\); width: min\(620px, calc\(100% - 448px - var\(--left\)\)\);/);
 });
 
 test("a directory loaded for one town is never offered under another town's name", () => {
@@ -62,7 +62,7 @@ test("on a phone the voice button shows the language code alone, so the ask fiel
 });
 
 test("between a phone and a wide desktop the panel ends above the dock, and the hero claims taste town by town, not for all 78 (judge panel 10/25 round 7)", () => {
-  assert.match(app, /@media \(min-width: 721px\) and \(max-width: 1023px\) \{\s*#panel \{ bottom: calc\(84px \+ var\(--caption-h, 0px\) \+ var\(--bottom\)\); \}/);
+  assert.match(app, /@media \(min-width: 721px\) and \(max-width: 1023px\) \{\s*#panel, body #opportunity-panel \{ bottom: calc\(96px \+ var\(--caption-h, 0px\) \+ var\(--bottom\)\); \}/, 'the opportunity list too: the answer covered it from 721 to 1440 px');
   assert.doesNotMatch(app, /taste for all 78 towns|en los 78 pueblos, frente/);
   assert.match(app, /Qloo's taste town by town, against the businesses the Census already counts/);
   const home = fs.readFileSync(new URL("../app/home.html", import.meta.url), "utf8");

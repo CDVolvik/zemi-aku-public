@@ -26,6 +26,75 @@
   // (judge panel 10/24: "Food", "Today", "Closed today" stayed English under a Spanish question).
   const pageLang = () => (typeof document !== "undefined" && document.documentElement?.lang === "es" ? "es" : "en");
   const kindLabel = (kind, lang = pageLang()) => (lang === "es" ? kind.es : kind.label);
+  // Qloo's genre names are English ("Fast food restaurant", "Bar & grill"). A Spanish page shows them in
+  // Spanish; a genre this list does not know shows its category instead, never the English name (judge
+  // panels 10/24-10/25: "Bakery · San Juan" and "Fast food restaurant" under Spanish answers).
+  const GENRE_ES = {
+    "restaurant": "Restaurante", "fast food restaurant": "Comida rápida", "bakery": "Panadería", "pizza restaurant": "Pizzería",
+    "pizza delivery": "Pizzería", "pizza takeout": "Pizzería", "bar": "Bar", "bar & grill": "Bar y grill",
+    "sports bar": "Bar deportivo", "cocktail bar": "Bar de cócteles", "gay bar": "Bar gay", "wine bar": "Bar de vinos",
+    "tapas bar": "Bar de tapas", "live music bar": "Bar con música en vivo", "gastropub": "Gastropub", "irish pub": "Pub irlandés",
+    "pub": "Pub", "karaoke bar": "Bar de karaoke", "piano bar": "Piano bar", "salsa bar": "Bar de salsa", "beer hall": "Cervecería",
+    "night club": "Discoteca", "lounge": "Lounge", "espresso bar": "Cafetería", "brewpub": "Cervecería", "beer garden": "Cervecería al aire libre",
+    "hotel": "Hotel", "resort hotel": "Hotel resort", "motel": "Motel", "lodging": "Hospedaje", "guest house": "Casa de huéspedes",
+    "hostel": "Hostal", "vacation home rental agency": "Alquiler vacacional", "supermarket": "Supermercado", "grocery store": "Colmado",
+    "cafe": "Café", "coffee shop": "Cafetería", "cafeteria": "Cafetería", "ice cream shop": "Heladería", "frozen yogurt shop": "Yogur helado",
+    "dessert shop": "Postres", "donut shop": "Donas", "cake shop": "Bizcochos", "juice shop": "Jugos", "açaí shop": "Açaí",
+    "sandwich shop": "Sándwiches", "deli": "Deli", "diner": "Diner", "bistro": "Bistró", "steak house": "Steakhouse",
+    "food court": "Área de comida", "shopping mall": "Centro comercial", "department store": "Tienda por departamentos",
+    "drug store": "Farmacia", "pharmacy": "Farmacia", "tourist attraction": "Atracción turística", "park": "Parque",
+    "city park": "Parque", "state park": "Parque estatal", "beach": "Playa", "public beach": "Playa pública",
+    "nature preserve": "Reserva natural", "scenic spot": "Mirador", "movie theater": "Cine", "arena": "Arena", "stadium": "Estadio",
+    "museum": "Museo", "historical landmark": "Lugar histórico", "performing arts theater": "Teatro", "cultural center": "Centro cultural",
+    "catholic church": "Iglesia católica", "event venue": "Lugar de eventos", "casino": "Casino", "water park": "Parque acuático",
+    "amusement park": "Parque de diversiones", "bowling alley": "Bolera", "tour operator": "Excursiones", "gym": "Gimnasio",
+    "sports complex": "Complejo deportivo", "beauty salon": "Salón de belleza", "beauty supply store": "Productos de belleza",
+    "clothing store": "Ropa", "women's clothing store": "Ropa de mujer", "shoe store": "Zapatería", "home goods store": "Artículos del hogar",
+    "furniture store": "Mueblería", "discount store": "Tienda de descuento", "pawn shop": "Casa de empeño", "warehouse store": "Almacén",
+    "warehouse club": "Club de almacén", "pet supply store": "Productos para mascotas", "pet store": "Tienda de mascotas",
+    "vitamin & supplements store": "Vitaminas y suplementos", "book store": "Librería", "home improvement store": "Ferretería",
+    "farmers' market": "Mercado agrícola", "convenience store": "Tienda de conveniencia", "jewelry store": "Joyería",
+  };
+  const CUISINE_ES = {
+    "puerto rican": "puertorriqueño", "chinese": "chino", "mexican": "mexicano", "chicken": "de pollo", "seafood": "de mariscos",
+    "barbecue": "de barbacoa", "brunch": "de brunch", "family": "familiar", "italian": "italiano", "hamburger": "de hamburguesas",
+    "creole": "criollo", "sushi": "de sushi", "breakfast": "de desayunos", "caribbean": "caribeño", "asian": "asiático",
+    "tex-mex": "tex-mex", "lechon": "de lechón", "spanish": "español", "argentinian": "argentino", "american": "americano",
+    "japanese": "japonés", "vegan": "vegano", "vegetarian": "vegetariano", "fusion": "de fusión", "french": "francés",
+    "health food": "de comida saludable", "chicken wings": "de alitas", "buffet": "bufé", "peruvian": "peruano", "tapas": "de tapas",
+    "fine dining": "de alta cocina", "steak": "de carnes", "thai": "tailandés", "indian": "indio", "greek": "griego", "cuban": "cubano",
+    "dominican": "dominicano", "colombian": "colombiano", "venezuelan": "venezolano", "turkish": "turco", "mediterranean": "mediterráneo",
+  };
+  function genreName(place, lang = pageLang()) {
+    const genre = String(place?.genre || place?.kind || "").trim();
+    if (!genre || lang !== "es") return genre;
+    const key = genre.toLowerCase();
+    if (Object.hasOwn(GENRE_ES, key)) return GENRE_ES[key];
+    const cuisine = key.match(/^(.+) restaurant$/);
+    if (cuisine && Object.hasOwn(CUISINE_ES, cuisine[1])) return `Restaurante ${CUISINE_ES[cuisine[1]]}`;
+    return KINDS[kindOf(place)].es;
+  }
+  // The fit line is written by the server in the language it was asked in; the agent's tools ask in English.
+  // It is shown in the page's language either way (Grok 10/24, the probe 10/25: "Strong match for Bad Bunny
+  // fans (88%)" under a Spanish answer).
+  function whyLine(text, lang = pageLang()) {
+    const s = String(text || "");
+    if (lang === "es") return s.replace(/^Strong match for (.+) fans \((\d+)%\)$/, "Fuerte afinidad para fans de $1 ($2%)")
+      .replace(/^Good match for (.+) fans \((\d+)%\)$/, "Buena afinidad para fans de $1 ($2%)");
+    return s.replace(/^Fuerte afinidad para fans de (.+) \((\d+)%\)$/, "Strong match for $1 fans ($2%)")
+      .replace(/^Buena afinidad para fans de (.+) \((\d+)%\)$/, "Good match for $1 fans ($2%)");
+  }
+  // Qloo files many bars under its restaurant genres ("urn:tag:genre:place:restaurant:bar"), so a "where do fans
+  // eat" answer can be mostly bars (Opus, 10/25). The chip names the place's own kind and one line says why.
+  // Any kind of bar or pub, by word, except the ones that serve no drinks ("Gastropub", "Live music bar" and "Beer
+  // hall" are in the catalogs too). Counted, so one bar reads in the singular.
+  const BAR_GENRE = /\b(bar|bars|pub|gastropub|brewpub|lounge|beer hall|beer garden|night ?club|tavern|cantina)\b/i;
+  const NOT_A_BAR = /\b(espresso|snack|juice|salad|oyster|raw|sushi|coffee|smoothie|candy|dessert|ice cream)\s+bar\b/i;
+  const barsAsFood = (places) => (places || []).filter((place) => {
+    const genre = String(place.genre || place.kind || "").trim();
+    return kindOf(place) === "food" && BAR_GENRE.test(genre) && !NOT_A_BAR.test(genre);
+  }).length;
+
   // Qloo's hours line is English ("Today 5:00 pm–12:00 am", "Closed today", "Open 24 hours").
   function hoursText(hours, lang = pageLang()) {
     // A midnight-to-midnight window is a day-long one (judge panel 10/25: "Today 12:00 am–12:00 am" read as a bug).
@@ -51,7 +120,8 @@
   function standing(place) {
     const popularity = Number(place.popularity);
     if (!Number.isFinite(popularity) || popularity <= 0 || popularity > 1) return "";
-    return `top ${Math.max(1, Math.round((1 - popularity) * 100))}% on Qloo`;
+    const top = Math.max(1, Math.round((1 - popularity) * 100));
+    return pageLang() === "es" ? `entre el ${top}% más popular en Qloo` : `top ${top}% on Qloo`;
   }
 
   // Same identify order as ZemiDossier.pictureOf (Qloo → photo → logo → site icon → letter).
@@ -67,7 +137,7 @@
   function card(place, { touch = false } = {}) {
     const kind = KINDS[kindOf(place)];
     const home = place.municipality || place.city || "";
-    const where = [place.genre, home].filter(Boolean).join(" · ");
+    const where = [genreName(place), home].filter(Boolean).join(" · ");
     const badges = [place.price, place.rating != null ? `★ ${place.rating}` : "", standing(place)]
       .filter(Boolean).map((text) => `<span>${esc(text)}</span>`).join("");
     return shotOf(place)
@@ -75,7 +145,7 @@
       + `<p class="kind"><i style="background:${kind.color}"></i>${esc(kindLabel(kind))}</p>`
       + (where ? `<p>${esc(where)}</p>` : "")
       + (badges ? `<p class="badges">${badges}</p>` : "")
-      + (touch ? `<p class="hint">Tap again for the full record</p>` : "");
+      + (touch ? `<p class="hint">${pageLang() === "es" ? "Toque otra vez para ver el registro completo" : "Tap again for the full record"}</p>` : "");
   }
 
   // The places an answer names, in the order it names them; without a spoken answer, the first three.
@@ -114,7 +184,7 @@
   function pickCards(places) {
     return (places || []).map((place) => {
       const kind = KINDS[kindOf(place)];
-      const where = [place.genre, place.municipality || place.city].filter(Boolean).join(" · ");
+      const where = [genreName(place), place.municipality || place.city].filter(Boolean).join(" · ");
       const shot = shotOf(place, ' loading="lazy"') || `<span class="pick-initial">${esc(String(place.name || "").charAt(0))}</span>`;
       const rating = place.rating != null ? `<span class="pick-rating">★ ${esc(place.rating)}</span>` : "";
       return `<button type="button" class="pick" data-index="${Number(place.index) || 0}" style="--kind:${kind.color}">${shot}`
@@ -137,12 +207,14 @@
   function resultCards(places, { from = null, lang = "en", focusedIndex = -1 } = {}) {
     const es = lang === "es";
     const labels = {
-      why: es ? "Por qué te queda" : "Why it fits you",
+      why: es ? "Por qué le conviene" : "Why it fits you",
       directions: es ? "Cómo llegar" : "Directions",
       ask: es ? "Preguntar más" : "Ask more",
       location: es ? "Ubicación" : "Location",
       newTab: es ? "(se abre en una pestaña nueva)" : "(opens in a new tab)",
       noHours: es ? "sin horario publicado" : "hours not listed", // judge panel 10/24 round 3: an unchecked place looked like a checked one
+      bars: (n) => (es ? (n === 1 ? "Qloo clasifica este bar como restaurante; por eso aparece aquí." : "Qloo clasifica estos bares como restaurantes; por eso aparecen aquí.")
+        : (n === 1 ? "Qloo lists this bar under restaurants, which is why it appears here." : "Qloo lists these bars under restaurants, which is why they appear here.")),
     };
     const renderId = ++resultCardRender;
     return `<ul class="answer-cards">${(places || []).map((place, index) => {
@@ -155,7 +227,7 @@
       const credit = picture.credit ? `<span class="result-credit">${esc(picture.credit)}</span>` : "";
       const whyId = `result-why-${renderId}-${index}`;
       const metaId = `result-meta-${renderId}-${index}`;
-      const whyText = place.why || "";
+      const whyText = whyLine(place.why || "", lang);
       const why = whyText
         ? `<p class="result-why" id="${whyId}"><span class="why-label">${labels.why}</span> ${esc(whyText)}</p>`
         : "";
@@ -180,13 +252,13 @@
       return `<li><article class="result-card"${dataIndex} data-name="${esc(place.name)}" data-id="${esc(place.id || "")}" data-tone="${esc(tone)}">`
         + `<div class="result-top">${media}<div class="result-text">`
         + `<button type="button" class="result-name" data-open-place aria-current="${current ? "true" : "false"}"${describedBy ? ` aria-describedby="${describedBy}"` : ""}>${esc(place.name)}</button>`
-        + `<span class="cat-chip" style="--chip:var(--${tone})">${esc(kindLabel(kind, lang))}</span>${credit}${why}${meta}`
+        + `<span class="cat-chip" style="--chip:var(--${tone})">${esc(genreName(place, lang) || kindLabel(kind, lang))}</span>${credit}${why}${meta}`
         + `<div class="result-actions">`
         + directions
         + `<button type="button" class="result-act" data-ask-more aria-label="${esc(labels.ask)}: ${esc(place.name)}">${labels.ask}</button>`
         + `</div></div></div>${location}</article></li>`;
-    }).join("")}</ul>`;
+    }).join("")}</ul>${barsAsFood(places) ? `<p class="cards-note">${labels.bars(barsAsFood(places))}</p>` : ""}`;
   }
 
-  window.ZemiMarks = { KINDS, kindOf, kindLabel, hoursText, legend, card, picks, pickCards, resultCards, haversineKm, shotOf };
+  window.ZemiMarks = { KINDS, kindOf, kindLabel, genreName, whyLine, hoursText, legend, card, picks, pickCards, resultCards, haversineKm, shotOf };
 })();

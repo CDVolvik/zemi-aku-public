@@ -6,14 +6,18 @@
 
   // "Tuesday: 90°F / 32°C, 60% chance of rain, chance showers and thunderstorms." The first daytime
   // period, or the first one there is. An active alert leads.
-  function line(data) {
+  // Spanish keeps the numbers and names the National Weather Service's own English for the alert, which
+  // this page does not translate (Opus 10/24: an English alert line inside a Spanish session).
+  function line(data, lang = "en") {
     const periods = data?.forecast?.periods || [];
     const period = periods.find((p) => p.daytime) || periods[0];
     if (!period) return "";
+    const es = lang === "es";
     const bits = [`${period.fahrenheit}°F / ${period.celsius}°C`];
-    if (period.rainChance != null) bits.push(`${period.rainChance}% chance of rain`);
-    if (period.forecast) bits.push(period.forecast.toLowerCase());
+    if (period.rainChance != null) bits.push(es ? `${period.rainChance}% de probabilidad de lluvia` : `${period.rainChance}% chance of rain`);
+    if (period.forecast && !es) bits.push(period.forecast.toLowerCase());
     const alert = data?.alerts?.alerts?.[0];
+    if (es) return `${alert ? `Aviso vigente: ${alert.event} (weather.gov, en inglés). ` : ""}Pronóstico de weather.gov: ${bits.join(", ")}.`;
     const warning = alert ? `${alert.event} in effect (weather.gov). ` : "";
     return `${warning}${period.name}: ${bits.join(", ")}.`;
   }

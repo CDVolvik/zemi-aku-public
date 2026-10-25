@@ -16,6 +16,7 @@
   const LANG_TAGS = { en: "en-US", es: "es-PR", fr: "fr-FR", it: "it-IT", de: "de-DE" };
   const IDLE_NOTE = "Choose a voice, then tap the orb to talk.";
   const STATE_LABELS = { off: "", listening: "Listening", thinking: "Thinking", speaking: "Speaking", paused: "Paused" };
+  const STATE_LABELS_ES = { off: "", listening: "Escuchando", thinking: "Pensando", speaking: "Hablando", paused: "En pausa" };
   const $ = (id) => document.getElementById(id);
   const app = () => window.ZemiApp;
   const fold = (s) => String(s || "").normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
@@ -74,8 +75,26 @@
     return matches.find(v => v.voiceURI === selected.voiceURI) || male || preferred || matches.find(v => v.default) || matches[0] || null;
   }
 
+  // The conversation's own notes, in Spanish on a Spanish page. A quoted question passes through.
+  const NOTES_ES = {
+    "Choose a voice, then tap the orb to talk.": "Escoja una voz y toque la esfera para hablar.",
+    "Listening. Speak, and I answer when you pause.": "Escuchando. Hable, y contesto cuando haga una pausa.",
+    "Connecting the microphone…": "Conectando el micrófono…",
+    "Thinking…": "Pensando…",
+    "Reconnecting with the selected voice…": "Reconectando con la voz escogida…",
+    "The voice agent session ended. Repeat your question to continue with standard listening.": "La sesión de voz terminó. Repita su pregunta para seguir con la escucha normal.",
+    "The answer was shortened. Ask for more detail after it finishes.": "La respuesta se acortó. Pida más detalle cuando termine.",
+    "Live listening is down and this browser has no speech recognition. Type the question.": "La escucha en vivo no está disponible y este navegador no reconoce voz. Escriba la pregunta.",
+    "Listening with this browser's own recognition.": "Escuchando con el reconocimiento de voz de este navegador.",
+    "The microphone is blocked. Allow it, or type the question.": "El micrófono está bloqueado. Permítalo, o escriba la pregunta.",
+    "Audio could not start. Press the orb to try again, or type your question.": "El audio no pudo empezar. Toque la esfera para intentarlo otra vez, o escriba su pregunta.",
+    "Paused. Session time still counts; Stop ends it.": "En pausa. El tiempo de la sesión sigue contando; Terminar la cierra.",
+    "Paused. The conversation is kept.": "En pausa. La conversación se guarda.",
+    "I couldn't update the map. Try opening the town again.": "No pude actualizar el mapa. Abra el pueblo otra vez.",
+  };
   function status(text) {
     const el = $("talk-status");
+    text = lang === "es" && Object.hasOwn(NOTES_ES, text || "") ? NOTES_ES[text] : text;
     el.textContent = text || "";
     el.hidden = !text;
   }
@@ -88,16 +107,18 @@
     mode = next;
     wisp?.setState(next === "off" ? "idle" : next);
     $("talk").dataset.mode = next;
-    $("talk-pause").textContent = next === "paused" ? "Resume" : "Pause";
+    const es = lang === "es";
+    $("talk-pause").textContent = next === "paused" ? (es ? "Seguir" : "Resume") : (es ? "Pausa" : "Pause");
     $("talk-pause").hidden = next === "off";
     $("talk-stop").hidden = next === "off";
     $("talk-preview").disabled = next !== "off";
-    const label = note === "Connecting the microphone…" ? "Connecting" : STATE_LABELS[next];
+    const label = note === "Connecting the microphone…" ? (es ? "Conectando" : "Connecting") : (es ? STATE_LABELS_ES : STATE_LABELS)[next];
     $("voice-state").textContent = label;
     $("voice-state").hidden = next === "off";
     $("voice-wave").hidden = next !== "listening" && next !== "speaking";
     $("wisp-button").dataset.mode = next;
-    $("wisp-button").setAttribute("aria-label", next === "off" ? "Talk with Zemi-Aku" : `${label}. ${next === "paused" ? "Resume talking" : "Talk with Zemi-Aku"}`);
+    const talk = es ? "Hablar con Zemi-Aku" : "Talk with Zemi-Aku";
+    $("wisp-button").setAttribute("aria-label", next === "off" ? talk : `${label}. ${next === "paused" ? (es ? "Seguir hablando" : "Resume talking") : talk}`);
     if (note !== undefined) status(note);
   }
 
@@ -109,7 +130,6 @@
     } catch {
       voices = []; listeningEnabled = false;
     }
-    restoreChoice();
     renderPicker();
   }
 
@@ -139,11 +159,17 @@
   }
 
   // Changing the language or the voice while talking reconnects once the old connection has closed.
-  function choose(nextLang, nextGender) {
+  // Only a pick in the menu is remembered: a question's language switches this visit and no other (Opus,
+  // Grok 10/25: after one English question, a fresh load of the page came up English for a Spanish speaker).
+  // A gender pick saves the gender only, so it never saves a language a question switched for this visit.
+  function choose(nextLang, nextGender, { persist = false } = {}) {
     const langChanged = nextLang !== lang;
     lang = nextLang;
     gender = nextGender === "male" ? "male" : "female";
-    try { localStorage.setItem(GENDER_STORE, gender); localStorage.setItem(LANG_STORE, lang); } catch {}
+    try {
+      if (persist === "lang") localStorage.setItem(LANG_STORE, lang);
+      if (persist === "gender") localStorage.setItem(GENDER_STORE, gender);
+    } catch {}
     renderPicker();
     if ((langChanged || agentMode) && mode !== "off") return restartListening();
   }
@@ -555,8 +581,8 @@
     $("wisp-button").addEventListener("click", start);
     $("talk-pause").addEventListener("click", () => (mode === "paused" ? resume() : pause()));
     $("talk-stop").addEventListener("click", stop);
-    $("talk-lang").addEventListener("change", (event) => choose(event.target.value, gender));
-    $("talk-voice").addEventListener("change", (event) => choose(lang, event.target.value));
+    $("talk-lang").addEventListener("change", (event) => choose(event.target.value, gender, { persist: "lang" }));
+    $("talk-voice").addEventListener("change", (event) => choose(lang, event.target.value, { persist: "gender" }));
     $("talk-preview").addEventListener("click", () => {
       if (mode !== "off") return;
       return app().speak({
@@ -574,5 +600,5 @@
     loadVoices();
   }
 
-  window.ZemiConverse = { init, start, stop, voice, browserVoice, LANG_TAGS, loadVoices, renderPicker, choose };
+  window.ZemiConverse = { init, start, stop, voice, browserVoice, LANG_TAGS, loadVoices, restoreChoice, renderPicker, choose };
 })();

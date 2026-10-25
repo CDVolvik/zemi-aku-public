@@ -889,6 +889,7 @@ function toCard(place, town) {
         : homeOf(place)
           ? `Names ${homeOf(place)}, not ${town}`
           : "Town not on the record",
+    genre: place.genre || "", home: homeOf(place) || "", category: place.category || "", elsewhere: Boolean(town && fold(town) !== "puerto rico" && !mentions),
     popularity: typeof place.popularity === "number" ? Math.round(place.popularity * 100) / 100 : null,
     image: place.image || "",
     imageSource: place.imageSource || "",
@@ -1698,7 +1699,8 @@ const server = http.createServer(async (req, res) => {
     if (url.pathname === "/api/coastal/ports" && req.method === "GET") return sendJson(res, 200, PORT_DATA);
     if (url.pathname === "/api/coastal/ships" && req.method === "GET") return sendJson(res, 200, shipFeed.snapshot());
     if (url.pathname === "/api/coastal/places" && req.method === "GET") {
-      const answer = await discoverCoast({ port: url.searchParams.get("port"), category: url.searchParams.get("category") || "all", artist: url.searchParams.get("artist") || "" });
+      const answer = await discoverCoast({ port: url.searchParams.get("port"), category: url.searchParams.get("category") || "all", artist: url.searchParams.get("artist") || "",
+        lang: url.searchParams.get("lang") === "es" ? "es" : "en" });
       return sendJson(res, answer.error ? 400 : 200, answer);
     }
     if (url.pathname === "/api/voice/status") return sendJson(res, 200, { enabled: voiceAgent.enabled });

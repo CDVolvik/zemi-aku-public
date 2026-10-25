@@ -1,6 +1,6 @@
 # Zemi-Aku: blind judge report (Opus)
 
-Tested 2026-10-25, about 08:35 to 08:41 UTC, against https://zemi.r21digital.com. I did not open any project code or docs under D:/R21-Brain. The only outside reads were the public site, the public GitHub repo's file list and commit messages (through the GitHub API), and HTTP timings.
+Tested 2026-10-25, about 08:35 to 08:41 UTC, against https://zemi.r21digital.com. I did not open any project code or docs on the machine. The only outside reads were the public site, the public GitHub repo's file list and commit messages (through the GitHub API), and HTTP timings.
 
 ## Browser used
 

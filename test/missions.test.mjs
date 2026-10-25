@@ -90,7 +90,7 @@ test('the Spanish town mission reads the standout vibes first and ends on the to
   await engine.play('ponce');
   assert.equal(log[0], 'lang es');
   assert.equal(log[1], 'select Ponce');
-  assert.match(log[4], /^say Esto es Ponce\. Qloo conoce 357 lugares aquí, y sabe lo que le gusta al pueblo: Tropical, Puerto Rican, Resort Like\./);
+  assert.match(log[4], /^say Esto es Ponce\. Qloo conoce 357 lugares aquí, y sabe lo que le gusta al pueblo, en sus etiquetas en inglés: Tropical, Puerto Rican, Resort Like\./);
   assert.match(log[6], /empiezan con Con Leche\./);
   assert.equal(log[7], 'open Con Leche Ponce');
   assert.match(log.at(-1), /^say Pregúnteme lo que quiera/);
@@ -102,4 +102,13 @@ test('the mission chips list every mission with its language for the voice', () 
   assert.match(html, /data-mission="bad-bunny" lang="en"/);
   assert.match(html, /data-mission="ponce" lang="es"/);
   assert.match(missions.chips('es'), /Ver un recorrido/);
+});
+
+test('on a Spanish page the English tours are named in Spanish and say they play in English', () => {
+  const es = missions.chips('es');
+  assert.match(es, /▶ Dónde comen los fans de Bad Bunny \(en inglés\)/);
+  assert.match(es, /▶ Vico C, en lugares reales \(en inglés\)/);
+  assert.match(es, /data-mission="ponce" lang="es">▶ Ponce, en español/);
+  const en = missions.chips('en');
+  assert.match(en, /data-mission="bad-bunny" lang="en">▶ Where Bad Bunny's fans eat/);
 });

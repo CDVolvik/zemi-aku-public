@@ -58,11 +58,11 @@ numbers in the answer; the cards under it carry the catalog's hours. For one kin
 call find_places with that word in the town so the cards are that kind, not the whole food category. For who goes to a
 place, what customers it draws or which ages like it, call place_audience with its catalog id: Qloo carries age and
 gender affinities for places, so never say it lacks them. A tool refused as unavailable did not run: say that tool was
-off for this run, never that it returned nothing. When the question carries a condition the tools cannot test (vegan,
-kosher, parking, a budget, rent as the priority), say so in one sentence before the rest and answer the part the data
-covers; never answer as if the condition had not been asked. A strict taste-tag miss is not catalog absence: for a kind
-of place use find_places with mode name and the kind word, and say a town has none of a kind only when town_catalog
-for its category lists none.
+off for this run, never that it returned nothing. When the question itself names a condition the tools cannot test
+(vegan, kosher, parking, a budget, rent as the priority), say so in one sentence before the rest and answer the part
+the data covers; never answer as if the condition had not been asked. Never raise a condition the question did not
+name. A strict taste-tag miss is not catalog absence: for a kind of place use find_places with mode name and the kind
+word, and say a town has none of a kind only when town_catalog for its category lists none.
 When the question is where an artist's fans eat, pass category food to artist_places; for nightlife, drinks.
 Use map tools to show relevant towns and verified places. Ask a clarification when town or intent
 is unclear: a question that names no kind of place and no purpose ("where is the good stuff", "¿dónde está lo
@@ -91,6 +91,46 @@ export function plainSpeech(text) {
     .replace(/\s*\n+\s*/g, " ")
     .replace(/\s{2,}/g, " ")
     .trim();
+}
+
+// The prompt asks for a sentence when the question names a condition the data cannot test. The model also
+// volunteered one on questions that named none ("Note: Qloo has no data on vegan, budget or parking here." under
+// a Taylor Swift question, 10/25). A sentence that disclaims such a condition is dropped unless the question
+// named one; the rest of the answer stays as written.
+const fold = (text) => String(text || "").normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
+// Conditions by kind, so a budget question does not license a vegan disclaimer. Money, cost and rent in the question
+// count as asking about a budget; in an answer only "budget" does, so the siting caveat about rents and sales stays.
+const CONDITIONS = {
+  vegan: /\b(vegan[oa]?s?|vegetarian[oa]?s?)\b/,
+  diet: /\b(kosher|halal|gluten|celiac[oa]?s?|celiaquia)\b/,
+  parking: /\b(parking|parquing|estacionamientos?)\b/,
+  budget: /\b(budget|presupuestos?)\b/,
+  access: /\b(wheelchair|silla de ruedas|accesib\w*)\b/,
+};
+// Whole words and verb forms only: "Costa Azul" is a place, not a cost.
+const MONEY = /\b(dinero|money|cheap|cheaper|cheapest|cheaply|barat[oa]s?|afford|affordable|cost|costs|costly|costo|costos|costar|cuesta|cuestan|cueste|cuesten|precios?|prices?|priced|rent|rents|renta|rentas|alquiler|alquileres|alquilar|ganar|ganancias?|profit|profits|profitable|revenue)\b/;
+// A gap in the data: a negation near a data noun, or Qloo said not to have something. "Vegan Planet is not open
+// today" is a fact about a place and stays.
+const DATA_NOUN = "(data|datos?|information|informacion|records?|registros?|catalog\\w*|coverage|cobertura)";
+const DATA_GAP = new RegExp(`\\b(no|not|without|lacks?|sin|ni|none|isn't|aren't|doesn't|don't|cannot|can't|unavailable|fuera)\\b[^.]{0,60}\\b${DATA_NOUN}\\b`
+  + `|\\b${DATA_NOUN}\\b[^.]{0,40}\\b(no|not|none|unavailable|missing|fuera|lacks?)\\b`
+  + `|\\bqloo\\b[^.]{0,30}\\b(has no|doesn't|does not|can't|cannot|lacks?|no tiene|no mide|no cubre|no sabe|no registra)\\b`
+  // "Parking isn't tracked by Qloo", "parking details are unavailable", "no se mide el estacionamiento".
+  + `|\\b(isn't|is not|aren't|are not|not|no)\\s+(tracked|measured|covered|listed|recorded|included|available)\\b`
+  + `|\\bunavailable\\b|\\bno (esta|estan) disponibles?\\b|\\bno se (mide|miden|registra|registran|incluye|incluyen)\\b`);
+const kindsIn = (text) => Object.keys(CONDITIONS).filter((kind) => CONDITIONS[kind].test(text));
+export function dropUnaskedConditions(question, speech) {
+  const q = fold(question);
+  const asked = new Set(kindsIn(q));
+  if (MONEY.test(q)) asked.add("budget");
+  const sentences = String(speech || "").split(/(?<=[.!?…])\s+/);
+  const kept = sentences.filter((sentence) => {
+    const s = fold(sentence);
+    const kinds = kindsIn(s);
+    return !(kinds.length && kinds.every((kind) => !asked.has(kind)) && DATA_GAP.test(s));
+  });
+  // An answer that was nothing but the unasked disclaimer comes back empty, so the caller's empty-answer path runs.
+  return kept.length < sentences.length ? kept.join(" ") : speech;
 }
 
 // /api/speak clamps to 300 characters, so the voice reads the opening sentences that fit; the
@@ -435,7 +475,7 @@ export function createAgent({ key, tools, ledger, fetchImpl = fetch, timeoutMs =
         const calls = message.tool_calls;
         if (!calls?.length) {
           if (typeof message.content !== "string" || message.content.length > 6000) return fail("empty-answer");
-          const speech = plainSpeech(message.content);
+          const speech = dropUnaskedConditions(question, plainSpeech(message.content));
           if (!speech) return fail("empty-answer");
           evidence.ms = Date.now() - started;
           return { agent: true, chat: true, speech, spoken: spokenExcerpt(speech), actions: townFlight(question, town, towns, kindPlaces(question, eatingPlaces(question, actions), speech)), evidence };

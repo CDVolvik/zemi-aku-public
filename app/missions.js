@@ -24,10 +24,10 @@
       count: "En toda la isla, Qloo conecta {count} lugares con el público de {artist}. El más fuerte es {place}, {kind} en {town}.",
       countOne: "Qloo conecta un lugar con el público de {artist}: {place}, {kind} en {town}.",
       countAmong: "En toda la isla, Qloo conecta {count} lugares con el público de {artist}. Entre ellos, {place}, {kind} en {town}.",
-      place: "{place}. {about}",
+      place: "{place}.",
       fans: "A quienes les encanta este lugar también siguen a {fan}, y viajan a {trip}.",
       fansOnly: "A quienes les encanta este lugar también siguen a {fan}.",
-      town: "Esto es {town}. Qloo conoce {count} lugares aquí, y sabe lo que le gusta al pueblo: {tastes}.",
+      town: "Esto es {town}. Qloo conoce {count} lugares aquí, y sabe lo que le gusta al pueblo, en sus etiquetas en inglés: {tastes}.",
       townCafes: "Sus cafés y panaderías más conocidos, por popularidad en Qloo, empiezan con {place}.",
       end: "Pregúnteme lo que quiera sobre Puerto Rico, en español o en inglés. Toque la esfera para hablar.",
       none: "Qloo no devolvió nada ahora mismo. Pregúnteme lo que quiera sobre Puerto Rico.",
@@ -35,8 +35,8 @@
   };
 
   const MISSIONS = [
-    { id: "bad-bunny", lang: "en", title: "Where Bad Bunny's fans eat", artist: "Bad Bunny", kind: "artist" },
-    { id: "vico-c", lang: "en", title: "Vico C, into real places", artist: "Vico C", kind: "artist" },
+    { id: "bad-bunny", lang: "en", title: "Where Bad Bunny's fans eat", titleEs: "Dónde comen los fans de Bad Bunny (en inglés)", artist: "Bad Bunny", kind: "artist" },
+    { id: "vico-c", lang: "en", title: "Vico C, into real places", titleEs: "Vico C, en lugares reales (en inglés)", artist: "Vico C", kind: "artist" },
     { id: "ponce", lang: "es", title: "Ponce, en español", town: "Ponce", kind: "town" },
   ];
 
@@ -146,7 +146,7 @@
   function chips(lang = "en") {
     const label = lang === "es" ? "Ver un recorrido" : "Watch a tour";
     return `<span class="mission-label">${label}</span>` + MISSIONS.map((m) =>
-      `<button type="button" data-mission="${m.id}" lang="${m.lang}">▶ ${esc(m.title)}</button>`).join("");
+      `<button type="button" data-mission="${m.id}"${lang === "es" && m.titleEs ? "" : ` lang="${m.lang}"`}>▶ ${esc(lang === "es" && m.titleEs ? m.titleEs : m.title)}</button>`).join("");
   }
 
   window.ZemiMissions = { create, chips, fill, firstSentence, MISSIONS, T };
