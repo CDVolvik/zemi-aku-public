@@ -8,7 +8,7 @@
       noTurn: "no model turn", unfinished: "model did not finish", place: (n) => `${n} place${n === 1 ? "" : "s"}`, measured: "catalog measured", read: "read", refused: "refused",
       done: "done", more: (n) => `+${n} more`, modelLine: (m) => `Model ${m} via OpenRouter`, rounds: (n) => `${n} round${n === 1 ? "" : "s"}`, answered: "answered", ids: "Qloo IDs",
       rulesBody: "Answered by the rule-based router from the saved Qloo catalog", replayBody: "A saved run, replayed; the times are when its data was read",
-      reasons: { clarify: "a question back, no record read", budget: "daily model budget spent", "visitor-cap": "your model turns for today are used", "no-key": "no model configured",
+      reasons: { clarify: "a question back, no record read", hours: "the note gave opening hours; the cards carry them", phone: "the note gave a phone number", quote: "the note quoted the tool", budget: "daily model budget spent", "visitor-cap": "your model turns for today are used", "no-key": "no model configured",
         echo: "the model repeated the verdict", number: "the model restated a figure; the verdict carries the numbers", claim: "the model made a claim the data cannot carry", language: "the note is written in English and Spanish only" },
       failed: (code) => `the model did not answer: ${code}`, decimal: ".",
       sources: (n) => `${n} source${n === 1 ? "" : "s"}`, kinds: { business: "business research", opportunity: "opportunity map" },
@@ -20,7 +20,7 @@
       noTurn: "sin turno del modelo", unfinished: "el modelo no terminó", place: (n) => `${n} lugar${n === 1 ? "" : "es"}`, measured: "catálogo medido", read: "leído", refused: "rechazada",
       done: "hecho", more: (n) => `+${n} más`, modelLine: (m) => `Modelo ${m} vía OpenRouter`, rounds: (n) => `${n} ronda${n === 1 ? "" : "s"}`, answered: "respondió", ids: "IDs de Qloo",
       rulesBody: "Respondió el enrutador de reglas desde el catálogo guardado de Qloo", replayBody: "Una corrida guardada, repetida; las horas son de cuando se leyeron sus datos",
-      reasons: { clarify: "una pregunta de vuelta, sin leer registros", budget: "presupuesto diario del modelo agotado", "visitor-cap": "sus turnos del modelo de hoy se usaron", "no-key": "sin modelo configurado",
+      reasons: { clarify: "una pregunta de vuelta, sin leer registros", hours: "la nota dio horarios; las tarjetas los llevan", phone: "la nota dio un teléfono", quote: "la nota citó la herramienta", budget: "presupuesto diario del modelo agotado", "visitor-cap": "sus turnos del modelo de hoy se usaron", "no-key": "sin modelo configurado",
         echo: "el modelo repitió el veredicto", number: "el modelo repitió una cifra; el veredicto lleva los números", claim: "el modelo afirmó algo que los datos no sostienen", language: "la nota solo se escribe en inglés y español" },
       failed: (code) => `el modelo no respondió: ${code}`, decimal: ",",
       sources: (n) => `${n} fuente${n === 1 ? "" : "s"}`, kinds: { business: "investigación de negocio", opportunity: "mapa de oportunidad" },
@@ -85,8 +85,11 @@
         // A control run says so in the folded line; a normal run offers the same question without Qloo.
         const control = evidence.control === "no-qloo";
         summary = `${t.evidence} · ${t.model}${control ? ` · ${t.control}` : ""} · ${t.call(calls.length)} · ${seconds(evidence.ms || 0, t)}`;
+        // The control is offered only when a Qloo tool answered; a refusal or a map-only turn has nothing to remove
+        // (judge panel 10/25 round 6).
+        const usedQloo = calls.some((call) => call.ok !== false && (/qloo/i.test(String(call.source || "")) || /^(qloo_|artist_places|fans_also_love|town_catalog|find_places|place_details|opportunity_map)/.test(String(call.tool || ""))));
         body = `${list}<p>${t.modelLine(esc(evidence.model || "?"))} · ${t.rounds(evidence.rounds || 1)}${when ? ` · ${t.answered} ${when}` : ""}</p>`
-          + (control ? "" : `<p><button type="button" class="control-run" data-control-run>${t.again}</button></p>`);
+          + (control || !usedQloo ? "" : `<p><button type="button" class="control-run" data-control-run>${t.again}</button></p>`);
       } else {
         summary = `${t.evidence} · ${t.replay} · ${t.call(calls.length)}`;
         body = `${list}<p>${t.replayBody}${when ? ` · ${when}` : ""}</p>`;

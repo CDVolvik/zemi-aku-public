@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 import { smallTalkKind, guideKind, vagueKind, chatReply } from '../server/chat.mjs';
-import { businessRequest, createBusinessDiscovery } from '../server/business.mjs';
+import { businessRequest, createBusinessDiscovery, outsidePlace } from '../server/business.mjs';
 
 test('purchase intent reaches its own handler before a place-name search', async () => {
   const source = fs.readFileSync(new URL('../scripts/serve-eagle.mjs', import.meta.url), 'utf8')
@@ -228,6 +228,20 @@ test('a business question about a place outside Puerto Rico says so instead of a
   // Lowercase, a mixed pair, and a town inside a longer name.
   assert.equal((await withMap({ question: 'Where should I open a bakery in miami?', lang: 'en', town: 'Ponce' })).kind, 'outside');
   assert.equal((await withMap({ question: 'Should I open a bakery in Ponce or Miami?', lang: 'en' })).kind, 'outside');
+  // A directive after the conjunction is not a place (judge panel 10/25 round 6).
+  assert.notEqual((await withMap({ question: 'Compare opening a bakery in Ponce versus Bayamón and give exact customer demand and expected monthly profit.', lang: 'en', town: 'Ponce' }))?.kind, 'outside');
+  assert.equal(outsidePlace('Compare opening a bakery in Vieques versus Culebra and give exact customer demand', ['Vieques', 'Culebra']), '');
+  assert.equal(outsidePlace('Should I open a bakery in Ponce or Miami', ['Ponce']), 'Miami');
+  assert.equal(outsidePlace('Should I open a bakery in Ponce or Miami next year?', ['Ponce']), 'Miami', 'a time after the place is fine');
+  assert.equal(outsidePlace('¿Abro una panadería en Ponce o Miami el año que viene?', ['Ponce']), 'Miami');
+  assert.equal(outsidePlace('Ponce o Miami, ¿cuál?', ['Ponce']), 'Miami');
+  assert.equal(outsidePlace('Open in Ponce or Culebra and give me the numbers', ['Ponce', 'Culebra']), '');
+  // A bare preposition after the candidate starts a directive, not a time (Codex review 10/25 round 6, second pass).
+  assert.equal(outsidePlace('Should I open a bakery in Ponce or give in detail?', ['Ponce']), '');
+  assert.equal(outsidePlace('Is Ponce good or better for a bakery?', ['Ponce']), '');
+  assert.equal(outsidePlace('¿Es Ponce mejor o peor para una panadería?', ['Ponce']), '');
+  assert.equal(outsidePlace('Should I open a bakery in Ponce or Miami in 2027?', ['Ponce']), 'Miami');
+  assert.equal(outsidePlace('Should I open a bakery in Ponce or Miami this summer?', ['Ponce']), 'Miami');
   assert.equal((await withMap({ question: 'Should I open a bakery in Old Ponce?', lang: 'en' })).town, 'Ponce');
   // A known town, "Puerto Rico" itself, a generic place word, a determiner or a source keeps the normal flow.
   assert.equal((await withMap({ question: 'Where should I open a bakery in Ponce?', lang: 'en' })).town, 'Ponce');

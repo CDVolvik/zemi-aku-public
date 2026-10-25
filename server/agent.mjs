@@ -52,7 +52,10 @@ each town's group (in Spanish: brecha, competido, tranquilo, saturado, sin datos
 10,000 residents against the median the groups split on, and the exact counts;
 quote every rate per 10,000 residents in that unit, exactly as the tool gives it; never say few when its figure is at or
 above the median, and end with one concrete next step (which places to visit). When the question is about a town other
-than the open one, call map_town for that town so the map follows the answer.
+than the open one, call map_town for that town so the map follows the answer. A town with no taste rank is unranked:
+never give it a position. Repeat the tool's sentences without quotation marks. Never write opening hours or phone
+numbers in the answer; the cards under it carry the catalog's hours. For one kind of place (bakeries, salons, cafés),
+call find_places with that word in the town so the cards are that kind, not the whole food category.
 When the question is where an artist's fans eat, pass category food to artist_places; for nightlife, drinks.
 Use map tools to show relevant towns and verified places. Ask a clarification when town or intent
 is unclear: a question that names no kind of place and no purpose ("where is the good stuff", "¿dónde está lo
@@ -223,6 +226,30 @@ export function eatingPlaces(question, actions) {
   });
 }
 
+// A question about one kind of place keeps cards of that kind (judge panel 10/25 round 6: bakery questions with BBQ
+// and taco cards from the food category). Matched on the catalog name and genre; when nothing matches, the list stays.
+const KIND_MATCH = {
+  bakery: /panader|bakery|bake|repost|pastel|pâtiss|patiss/i,
+  cafe: /caf[eé]\b|cafeter|coffee|café/i,
+  bar: /\bbar\b|\bbarra\b|\bpub\b|lounge|cervec|brew|taproom/i,
+  hotel: /hotel|hostal|\binn\b|resort|hospedaje|guest ?house|parador/i,
+  salon: /sal[oó]n|beauty|barber|peluq|\bspa\b|nail|estética|estetica/i,
+};
+export function kindPlaces(question, actions, speech = "") {
+  const kind = industryIn(String(question || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "")); // "café" folds so \b holds
+  const re = KIND_MATCH[kind];
+  if (!re) return actions;
+  // "Where can I eat near my hotel?" asks for food; the hotel is context (Codex review 10/25 round 6).
+  if (isEating(question) && !["bakery", "cafe"].includes(kind)) return actions;
+  const lists = (actions || []).filter((action) => action?.type === "show_places" && Array.isArray(action.places));
+  // A list the answer names stays whole: cards never contradict the speech (Codex review 10/25 round 6, second pass).
+  const said = String(speech || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const mentioned = (place) => Boolean(said && place?.name) && said.includes(String(place.name).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase());
+  const keep = new Map(lists.map((action) => [action, action.places.filter((place) => mentioned(place) || re.test(`${place?.name || ""} ${place?.genre || ""}`))]));
+  if (![...keep.values()].some((places) => places.length)) return actions; // nothing of that kind anywhere: the lists stay
+  return (actions || []).flatMap((action) => !keep.has(action) ? [action] : keep.get(action).length ? [{ ...action, places: keep.get(action) }] : []);
+}
+
 // The map follows the town the question names (judge panel 10/24: Adjuntas stayed on screen under a Culebra answer).
 // Only when the model moved nothing itself, and only to a known town other than the open one.
 export function townFlight(question, town, towns, actions) {
@@ -240,7 +267,8 @@ export function townFlight(question, town, towns, actions) {
 // It never changes the verdict; a capped or failed call leaves the template alone and the drawer says so.
 const NOTE_PROMPT = `You add two short sentences after a fixed verdict about opening a business in a Puerto Rico town.
 Use only the data given. Sentence one: name up to three places from the catalog list the person should go see, and one
-concrete thing to check there, said once (the opening hour, the queue, the prices); if the catalog list is empty, say
+concrete thing to check there, said once (the queue, the prices, whether it is open when you go); never write an
+opening hour or a phone number, the cards carry them; if the catalog list is empty, say
 there is no listed place to visit yet, and never put a town in that slot. Sentence two: one comparison with a town from
 the gap list, or one next step. Never quote a rate, count, rank or percentage: the verdict already said the numbers,
 and a note with a figure is dropped. The data carries a ready comparison sentence; keep its direction as given. A row
@@ -262,13 +290,26 @@ export function noteLanguage(text) {
 // A figure beside a unit is the model restating a number (judge panel 10/24 round 3: "0.65 por cada cien mil" beside
 // "0.7 per 10,000" in one bubble); the verdict carries every number, the note none.
 const FIGURES = /\d[\d.,]*\s*(?:%|per\b|por\b|residents?\b|residentes?\b|establishments?\b|establecimientos?\b|businesses\b|negocios\b|places\b|lugares\b|bakeries\b|panader[ií]as?\b|caf[eé]s?\b|cafeter[ií]as?\b|restaurants?\b|restaurantes?\b|bars?\b|barras?\b|hotels?\b|hoteles\b|salons?\b|salones\b)|\b(?:per|por cada)\s+(?:\d|ten|hundred|cien|diez|mil)\b|\b(?:rank|ranks|ranked|puesto|lugar)\s*#?\d|#\d|\d+\s+(?:of|de)\s+\d+/i;
+// Clock times, phone numbers and quotation marks never belong in the note: the cards carry hours and numbers, and a
+// quoted tool sentence reads as pasted (Codex review 10/25 round 6; judge panel: hours in the text against the card).
+const CLOCK = new RegExp([
+  String.raw`\b\d{1,2}(?::\d{2})?\s*(?:a\.?\s?m\.?|p\.?\s?m\.?)\b`, // 8 am, 8:00 a.m.
+  String.raw`\b\d{1,2}[:h]\d{2}\b`, // 8:00, 18h30
+  String.raw`\b(?:at|from|until|till|by|before|after|around|a las|a la|desde las|hasta las|antes de las|después de las|despues de las|sobre las|tipo)\s+(?:las\s+)?\d{1,2}(?:[:.h]\d{2})?\b`, // at 8, a las 8, desde las 7.30
+  String.raw`\b\d{1,2}\.\d{2}\s*(?:h|hrs|horas)?\b(?=\s*(?:a|y|de la|en|$|[,.;]))`, // 18.30 as a time
+].join("|"), "i");
+const PHONE = /(?<!\d)(?:\(?\d{3}\)?[\s.-]?){2}\d{4}(?!\d)/; // 787-555-0123, (787)555-0123, 7875550123
+const QUOTES = /["“”«»]/;
 export function checkNote(text, lang, names = []) {
   const sentences = String(text || "").split(/(?<=[.!?…])\s+/).filter(Boolean).slice(0, 3);
   const kept = sentences.join(" ");
   if (CLAIMS.test(kept)) return { reason: "claim" };
-  // A catalog name may end in a digit ("La Familia Bakery 2, Panadería…" read as "2 panaderías" live); the
-  // names the note was given are masked before the figure check, never the figures around them.
-  const masked = names.filter(Boolean).reduce((t, name) => t.split(name).join("PLACE"), kept);
+  // A catalog name may end in a digit ("La Familia Bakery 2, Panadería…" read as "2 panaderías" live) or carry a
+  // time ("Bar 5:30"); the names the note was given are masked before every figure check, never the text around them.
+  const masked = names.filter(Boolean).reduce((t, name) => t.replace(new RegExp(String(name).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi"), "PLACE"), kept);
+  if (CLOCK.test(masked)) return { reason: "hours" };
+  if (PHONE.test(masked)) return { reason: "phone" };
+  if (QUOTES.test(masked)) return { reason: "quote" };
   if (FIGURES.test(masked)) return { reason: "number" };
   const guessed = noteLanguage(kept);
   if (guessed && ["en", "es"].includes(lang) && guessed !== lang) return { reason: "language" };
@@ -390,7 +431,7 @@ export function createAgent({ key, tools, ledger, fetchImpl = fetch, timeoutMs =
           const speech = plainSpeech(message.content);
           if (!speech) return fail("empty-answer");
           evidence.ms = Date.now() - started;
-          return { agent: true, chat: true, speech, spoken: spokenExcerpt(speech), actions: townFlight(question, town, towns, eatingPlaces(question, actions)), evidence };
+          return { agent: true, chat: true, speech, spoken: spokenExcerpt(speech), actions: townFlight(question, town, towns, kindPlaces(question, eatingPlaces(question, actions), speech)), evidence };
         }
         // A round runs at most four tools. The model sometimes asks for six on an open question ("what is
         // there to do in Maricao?"); the extras get an error result instead of the whole turn falling back.

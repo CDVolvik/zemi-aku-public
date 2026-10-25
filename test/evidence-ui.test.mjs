@@ -172,3 +172,26 @@ test('a model answer offers the control run and a control run is labeled instead
   assert.match(Z.html('es', { mode: 'sources', kind: 'business', calls: [], note: { fallback: 'number' } }), /el modelo repitió una cifra/);
   assert.match(html.match(/async function runQuestion\([^]*?\n}\n/)[0], /lastAgentAnswer = \{ \.\.\.lastRequest, speech: data\.speech \};/);
 });
+
+test("the control diff matches whole names, so La Victoria is not found inside Villa Victoria (judge panel 10/25 round 6)", () => {
+  const html = fs.readFileSync(new URL("../app/index.html", import.meta.url), "utf8");
+  const source = html.match(/function qlooDiff\([^]*?\n}\n/)[0];
+  const context = { foldName: (v) => String(v || "").normalize("NFD").replace(/\p{M}/gu, "").toLowerCase() }; // the production fold: accents and case only
+  vm.createContext(context); vm.runInContext(source, context);
+  const names = ["La Placita de Santurce", "La Victoria", "Los Kings Lounge"];
+  const withQloo = "Try La Placita de Santurce, La Victoria and Los Kings Lounge.";
+  const without = "Without Qloo I can only suggest Villa Victoria and the plaza.";
+  assert.deepEqual(context.qlooDiff(withQloo, without, names), ["La Placita de Santurce", "La Victoria", "Los Kings Lounge"]);
+  assert.deepEqual(context.qlooDiff(withQloo, "Go to La Victoria.", names), ["La Placita de Santurce", "Los Kings Lounge"]);
+  assert.deepEqual(context.qlooDiff("Try La Placita de Santurce, then Los Kings Lounge!", "Go to Los Kings Lounge.", names), ["La Placita de Santurce"], "punctuation around a name does not hide it");
+});
+
+test("the control run is offered only when a Qloo tool answered (judge panel 10/25 round 6)", () => {
+  const Z = load();
+  const base = { mode: "model", model: "m", rounds: 1, ms: 900, at: "2026-10-25T08:00:00Z" };
+  assert.doesNotMatch(Z.answerBody("en", { ...base, calls: [] }, ""), /control-run/, "a refusal with no tool call");
+  assert.doesNotMatch(Z.answerBody("en", { ...base, calls: [{ tool: "map_town", ok: true, args: { town: "Ponce" } }] }, ""), /control-run/, "a map-only turn");
+  assert.match(Z.answerBody("en", { ...base, calls: [{ tool: "artist_places", ok: true, args: {}, source: "Qloo", count: 5 }] }, ""), /control-run/);
+  assert.match(Z.answerBody("en", { ...base, calls: [{ tool: "opportunity_map", ok: true, args: {}, source: "Qloo heatmap · Census" }] }, ""), /control-run/);
+  assert.doesNotMatch(Z.answerBody("en", { ...base, calls: [{ tool: "artist_places", ok: false, args: {}, error: "refused" }] }, ""), /control-run/, "a Qloo call that failed answered nothing");
+});

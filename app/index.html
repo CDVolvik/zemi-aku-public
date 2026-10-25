@@ -972,7 +972,8 @@ function flyHome(duration) {
 // half that stays tappable: higher, a little west, aimed south of the island (measured at 390 px).
 function flyOpportunityFrame() {
   if (innerWidth > 720) return;
-  ZemiFlight.travel(viewer, { lon: EAGLE.lon - 0.55, lat: EAGLE.lat - 0.85, eye: 340000, ground: 70000 }, { duration: reducedMotion ? 0 : 1.6 });
+  // Higher and less west than before: the east end (Fajardo, Culebra, Vieques) was past the right edge (judge panel 10/25 round 6).
+  ZemiFlight.travel(viewer, { lon: EAGLE.lon - 0.12, lat: EAGLE.lat - 1.0, eye: 480000, ground: 70000 }, { duration: reducedMotion ? 0 : 1.6 });
 }
 function focusSanJuan(duration) {
   if (byName.has("San Juan")) frameWholeTown("San Juan", duration);
@@ -2750,7 +2751,9 @@ let lastAgentPlaces = []; // the catalog place names the with-Qloo answer put on
 // The same name test as /compare (server/compare.mjs): a multi-word catalog name, accent- and case-insensitive.
 const foldName = (v) => String(v || "").normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
 function qlooDiff(withText, withoutText, names) {
-  const named = (text) => names.filter((name) => foldName(name).trim().includes(" ") && ` ${foldName(text)} `.includes(foldName(name)));
+  // Whole names only: "La Victoria" sits inside "Villa Victoria" as a substring (judge panel 10/25 round 6).
+  const canon = (v) => ` ${foldName(v).replace(/[^\p{L}\p{N}]+/gu, " ").trim()} `; // punctuation and runs of space become one space
+  const named = (text) => names.filter((name) => canon(name).trim().includes(" ") && canon(text).includes(canon(name)));
   const without = named(withoutText);
   return named(withText).filter((name) => !without.includes(name));
 }

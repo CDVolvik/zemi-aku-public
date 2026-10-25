@@ -86,6 +86,9 @@ export function comparesTowns(text, towns, history = []) {
 // Case does not decide (phones lowercase everything); determiners, generic words and the data sources do.
 const AFTER_IN = /\b(in|en|or|o|and|y|vs|versus)\s+([a-z]+(?:\s+(?!(?:in|en|or|o|and|y|vs|versus)\b)[a-z]+)?)/g;
 const NOT_PLACES = new Set(['puerto rico', 'puerto', 'qloo', 'overture', 'census', 'pr', 'english', 'spanish', 'espanol', 'ingles',
+  // manner and time words after "in"/"en" that are not places (Codex review 10/25 round 6: "give in detail" read "Detail")
+  'detail', 'details', 'detalle', 'detalles', 'depth', 'general', 'particular', 'short', 'brief', 'summary', 'resumen', 'person', 'persona',
+  'practice', 'theory', 'order', 'advance', 'total', 'full', 'part', 'parte', 'cash', 'efectivo', 'principle', 'principio', 'writing', 'words', 'palabras',
   'a', 'an', 'the', 'this', 'that', 'my', 'our', 'your', 'el', 'la', 'los', 'las', 'un', 'una', 'mi', 'su', 'nuestro', 'este', 'esta', 'ese', 'esa',
   'town', 'towns', 'pueblo', 'pueblos', 'municipio', 'city', 'ciudad', 'downtown', 'center', 'centro', 'casco', 'plaza', 'zona', 'area', 'campo',
   'playa', 'beach', 'island', 'isla', 'general', 'particular', 'total', 'qloo data', 'the island', 'la isla', 'el centro', 'el casco',
@@ -108,13 +111,22 @@ export function outsidePlace(question, towns) {
   return '';
 }
 const CONJUNCTION = new Set(['or', 'o', 'and', 'y', 'vs', 'versus']);
+// A time ("next year", "el año que viene", "en 2027", "this summer") or a question ("¿cuál?") may follow the place;
+// a bare preposition may not, it starts a directive ("or give in detail", "o peor para una panadería").
+const TAIL_OK = /^(?:(?:next|this|last|coming)\s+(?:year|month|week|summer|winter|spring|fall|season)\b|(?:el|la)\s+(?:ano|mes|semana|temporada|verano|invierno)\b|(?:en|in)\s+(?:el\s+)?(?:\d{4}|verano|invierno|summer|winter|spring|fall|\d{1,2}\s+(?:meses|months|anos|years))\b|(?:cual|cuales|which|what|when|cuando)\b|\d{4}\b)/;
 function outsideIn(folded, towns) {
   // "Ponce or Miami" names a place after a conjunction only when the clause already names a known town;
   // "¿me conviene y por qué?" never does (judge panel 10/24 read "Por" as a town).
   const namesKnown = towns.some(town => folded.includes(fold(town)));
   for (const match of folded.matchAll(AFTER_IN)) {
     if (CONJUNCTION.has(match[1]) && !namesKnown) continue;
+    // A place after a conjunction ends the clause ("Ponce or Miami") or is followed by a time or a question ("next
+    // year", "el año que viene"); words that go on otherwise are a directive, not a place (judge panel 10/25 round 6:
+    // "Vieques versus Culebra and give exact customer demand" read "Give Exact" as a place).
     const words = match[2].split(' ');
+    let tail = folded.slice(match.index + match[0].length).trim();
+    if (CONJUNCTION.has(match[1]) && words[1] && TAIL_OK.test(`${words[1]} ${tail}`.trim())) tail = `${words.pop()} ${tail}`.trim(); // "Miami next year"
+    if (CONJUNCTION.has(match[1]) && tail && !TAIL_OK.test(tail)) continue;
     // The candidate is the longest run of words that is not a determiner, generic word or source.
     const first = NOT_PLACES.has(words[0]) ? '' : NOT_PLACES.has(words.join(' ')) ? '' : words[0];
     if (!first) continue;

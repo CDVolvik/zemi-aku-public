@@ -13,7 +13,7 @@ test("HERO_COPY defines business and traveler variants with distinct headlines a
   assert.match(home, /Plan my trip from my taste/);
   assert.match(home, /\/app\?mission=bad-bunny/);
   assert.match(home, /Find a town to open in/);
-  assert.match(home, /See how taste meets demand/);
+  assert.match(home, /See how taste meets supply/);
 });
 
 test("business is the default story and the static hero leads with it", () => {

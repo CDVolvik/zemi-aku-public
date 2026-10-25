@@ -367,6 +367,38 @@ the dock at 769, the island's west and east tips project to x 41 and 383 at y 17
 the ion token's origin restriction, not a live condition), the five nav links are 12 px tall each; `check-demo --journeys`
 0 failed. 341 tests.
 
+## Round-six release (2026-10-25, night)
+
+Live as `zemi-aku:round6-20261025`, source `4235303`, layered on `polish-20261025` with `app/`, `server/` and
+`scripts/serve-eagle.mjs` (`tmp/deploy-round6-20261025.sh`, local only). Rollback set
+`/opt/zemi-aku/round6-20261025-rollback` (previous image `polish-20261025`). Carlos: "can we check again the evaluation
+and see again our score now with all this changes? and see what else we keep optimizing". The sixth blind panel on the
+polish release (`JUDGE-PANEL-2026-10-25b.md`: GPT 16, Opus 14, Grok 15, mean 15.0) and three Codex rounds on this
+diff. No key, cap, cache, Caddy, env or connector change.
+
+What changed on the site:
+
+- **No hours or phone numbers in the model's text**: the cards carry them. The hybrid verdict note gets no hours in
+  its payload; a clock time, a phone number or a quotation mark drops the note and the drawer says why (Opus: 5:30 am
+  in the text against 5:00 am on the card).
+- **An unranked town stays unranked**; the tool's reading says how many Census codes are withheld ("0 to 4" for two)
+  and a partly published count reads "N published plus one withheld code" (Opus: "0 a 4", "puesto 70 de 70").
+- **Cards of the kind asked**: a bakery, café, bar, hotel or salon question keeps cards of that kind; a list the
+  answer names stays whole (Opus: BBQ and taco cards under a bakery question).
+- **The control diff matches whole names** after canonicalizing punctuation (Opus: La Victoria lost inside "Villa
+  Victoria"); the control is offered only after a Qloo call that answered.
+- **The comparison town is the next row on the gap list** after the open town, said as "the next gap-group town by
+  taste rank", or "the top gap-group town by taste rank" when there is none (Grok).
+- **A directive after a town is not a place**: "…Vieques versus Culebra and give exact customer demand…" no longer
+  refuses as "Give Exact" (GPT's High); a time or a question after the place still counts ("Miami next year").
+- **The phone island frame** holds Aguadilla, Culebra and Vieques inside 390 px (Opus).
+- **Front page**: "See how taste meets supply", the words the sheet uses (Grok's High).
+
+Checks: container healthy; seven changed-file SHA-256 hashes in the container equal the commit's; live browser runs
+(Culebra bakery question: one bakery card, no hours in the text; Las Marías salon: two withheld codes, no rank; San
+Juan's comparison Loíza, Maricao's the top row; the control's title; the town-state and comparison paths; the 390 px
+island frame); `check-demo --journeys` 0 failed; 456 tests. Real phones not tested.
+
 ## Polish release (2026-10-25, later)
 
 Live as `zemi-aku:polish-20261025`, source `d4e239d`, layered on `state-20261025` with `app/`, `server/` and
@@ -400,7 +432,9 @@ What changed on the site:
 Checks: container healthy; six changed-file SHA-256 hashes in the container equal the commit's; live browser runs of
 the San Juan verdict (tags, visit line, comparison wording), Maricao (withheld wording), the control's title, the
 bakery correction after a restaurant verdict, the town-state path at 390 px, the gap-list note in both languages,
-the phone field width; `check-demo --journeys` 0 failed; 453 tests. Real phones not tested.
+the phone field width; `check-demo --journeys` 0 failed; 453 tests. Real phones not tested. Public snapshot re-exported
+from `0c59184` as `c5820b5` (the fifth panel record and its four evidence files added to the export list; scanned for the VM
+address, local paths, `_secrets` and attribution; the README's test count and the panel record read logged out).
 
 ## State release (2026-10-25)
 

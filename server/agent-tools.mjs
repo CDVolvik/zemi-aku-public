@@ -26,10 +26,19 @@ function townReading(file, industry, town) {
   const median = Number.isFinite(file.medians?.perTenThousand) ? file.medians.perTenThousand : null;
   // The groups split at the median of towns with published counts; quote that line, not the island average.
   const against = median !== null ? `against the median of ${figure(median)} the groups split on (island average ${figure(island)})` : `against ${figure(island)} island-wide`;
+  // A withheld cell is 0 to 2; an industry that sums two withheld codes reads 0 to 4, and the sentence says why
+  // (judge panel 10/25 round 6: "0 a 4" read as a misstated rule). An unranked town gets no "of N" to turn into a rank.
+  const published = row.establishments || 0;
+  const cells = row.suppressed ? Math.max(1, Math.round(Math.max(0, (row.establishmentsMax ?? 2) - published) / 2)) : 0;
+  const upper = published + 2 * cells; // equals establishmentsMax when the build is consistent; never below the published count
+  const withheldCodes = cells === 1 ? "one withheld code" : `${cells} withheld codes`;
   const density = row.suppressed
-    ? `no published count below 3, so 0 to ${row.establishmentsMax ?? 2} establishments`
+    ? (published > 0
+      ? `${published} published plus ${withheldCodes} (the Census withholds a code's count below 3), so ${published} to ${upper} establishments in all`
+      : `no published count (the Census withholds a code's count below 3; ${withheldCodes} here), so 0 to ${upper} establishments`)
     : `${row.establishments} establishments with employees, ${figure(row.perTenThousand)} per 10,000 residents ${against}`;
-  const reading = `${town} is ${GROUP_WORDS[row.group] || row.group} for ${industry}: taste rank ${row.tasteRank ?? "unranked"} of ${ranked}; ${density}. `
+  const rank = Number.isInteger(row.tasteRank) ? `taste rank ${row.tasteRank} of ${ranked}` : "no taste rank (Qloo has no heatmap signal here, so no position among the ranked towns)";
+  const reading = `${town} is ${GROUP_WORDS[row.group] || row.group} for ${industry}: ${rank}; ${density}. `
     + (row.group === "gap" ? "Taste above the median, few businesses: a lead to visit, not demand." : row.group === "competitive" ? "Taste above the median, many businesses: the figure is at or above the median, so never call it few."
       : row.group === "quiet" ? "Taste below the median, few businesses." : row.group === "crowded" ? "Taste below the median, many businesses." : "Not enough data to group.");
   return { town, group: row.group, groupEs: GROUP_ES[row.group] || row.group, tasteRank: row.tasteRank ?? null, ranked, establishments: row.establishments ?? null, establishmentsMax: row.establishmentsMax ?? null,

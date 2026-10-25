@@ -1508,18 +1508,25 @@ async function withVerdictNote(business, asked, ip) {
   // The current town is never its own comparison; a suppressed Census count is said in words, never as zero.
   const label = es ? "negocios de este tipo" : "businesses of this type";
   const rate = (r) => (r.suppressed ? r.perTenThousandMax ?? 0 : r.perTenThousand ?? 0);
-  const topGaps = (file?.towns || []).filter((r) => r.group === "gap" && r.town !== business.town).sort((a, b) => (a.tasteRank ?? 99) - (b.tasteRank ?? 99)).slice(0, 5)
+  const gapRows = (file?.towns || []).filter((r) => r.group === "gap" && r.town !== business.town).sort((a, b) => (a.tasteRank ?? 99) - (b.tasteRank ?? 99));
+  // The next row on the gap list the person is looking at: the gap town after this one by taste rank, else the top
+  // row (judge panel 10/25 round 6: San Juan's "siguiente pueblo" was the top row, not the row after San Juan).
+  const after = row.group === "gap" ? gapRows.find((r) => (r.tasteRank ?? 99) > (row.tasteRank ?? -1)) : null;
+  const topGaps = [...(after ? [after] : []), ...gapRows.filter((r) => r !== after)].slice(0, 5)
     .map((r) => ({ town: r.town, group: "gap", suppressed: Boolean(r.suppressed) }));
   const gap = (file?.towns || []).find((r) => r.town === topGaps[0]?.town);
+  // Said as what it is: the next row after this town, or the top row when there is none (Codex review 10/25 round 6).
+  const other = after ? "the next gap-group town by taste rank" : "the top gap-group town by taste rank";
+  const otherEs = after ? "el siguiente pueblo del grupo brecha por gusto" : "el primer pueblo del grupo brecha por gusto";
   const comparison = !gap ? (es ? "No hay otro pueblo del grupo brecha con el que comparar." : "No other gap-group town to compare with.")
-    // The other town is introduced as what it is, the next gap-group town (judge panel 10/25: "no se compara con Río
+    // The other town is introduced as what it is, the next (or top) gap-group town by taste rank (judge panel 10/25: "no se compara con Río
     // Grande" at the end of a Maricao answer read as a non sequitur).
-    : row.suppressed ? (es ? `El Census retiene el conteo de ${business.town}, así que no se puede ordenar frente a ${gap.town}, el siguiente pueblo del grupo brecha.` : `The Census withholds ${business.town}'s count, so it cannot be ordered against ${gap.town}, the next gap-group town.`)
-    : gap.suppressed ? (es ? `${gap.town}, el siguiente pueblo del grupo brecha, no tiene cifra publicada (el Census retiene los conteos pequeños), así que los dos no se pueden ordenar.` : `${gap.town}, the next gap-group town, has no published count (the Census withholds small counts), so the two cannot be ordered.`)
-    : rate(gap) < rate(row) ? (es ? `${gap.town}, el siguiente pueblo del grupo brecha, tiene menos ${label} por residente que ${business.town}.` : `${gap.town}, the next gap-group town, has fewer ${label} per resident than ${business.town}.`)
-    : rate(gap) > rate(row) ? (es ? `${gap.town}, el siguiente pueblo del grupo brecha, tiene más ${label} por residente que ${business.town}.` : `${gap.town}, the next gap-group town, has more ${label} per resident than ${business.town}.`)
-    : (es ? `${gap.town}, el siguiente pueblo del grupo brecha, y ${business.town} tienen la misma cifra por residente.` : `${gap.town}, the next gap-group town, and ${business.town} have the same figure per resident.`);
-  const places = business.places.slice(0, 6).map((p) => ({ name: p.name, genre: p.genre || null, rating: p.rating ?? null, hours: p.hours || null }));
+    : row.suppressed ? (es ? `El Census retiene el conteo de ${business.town}, así que no se puede ordenar frente a ${gap.town}, ${otherEs}.` : `The Census withholds ${business.town}'s count, so it cannot be ordered against ${gap.town}, ${other}.`)
+    : gap.suppressed ? (es ? `${gap.town}, ${otherEs}, no tiene cifra publicada (el Census retiene los conteos pequeños), así que los dos no se pueden ordenar.` : `${gap.town}, ${other}, has no published count (the Census withholds small counts), so the two cannot be ordered.`)
+    : rate(gap) < rate(row) ? (es ? `${gap.town}, ${otherEs}, tiene menos ${label} por residente que ${business.town}.` : `${gap.town}, ${other}, has fewer ${label} per resident than ${business.town}.`)
+    : rate(gap) > rate(row) ? (es ? `${gap.town}, ${otherEs}, tiene más ${label} por residente que ${business.town}.` : `${gap.town}, ${other}, has more ${label} per resident than ${business.town}.`)
+    : (es ? `${gap.town}, ${otherEs}, y ${business.town} tienen la misma cifra por residente.` : `${gap.town}, ${other}, and ${business.town} have the same figure per resident.`);
+  const places = business.places.slice(0, 6).map((p) => ({ name: p.name, genre: p.genre || null, rating: p.rating ?? null })); // no hours: the cards carry them
   const note = await verdictNote({ lang: asked.lang, town: business.town, industry: row.industry, verdict: business.speech, topGaps, places, comparison,
     row: { group: row.group, groupEs: GROUP_ES[row.group] || row.group, suppressed: Boolean(row.suppressed),
       ...(row.suppressed ? { countNote: "no published count: the Census withholds small counts" } : {}) } });

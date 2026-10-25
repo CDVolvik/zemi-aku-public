@@ -157,6 +157,10 @@ test('opportunity_map with a town returns that town’s row beside the island fi
   const withheld = await tool.run({ industry: 'bakery', town: 'Vieques' });
   assert.equal(withheld.data.town.perTenThousand, null, 'a withheld count is never a rate of zero');
   assert.equal(withheld.data.town.perTenThousandMax, 2.1);
+  assert.match(withheld.data.town.reading, /5 published plus one withheld code \(the Census withholds a code's count below 3\), so 5 to 7 establishments in all/, 'a partly published count says so (Codex review 10/25 round 6)');
+  const unranked = await tool.run({ industry: 'bakery', town: 'Culebra' });
+  assert.match(unranked.data.town.reading, /no taste rank \(Qloo has no heatmap signal here, so no position among the ranked towns\)/);
+  assert.doesNotMatch(unranked.data.town.reading, /of \d+;/);
   const missing = await tool.run({ industry: 'bakery', town: 'Lares' });
   assert.equal(missing.data.town, null);
 });
