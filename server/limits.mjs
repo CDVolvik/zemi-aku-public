@@ -38,12 +38,23 @@ export function createLimiter({ now = () => Date.now() } = {}) {
 
   // Daily budget shared by every visitor (UTC day).
   function spend(name, amount, cap) {
+    return spendDay(name, amount, cap) !== null;
+  }
+  // The same, returning the UTC day it charged (null when over the cap), so a refund names that day exactly.
+  function spendDay(name, amount, cap) {
     const day = today();
     const row = daily.get(name)?.day === day ? daily.get(name) : { day, used: 0 };
     daily.set(name, row);
-    if (row.used + amount > cap) return false;
+    if (row.used + amount > cap) return null;
     row.used += amount;
-    return true;
+    return day;
+  }
+
+  // Gives back what a request spent and could not use (a model turn the provider refused), on the day it was spent:
+  // a request that crosses UTC midnight never refunds the next day's turn (Codex review, round ten).
+  function refund(name, amount, day = today()) {
+    const row = daily.get(name);
+    if (row?.day === day) row.used = Math.max(0, row.used - amount);
   }
 
   function used(name) {
@@ -64,7 +75,7 @@ export function createLimiter({ now = () => Date.now() } = {}) {
     for (const [key, bucket] of buckets) if (bucket.at < cutoff) buckets.delete(key);
   }
 
-  return { take, spend, used, visitorIp, sweep };
+  return { take, spend, spendDay, refund, used, visitorIp, sweep };
 }
 
 // Shared gate for /api/* and /mcp. Returns false when a 429 was already sent.

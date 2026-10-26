@@ -16,7 +16,8 @@
       sourcesBody: "Answered from these sources without a model turn",
       hybrid: "sources + live model", hybridBody: "The verdict sentence is rule-based from these sources; the model wrote the closing sentences from the same data",
       noteSkipped: (why) => `the model's closing note was skipped: ${why}`,
-      control: "without Qloo tools, no history", again: "Ask again without Qloo" },
+      control: "without Qloo tools, no history", again: "Ask again without Qloo",
+      noControl: 'Ask again without Qloo needs a model turn, so it is not offered here. The saved with-and-without pairs are on <a href="/compare">/compare</a>.' },
     es: { evidence: "Evidencia", model: "modelo en vivo", rules: "reglas", replay: "repetición guardada", call: (n) => `${n} llamada${n === 1 ? "" : "s"}`,
       noTurn: "sin turno del modelo", unfinished: "el modelo no terminó", place: (n) => `${n} lugar${n === 1 ? "" : "es"}`, town: (n) => `${n} pueblo${n === 1 ? "" : "s"}`, measured: "catálogo medido", read: "leído", refused: "rechazada",
       done: "hecho", more: (n) => `+${n} más`, modelLine: (m) => `Modelo ${m} vía OpenRouter`, rounds: (n) => `${n} ronda${n === 1 ? "" : "s"}`, answered: "respondió", ids: "IDs de Qloo",
@@ -29,7 +30,8 @@
       sourcesBody: "Respondido desde estas fuentes, sin turno del modelo",
       hybrid: "fuentes + modelo en vivo", hybridBody: "La oración del veredicto sale de reglas sobre estas fuentes; el modelo escribió las oraciones finales con los mismos datos",
       noteSkipped: (why) => `la nota final del modelo se omitió: ${why}`,
-      control: "sin las herramientas de Qloo, sin historial", again: "Preguntar otra vez sin Qloo" },
+      control: "sin las herramientas de Qloo, sin historial", again: "Preguntar otra vez sin Qloo",
+      noControl: 'Preguntar otra vez sin Qloo necesita un turno del modelo, así que no aparece aquí. Los pares guardados con y sin Qloo están en <a href="/compare">/compare</a>.' },
   };
   const short = (id) => (/^[0-9a-fA-F-]{36}$/.test(id) ? `${id.slice(0, 4)}…${id.slice(-4)}` : id);
   const utc = (iso) => {
@@ -96,15 +98,19 @@
         : `${t.evidence} · ${t.kinds[evidence.kind] || t.rules} · ${t.noTurn}${evidence.reason ? ` (${t.reasons[evidence.reason] || t.failed(esc(String(evidence.reason)))})` : ""} · ${t.sources(calls.length)}`;
       body = `<ul>${calls.map((call) => callLine(call, t)).join("")}</ul><p>${hybrid ? `${t.hybridBody} · ${t.modelLine(esc(note.model))}` : t.sourcesBody}${when ? ` · ${when}` : ""}</p>`
         + (hybrid ? `<p><button type="button" class="control-run" data-control-run>${t.again}</button></p>`
-          : note?.fallback ? `<p>${t.noteSkipped(t.reasons[note.fallback] || esc(String(note.fallback)))}</p>` : "");
+          : note?.fallback ? `<p>${t.noteSkipped(t.reasons[note.fallback] || esc(String(note.fallback)))}</p>` : "")
+        + (!hybrid && (evidence.reason || note?.fallback) ? `<p>${t.noControl}</p>` : "");
     } else if (evidence.mode === "rules") {
       const why = t.reasons[evidence.reason] || t.failed(esc(String(evidence.reason || "unknown")));
+      // Without a model turn there is no live control to run; say where the saved pairs are (judge panel 10/26:
+      // "the live ablation disappears exactly when judge verification needs it"). A clarifying question needs none.
+      const noControl = evidence.reason === "clarify" ? "" : `<p>${t.noControl}</p>`;
       if (calls.length) {
         summary = `${t.evidence} · ${t.rules} · ${t.unfinished} (${why}) · ${t.call(calls.length)}`;
-        body = `<ul>${calls.map((call) => callLine(call, t)).join("")}</ul><p>${t.rulesBody}${when ? ` · ${when}` : ""}</p>`;
+        body = `<ul>${calls.map((call) => callLine(call, t)).join("")}</ul><p>${t.rulesBody}${when ? ` · ${when}` : ""}</p>${noControl}`;
       } else {
         summary = `${t.evidence} · ${t.rules} · ${t.noTurn} (${why})`;
-        body = `<p>${t.rulesBody}${when ? ` · ${when}` : ""}</p>`;
+        body = `<p>${t.rulesBody}${when ? ` · ${when}` : ""}</p>${noControl}`;
       }
     } else {
       const ids = [...new Set(calls.flatMap((call) => call.ids || []))].map(short);

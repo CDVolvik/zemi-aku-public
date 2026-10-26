@@ -128,10 +128,10 @@ function notesFor(label, day) {
       "People: Puerto Rico Community Survey 2020–2024.",
       "Groups split at the island median on each axis. A town without a published count counts as few only when even 2 businesses would stay below the median; otherwise it shows as not enough data.", ATTRIBUTION.en],
     es: ["Gusto comparado con los negocios que ya existen. No mide demanda, ingresos ni ganancias.",
-      "Negocios: U.S. Census Bureau, County Business Patterns 2023. No incluye a quienes trabajan por cuenta propia ni al gobierno. El Census no publica cifras menores de 3, así que un pueblo sin cifra publicada tiene de 0 a 2 establecimientos en esta industria.",
+      "Negocios: U.S. Census Bureau, County Business Patterns 2023. No incluye a quienes trabajan por cuenta propia ni al gobierno. El Censo no publica cifras menores de 3, así que un pueblo sin cifra publicada tiene de 0 a 2 establecimientos en esta industria.",
       `Gusto: afinidad del mapa de calor de Qloo por ${label.es}, promediada sobre las celdas del pueblo, obtenida el ${day}.`,
       "Población: Puerto Rico Community Survey 2020–2024.",
-      "Los grupos se dividen en la mediana de la isla en cada eje. Un pueblo sin cifra publicada se cuenta entre los de pocos negocios solo si aun con 2 quedaría por debajo de la mediana; si no, aparece como datos insuficientes.", ATTRIBUTION.es],
+      "Los grupos se dividen en la mediana de la isla en cada eje. Un pueblo sin cifra publicada se cuenta entre los de pocos negocios por residente solo si aun con 2 quedaría por debajo de la mediana; si no, aparece como datos insuficientes.", ATTRIBUTION.es],
   };
 }
 

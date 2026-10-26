@@ -43,8 +43,8 @@ function townReading(file, industry, town) {
     : `${row.establishments} establishments with employees, ${figure(row.perTenThousand)} per 10,000 residents ${against}`;
   const rank = Number.isInteger(row.tasteRank) ? `taste rank ${row.tasteRank} of ${ranked}` : "no taste rank (Qloo has no heatmap signal here, so no position among the ranked towns)";
   const reading = `${town} is ${GROUP_WORDS[row.group] || row.group} for ${industry}: ${rank}; ${density}. `
-    + (row.group === "gap" ? "Taste above the median, few businesses: a lead to visit, not demand." : row.group === "competitive" ? "Taste above the median, many businesses: the figure is at or above the median, so never call it few."
-      : row.group === "quiet" ? "Taste below the median, few businesses." : row.group === "crowded" ? "Taste below the median, many businesses." : "Not enough data to group.");
+    + (row.group === "gap" ? "Taste above the median, few businesses per resident: a lead to visit, not demand." : row.group === "competitive" ? "Taste above the median, many businesses per resident: the figure is at or above the median, so never call it few."
+      : row.group === "quiet" ? "Taste below the median, few businesses per resident." : row.group === "crowded" ? "Taste below the median, many businesses per resident." : "Not enough data to group.");
   return { town, group: row.group, groupEs: GROUP_ES[row.group] || row.group, tasteRank: row.tasteRank ?? null, ranked, establishments: row.establishments ?? null, establishmentsMax: row.establishmentsMax ?? null,
     suppressed: Boolean(row.suppressed), perTenThousand: row.suppressed ? null : figure(row.perTenThousand), perTenThousandMax: figure(row.perTenThousandMax), medianPerTenThousand: median, islandPerTenThousand: island, reading };
 }

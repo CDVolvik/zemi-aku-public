@@ -18,7 +18,18 @@ const YES = /^ (yes|yeah|yep|sure|ok|okay|si|claro|dale|oui|certo|ja|genau) $/;
 // An ask with no kind of place and no purpose gets one question back before the model or the records
 // (judge panels 10/24: "¿Dónde está lo bueno?" came back as food in the open town). Bounded forms only.
 const VAGUE = /^ (where s the good stuff|where is the good stuff|what s good|what s good here|what s good around here|what s good there|anything good|anything good here|anything good around here|donde esta lo bueno|donde esta lo bueno por aqui|que hay de bueno|que hay de bueno por aqui|que hay bueno|que hay bueno por aqui|donde esta lo mejor|que es lo bueno|que es lo bueno de aqui) $/;
-export function vagueKind(text) { return VAGUE.test(clean(text)) ? "vague" : null; }
+// A bare "¿Dónde?" or "What do you recommend?" is vague only at the start of a conversation (judge panel 10/26); after
+// "a quiet dinner in Ponce" the model has the town and the purpose (Codex review, round ten).
+const BARE = /^ (where|where exactly|and where|what|which|donde|donde exactamente|y donde|que|cual|what do you recommend|what do you recommend here|what do you recommend around here|any recommendations|que me recomiendas|que me recomienda|que me recomiendas por aqui|que me recomienda por aqui|que recomiendas|que recomienda) $/;
+export function vagueKind(text, history = []) {
+  const t = clean(text);
+  // Context is an earlier real question: "Hello" or another bare "Where?" gives none (Codex review, round ten).
+  const asked = (Array.isArray(history) ? history : []).some((turn) => {
+    const said = turn?.role === "user" ? String(turn.content || "") : "";
+    return said.trim() && !smallTalkKind(said) && !VAGUE.test(clean(said)) && !BARE.test(clean(said));
+  });
+  return VAGUE.test(t) || (BARE.test(t) && !asked) ? "vague" : null;
+}
 
 // Words that can sit around small talk without making it a question.
 const FILLER = new Set(("zemi aku please por favor there today and you u i im m fine good great well doing very so oh "

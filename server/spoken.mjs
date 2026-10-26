@@ -135,8 +135,8 @@ const CATALOG = {
     catalogNone: (b) => `I looked for ${b.query} in ${b.town} and Qloo has nothing. I won’t make one up.`,
     catalog: (b) => `Here’s what Qloo has for ${b.query} in ${b.town}.`,
     elsewhere: (t, q) => `Nothing in ${t} lists ${q}.`,
-    catalogMore: (n) => `You’ll see ${roughCount(n, "en")} on the map.`,
-    chain: (name, n) => `They’re all ${name}, ${roughCount(n, "en")} of them, right there on the map.`,
+    catalogMore: (n) => `You’ll see ${exactCount(n, "en")} on the map.`,
+    chain: (name, n) => `They’re all ${name}, ${exactCount(n, "en")} of them, right there on the map.`,
     open: {
       Food: (t) => `Hungry in ${t}? Here’s what’s already on the record.`,
       History: (t) => `For ${t}’s history, I’ll stick to the sourced page and the places that fit.`,
@@ -162,8 +162,8 @@ const CATALOG = {
     catalogNone: (b) => `Busqué ${b.query} en ${b.town} y Qloo no tiene nada. No voy a inventar.`,
     catalog: (b) => `Esto es lo que Qloo tiene de ${b.query} en ${b.town}.`,
     elsewhere: (t, q) => `Ningún lugar de ${t} tiene ${q}.`,
-    catalogMore: (n) => `Va a ver ${roughCount(n, "es")} en el mapa.`,
-    chain: (name, n) => `Son todos ${name}, ${roughCount(n, "es")}, ahí mismo en el mapa.`,
+    catalogMore: (n) => `Va a ver ${exactCount(n, "es")} en el mapa.`,
+    chain: (name, n) => `Son todos ${name}, ${exactCount(n, "es")}, ahí mismo en el mapa.`,
     open: {
       Food: (t) => `¿Hambre en ${t}? Esto es lo que ya está en el registro.`,
       History: (t) => `Para la historia de ${t}, me quedo con la página citada y los lugares que encajan.`,
@@ -357,7 +357,7 @@ export function spoken(kind, data = {}, lang = "en") {
   switch (kind) {
     case "catalog": return catalogLine(data, lang);
     case "business": return businessLine(data, lang);
-    case "opportunity": return es ? `Aquí el gusto por ${data.label} es fuerte y hay pocos negocios. Toque un pueblo para ver más.`
+    case "opportunity": return es ? `Aquí el gusto por ${data.label} es fuerte y hay pocos negocios por residente. Toque un pueblo para ver más.`
       : `Here’s where ${data.label} taste runs strong and businesses are few. Tap a town to look closer.`;
     case "businessTown": return es ? "Vamos a investigar. ¿En qué pueblo está pensando?" : "Let’s research it. Which town are you thinking about?";
     case "outside": return es ? `Zemi-Aku cubre solo los 78 pueblos de Puerto Rico, y ${data.place} no está en este mapa. Dígame un pueblo de aquí y lo busco.`

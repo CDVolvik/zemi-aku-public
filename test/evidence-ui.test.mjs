@@ -249,3 +249,12 @@ test('third pass: town counts read as towns, and Spanish errors keep their next 
   assert.match(es, /el resultado era demasiado grande; pida algo más específico/);
   assert.match(es, /demasiadas llamadas en una ronda; esa consulta quedó para la siguiente/);
 });
+
+test('an answer without a model turn says why the without-Qloo control is missing and where the saved pairs are (judge panel 10/26)', () => {
+  const Z = load();
+  assert.match(Z.html('en', { mode: 'rules', reason: 'http-402' }), /Ask again without Qloo needs a model turn, so it is not offered here\. The saved with-and-without pairs are on <a href="\/compare">\/compare<\/a>\./);
+  assert.match(Z.html('es', { mode: 'rules', reason: 'budget' }), /necesita un turno del modelo/);
+  assert.doesNotMatch(Z.html('en', { mode: 'rules', reason: 'clarify' }), /needs a model turn/, 'a question back needs no control');
+  assert.match(Z.html('en', { mode: 'sources', kind: 'business', reason: 'http-402', calls: [] }), /needs a model turn/);
+  assert.doesNotMatch(Z.html('en', { mode: 'sources', kind: 'opportunity', calls: [] }), /needs a model turn/, 'a sources answer that never tried the model says nothing');
+});

@@ -70,7 +70,7 @@ test('a town with an opportunity verdict gets a decision card first: what the da
   const elements = new Map();
   const context = { $: id => { if (!elements.has(id)) elements.set(id, { dataset: {} }); return elements.get(id); },
     ZemiConverse: { voice: () => ({ lang: 'es' }) }, esc: text => String(text), document: { querySelectorAll: () => [] },
-    ZemiOpportunity: { LABELS: { es: { gap: 'Brecha: afinidad sobre la mediana, pocos negocios', competitive: 'Competido' }, en: { gap: 'Gap' } }, supplyText: () => ({ businesses: '16 establecimientos', per: '0.5 por cada 10,000' }),
+    ZemiOpportunity: { LABELS: { es: { gap: 'Brecha: afinidad sobre la mediana, pocos negocios por residente', competitive: 'Competido' }, en: { gap: 'Gap' } }, supplyText: () => ({ businesses: '16 establecimientos', per: '0.5 por cada 10,000' }),
       definitionsHtml: () => '', industryChips: () => '', censusScope: (lang, sources) => sources?.cbp?.naics?.length ? `panaderías al detal, con empleados (NAICS ${sources.cbp.naics.join(' + ')})` : '' } };
   vm.createContext(context); vm.runInContext(source, context);
   vm.runInContext("researchPlaces = [{ name: 'Panadería Alturas' }, { name: 'La Familia Bakery 2' }, { name: 'Ekelekua' }, { name: 'Cuarta' }];", context);
@@ -78,13 +78,13 @@ test('a town with an opportunity verdict gets a decision card first: what the da
     evidence: { supply: { count: 64, release: '2026-09' }, opportunity: { industry: 'bakery', group: 'gap', tasteRank: 5, ranked: 76, establishments: 16, suppressed: false, perTenThousand: 0.476, medianPerTenThousand: 1.3, notes: [] } } });
   const out = elements.get('business-evidence').innerHTML;
   assert.ok(out.indexOf('class="decision"') < out.indexOf('Overture'), 'the card comes first');
-  assert.match(out, /Lo que dicen los datos<\/h4><p>Brecha: afinidad sobre la mediana, pocos negocios · gusto #5 de 76\. 16 establecimientos con empleados, 0\.5 por cada 10,000 residentes frente a la mediana de 1\.3 con la que se dividen los grupos\. Qloo registra 37 lugares de este tipo; Overture, 64\./);
+  assert.match(out, /Lo que dicen los datos<\/h4><p>Brecha: afinidad sobre la mediana, pocos negocios por residente · gusto #5 de 76\. 16 establecimientos con empleados, 0\.5 por cada 10,000 residentes frente a la mediana de 1\.3 con la que se dividen los grupos\. Qloo registra 37 lugares de este tipo; Overture, 64\./);
   assert.match(out, /Lo que no puede decir<\/h4><p>Demanda, ventas, rentas, tráfico peatonal, permisos ni ganancias\./);
   assert.match(out, /Tres pasos siguientes<\/h4><ol><li>Visite Panadería Alturas, La Familia Bakery 2, Ekelekua a la hora de apertura/);
   assert.match(out, /<li>Pregunte rentas en la calle principal/);
   assert.match(out, /<li>Compare con el siguiente pueblo del grupo brecha/);
   assert.doesNotMatch(out, /Overture, [^<]*mapa de Overture/);
-  assert.doesNotMatch(out, /El Census cuenta solo/, 'no NAICS codes in the record: no scope sentence');
+  assert.doesNotMatch(out, /El Censo cuenta solo/, 'no NAICS codes in the record: no scope sentence');
   assert.doesNotMatch(out, /Qloo etiqueta/, 'no taste profile: no tags sentence');
   // The town's Qloo taste tags sit beside the rank (judge panel 10/25).
   elements.clear();
@@ -100,11 +100,11 @@ test('a town with an opportunity verdict gets a decision card first: what the da
   context.showBusinessResearch({ town: 'San Juan', mode: 'research', available: true, total: 37, counts: [],
     evidence: { supply: { count: 64, release: '2026-09' }, opportunity: { industry: 'bakery', group: 'gap', tasteRank: 5, ranked: 76, establishments: 16, suppressed: false, perTenThousand: 0.476, medianPerTenThousand: 1.3, notes: [], sources: { cbp: { naics: ['311811'] } } } } });
   const scoped = elements.get('business-evidence').innerHTML;
-  assert.match(scoped, /Overture, 64\. El Census cuenta solo panaderías al detal, con empleados \(NAICS 311811\); las listas de Qloo y Overture incluyen lugares sin empleados y con otras etiquetas, por eso son más largas, y el grupo se lee en el eje del Census\.<\/p>/);
+  assert.match(scoped, /Overture, 64\. El Censo cuenta solo panaderías al detal, con empleados \(NAICS 311811\); las listas de Qloo y Overture incluyen lugares sin empleados y con otras etiquetas, por eso son más largas, y el grupo se lee en el eje del Censo\.<\/p>/);
   elements.clear();
   context.showBusinessResearch({ town: 'Lares', mode: 'research', available: true, total: 2, counts: [],
     evidence: { supply: { count: 3 }, opportunity: { industry: 'bakery', group: 'competitive', tasteRank: 30, ranked: 76, establishments: 5, suppressed: false, perTenThousand: 2.0, medianPerTenThousand: 1.3, notes: [], sources: { cbp: { naics: ['311811'] } } } } });
-  assert.doesNotMatch(elements.get('business-evidence').innerHTML, /El Census cuenta solo/, 'catalogs no longer than the Census count: nothing to explain');
+  assert.doesNotMatch(elements.get('business-evidence').innerHTML, /El Censo cuenta solo/, 'catalogs no longer than the Census count: nothing to explain');
   // One catalog longer, the other not: only that one is named (Codex review 10/25: Bayamón cafés, Qloo 21, Overture 62, Census 31).
   elements.clear();
   context.showBusinessResearch({ town: 'Bayamón', mode: 'research', available: true, total: 21, counts: [],
@@ -115,7 +115,7 @@ test('a town with an opportunity verdict gets a decision card first: what the da
   elements.clear();
   context.showBusinessResearch({ town: 'Florida', mode: 'research', available: true, total: 2, counts: [],
     evidence: { supply: { count: 2 }, opportunity: { industry: 'bakery', group: 'gap', tasteRank: 20, ranked: 76, establishments: 0, establishmentsMax: 2, suppressed: true, perTenThousand: 0, perTenThousandMax: 1.6, medianPerTenThousand: 1.3, notes: [], sources: { cbp: { naics: ['311811'] } } } } });
-  assert.doesNotMatch(elements.get('business-evidence').innerHTML, /El Census cuenta solo/);
+  assert.doesNotMatch(elements.get('business-evidence').innerHTML, /El Censo cuenta solo/);
   // The third check follows the group, and Overture-only names join the visit list (judge panel 10/24 round 3).
   elements.clear();
   context.showBusinessResearch({ town: 'Adjuntas', mode: 'research', available: true, total: 5, counts: [],
@@ -130,7 +130,7 @@ test('a town with an opportunity verdict gets a decision card first: what the da
   context.showBusinessResearch({ town: 'Luquillo', mode: 'research', available: true, total: 3, counts: [],
     evidence: { supply: { count: 4 }, opportunity: { industry: 'bakery', group: 'gap', tasteRank: 3, ranked: 76, establishments: 0, establishmentsMax: 2, suppressed: true, perTenThousand: 0, perTenThousandMax: 1.14, medianPerTenThousand: 1.3, notes: [] } } });
   const sup = elements.get('business-evidence').innerHTML;
-  assert.match(sup, /de 0 a 2 establecimientos con empleados \(el Census no publica cifras menores de 3\), hasta 1\.1 por cada 10,000 residentes frente a la mediana de 1\.3/);
+  assert.match(sup, /de 0 a 2 establecimientos con empleados \(el Censo no publica cifras menores de 3\), hasta 1\.1 por cada 10,000 residentes frente a la mediana de 1\.3/);
   assert.doesNotMatch(sup, /0\.0 por cada/);
   // No verdict row: no card.
   elements.clear();

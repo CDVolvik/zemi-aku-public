@@ -39,7 +39,7 @@ for (const navigation of ['goHome', 'select', 'showCatalog']) {
     const noop = () => {};
     const context = { $: id => { if (!nodes.has(id)) nodes.set(id, {}); return nodes.get(id); },
       byName: new Map([['Ponce', { record: { town: 'Ponce' } }]]), ZemiApp: {},
-      focusToken: 0, leadNames: [], dirCat: 'food',
+      focusToken: 0, placesToken: 0, leadNames: [], dirCat: 'food',
       placeSource: { entities: { removeAll: noop } }, heatSource: { entities: { removeAll: noop } },
       loadPlaces: async () => {}, opportunityUI: null,
       mapHistory: { beginUserNav: noop }, localFocus: (f) => f,

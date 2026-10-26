@@ -98,10 +98,10 @@ test('the server publishes each place with the catalog category the map colors b
   assert.equal(server.publishPlace({ ...base, genreId: 'urn:tag:genre:place:hotel', genre: 'Hotel' }).category, 'stay');
   assert.equal(server.publishPlace({ ...base, category: 'drinks', genreId: 'urn:tag:genre:place:hotel' }).category, 'drinks');
   assert.equal(server.publishPlace({ ...base, genre: 'Unheard-of thing' }).category, 'other');
-  assert.equal(server.publishPlace({ ...base, affinity: 0.81, affinitySignal: 'Bad Bunny' }).why, 'Strong match for Bad Bunny fans (81%)');
-  assert.equal(server.publishPlace({ ...base, affinity: 0.45, affinitySignal: 'Bad Bunny' }).why, 'Good match for Bad Bunny fans (45%)');
+  assert.equal(server.publishPlace({ ...base, affinity: 0.81, affinitySignal: 'Bad Bunny' }).why, 'Strong match for Bad Bunny fans (affinity 81/100)');
+  assert.equal(server.publishPlace({ ...base, affinity: 0.45, affinitySignal: 'Bad Bunny' }).why, 'Good match for Bad Bunny fans (affinity 45/100)');
   assert.equal(server.publishPlace({ ...base, affinity: 0.12, affinitySignal: 'Bad Bunny' }).why, '');
-  assert.equal(server.publishPlace({ ...base, affinity: 0.81, affinitySignal: 'Bad Bunny', whyLang: 'es' }).why, 'Fuerte afinidad para fans de Bad Bunny (81%)');
+  assert.equal(server.publishPlace({ ...base, affinity: 0.81, affinitySignal: 'Bad Bunny', whyLang: 'es' }).why, 'Fuerte afinidad para fans de Bad Bunny (81 de 100)');
   assert.equal(server.publishPlace({ ...base, affinity: 0.81 }).why, '');
 });
 
@@ -152,7 +152,7 @@ test('a chain with no photo of its own shows the brand logo on a plain tile; a C
 
 test('result cards carry why-it-fits, distance, actions and a small location thumb when present', () => {
   const html = marks.resultCards([
-    { name: 'TocaMadera', category: 'food', why: 'Strong match for Bad Bunny fans (81%)', lat: 18.4, lon: -66.15,
+    { name: 'TocaMadera', category: 'food', why: 'Strong match for Bad Bunny fans (affinity 81/100)', lat: 18.4, lon: -66.15,
       hours: 'Today 8–4', rating: 4.5, aerial: 'https://img/a.jpg', index: 2 },
   ], { from: { lat: 18.4, lon: -66.16 }, lang: 'en', focusedIndex: 2 });
   assert.match(html, /<ul class="answer-cards">/);
@@ -161,8 +161,8 @@ test('result cards carry why-it-fits, distance, actions and a small location thu
   assert.match(html, /data-tone="coral"/);
   assert.match(html, /class="result-name" data-open-place aria-current="true"/);
   assert.match(html, /aria-describedby="result-why-\d+-0 result-meta-\d+-0"/);
-  assert.match(html, /Why it fits you/);
-  assert.match(html, /Strong match for Bad Bunny fans \(81%\)/);
+  assert.match(html, /Why it's here/);
+  assert.match(html, /Strong match for Bad Bunny fans \(affinity 81\/100\)/);
   assert.doesNotMatch(html, />Open<|>Show on map</);
   assert.match(html, /aria-label="Ask more: TocaMadera"/);
   assert.match(html, /https:\/\/www\.google\.com\/maps\/dir\/\?api=1&destination=18\.4,-66\.15/);
@@ -175,7 +175,7 @@ test('result cards carry why-it-fits, distance, actions and a small location thu
   assert.match(noCoords, /hours not listed/, 'a place with no hours says so (judge panel 10/24 round 3)');
   assert.match(marks.resultCards([{ name: 'X', category: 'food' }], { lang: 'es' }), /sin horario publicado/);
   assert.doesNotMatch(noCoords, /maps\/dir/);
-  assert.doesNotMatch(noCoords, /Why it fits you/);
+  assert.doesNotMatch(noCoords, /Why it's here/);
   assert.doesNotMatch(marks.resultCards([{ name: 'Y', category: 'food', affinity: null }]), /data-index=/);
 });
 
@@ -233,10 +233,13 @@ test('a food answer that holds bars says so: Qloo lists these bars under restaur
 });
 
 test('the match line and the weather line follow the page language (probe 10/25, Opus 10/24)', () => {
-  assert.equal(marks.whyLine('Strong match for Bad Bunny fans (88%)', 'es'), 'Fuerte afinidad para fans de Bad Bunny (88%)');
-  assert.equal(marks.whyLine('Good match for Vico C fans (52%)', 'es'), 'Buena afinidad para fans de Vico C (52%)');
-  assert.equal(marks.whyLine('Fuerte afinidad para fans de Bad Bunny (88%)', 'en'), 'Strong match for Bad Bunny fans (88%)');
-  assert.match(marks.resultCards([{ name: 'La Victoria', genre: 'Bar', category: 'food', why: 'Strong match for Bad Bunny fans (87%)' }], { lang: 'es' }), /Fuerte afinidad para fans de Bad Bunny \(87%\)/);
+  assert.equal(marks.whyLine('Strong match for Bad Bunny fans (affinity 88/100)', 'es'), 'Fuerte afinidad para fans de Bad Bunny (88 de 100)');
+  assert.equal(marks.whyLine('Good match for Vico C fans (affinity 52/100)', 'es'), 'Buena afinidad para fans de Vico C (52 de 100)');
+  assert.equal(marks.whyLine('Fuerte afinidad para fans de Bad Bunny (88 de 100)', 'en'), 'Strong match for Bad Bunny fans (affinity 88/100)');
+  // Saved runs carry the older percentage form; it reads as a score out of 100 too (judge panel 10/26).
+  assert.equal(marks.whyLine('Strong match for Bad Bunny fans (88%)', 'en'), 'Strong match for Bad Bunny fans (affinity 88/100)');
+  assert.equal(marks.whyLine('Buena afinidad para fans de Vico C (52%)', 'es'), 'Buena afinidad para fans de Vico C (52 de 100)');
+  assert.match(marks.resultCards([{ name: 'La Victoria', genre: 'Bar', category: 'food', why: 'Strong match for Bad Bunny fans (affinity 87/100)' }], { lang: 'es' }), /Fuerte afinidad para fans de Bad Bunny \(87 de 100\)/);
   const weatherContext = { window: {} };
   vm.createContext(weatherContext);
   vm.runInContext(fs.readFileSync(new URL('../app/weather.js', import.meta.url), 'utf8'), weatherContext);
@@ -247,8 +250,8 @@ test('the match line and the weather line follow the page language (probe 10/25,
 });
 
 test('hours from a saved catalog carry their date in both languages, and live hours keep "Today" (judge panel 10/25 round 8)', () => {
-  assert.equal(marks.hoursText('Oct 7: 5:00 pm–3:00 am', 'en'), 'Oct 7: 5:00 pm–3:00 am');
-  assert.equal(marks.hoursText('Oct 7: 5:00 pm–3:00 am', 'es'), '7 oct: 5:00 pm–3:00 am');
+  assert.equal(marks.hoursText('On Oct 7: 5:00 pm–3:00 am', 'en'), 'On Oct 7: 5:00 pm–3:00 am');
+  assert.equal(marks.hoursText('On Oct 7: 5:00 pm–3:00 am', 'es'), 'El 7 oct: 5:00 pm–3:00 am');
   assert.equal(marks.hoursText('Closed on Oct 7', 'es'), 'Cerrado el 7 oct');
   assert.equal(marks.hoursText('Open 24 hours on Oct 7', 'es'), 'Abierto 24 horas el 7 oct');
   assert.equal(marks.hoursText('Today 12:00 am–12:00 am', 'es'), 'Abierto 24 horas');
@@ -256,7 +259,7 @@ test('hours from a saved catalog carry their date in both languages, and live ho
 });
 
 test('a card in another town shows no distance, and an affinity percentage is defined under the cards (judge panel 10/25 round 8)', () => {
-  const caguas = { name: 'Panadería Caguas', municipality: 'Caguas', lat: 18.23, lon: -66.03, category: 'food', genre: 'Bakery', why: 'Strong match for Vico C fans (96%)' };
+  const caguas = { name: 'Panadería Caguas', municipality: 'Caguas', lat: 18.23, lon: -66.03, category: 'food', genre: 'Bakery', why: 'Strong match for Vico C fans (affinity 96/100)' };
   const home = { name: 'Panadería Mayagüez', municipality: 'Mayagüez', lat: 18.2, lon: -67.14, category: 'food', genre: 'Bakery' };
   const from = { lat: 18.2, lon: -67.13 };
   const html = marks.resultCards([caguas, home], { from, fromTown: 'Mayagüez', lang: 'en' });
@@ -264,7 +267,7 @@ test('a card in another town shows no distance, and an affinity percentage is de
   assert.doesNotMatch(metas[0], /km/, 'the Caguas card has no distance from Mayagüez');
   assert.match(metas[1], /km/, 'the Mayagüez card keeps its distance');
   assert.match(html, /not the share of fans who go/);
-  assert.match(marks.resultCards([caguas], { lang: 'es' }), /no qué parte de los fans va/);
+  assert.match(marks.resultCards([caguas], { lang: 'es' }), /No es qué parte de los fans va/);
   assert.doesNotMatch(marks.resultCards([home], { lang: 'en' }), /affinity score/, 'no percentage, no definition');
 });
 

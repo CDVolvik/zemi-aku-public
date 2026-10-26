@@ -68,8 +68,16 @@ test("a chain is spoken once, with its count", () => {
   const kfc = { catalog: true, query: "KFC", town: "San Juan", count: 13, lead: [
     { name: "KFC", kind: "Fast food restaurant" }, { name: "KFC", kind: "Fast food restaurant" }, { name: "KFC", kind: "Fast food restaurant" },
   ] };
-  assert.equal(speechFor("en", kfc), "Here’s what Qloo has for KFC in San Juan. They’re all KFC, about a dozen of them, right there on the map.");
-  assert.match(speechFor("es", kfc), /Son todos KFC, como una docena/);
+  assert.equal(speechFor("en", kfc), "Here’s what Qloo has for KFC in San Juan. They’re all KFC, 13 of them, right there on the map.");
+  assert.match(speechFor("es", kfc), /Son todos KFC, 13,/);
+});
+
+test("a list's spoken count matches the places on the map (judge panel 10/26: 'about a dozen' for 8)", () => {
+  const fans = { catalog: true, query: "Bad Bunny fans", town: "San Juan", count: 8, lead: [
+    { name: "La Placita de Santurce", kind: "Bar" }, { name: "La Victoria", kind: "Bar" }, { name: "El Techo", kind: "Restaurant" },
+  ] };
+  assert.match(speechFor("en", fans), /You’ll see 8 on the map\.$/);
+  assert.match(speechFor("es", fans), /Va a ver 8 en el mapa\.$/);
 });
 
 test("catalog with nothing found does not invent places", () => {

@@ -62,12 +62,13 @@ test('a failed load leaves no colors and says the industry is unavailable',async
 
 test('the legend uses the group labels and honesty lines in the chosen language',()=>{
   const {Z}=load();
-  const en=Z.legendHtml('en',notes.en);
-  for(const text of ['Gap: taste above the median, few businesses','Competitive: taste above the median, many businesses','Quiet: taste below the median, few businesses',
-    'Crowded: taste below the median, many businesses','Not enough data','Not a measure of demand']) assert.ok(en.includes(text),text);
-  const es=Z.legendHtml('es',notes.es);
-  for(const text of ['Brecha: afinidad sobre la mediana, pocos negocios','Competido: afinidad sobre la mediana, muchos negocios','Tranquilo: afinidad bajo la mediana, pocos negocios',
-    'Saturado: afinidad bajo la mediana, muchos negocios','Datos insuficientes','No mide demanda']) assert.ok(es.includes(text),text);
+  const text=(html)=>html.replace(/<[^>]+>/g,''); // the names and rules sit in their own spans
+  const en=text(Z.legendHtml('en',notes.en));
+  for(const line of ['Gap: taste above the median, few businesses per resident','Competitive: taste above the median, many businesses per resident','Quiet: taste below the median, few businesses per resident',
+    'Crowded: taste below the median, many businesses per resident','Not enough data','Not a measure of demand']) assert.ok(en.includes(line),line);
+  const es=text(Z.legendHtml('es',notes.es));
+  for(const line of ['Brecha: afinidad sobre la mediana, pocos negocios por residente','Competido: afinidad sobre la mediana, muchos negocios por residente','Tranquilo: afinidad bajo la mediana, pocos negocios por residente',
+    'Saturado: afinidad bajo la mediana, muchos negocios por residente','Datos insuficientes','No mide demanda']) assert.ok(es.includes(line),line);
 });
 
 test('tapping a town asks the town question in the current language',async()=>{
@@ -111,7 +112,7 @@ test('supplyText states unpublished Census counts as a range, never as zero',()=
   assert.deepEqual({...Z.supplyText(exact,'en')},{businesses:'9 establishments · 40 employees',per:'8.7 per 10,000 residents'});
   assert.deepEqual({...Z.supplyText(hidden,'en')},{businesses:'0–2 establishments (Census does not publish counts below 3)',per:'up to 2.1 per 10,000 residents'});
   assert.deepEqual({...Z.supplyText(partial,'en')},{businesses:'at least 10 establishments · at least 80 employees',per:'10.0–12.0 per 10,000 residents'});
-  assert.deepEqual({...Z.supplyText(hidden,'es')},{businesses:'de 0 a 2 establecimientos (el Census no publica cifras menores de 3)',per:'hasta 2.1 por cada 10,000 residentes'});
+  assert.deepEqual({...Z.supplyText(hidden,'es')},{businesses:'de 0 a 2 establecimientos (el Censo no publica cifras menores de 3)',per:'hasta 2.1 por cada 10,000 residentes'});
   assert.deepEqual({...Z.supplyText(exact,'es')},{businesses:'9 establecimientos · 40 empleados',per:'8.7 por cada 10,000 residentes'});
 });
 
@@ -136,13 +137,15 @@ test('an industry that sums two Census codes names both, and missing sources lea
   assert.ok(!bare.includes('undefined')&&!bare.includes('NaN'));
 });
 
-test('the panel shows the definitions under the legend once an industry is loaded',async()=>{
+test('the honesty line stays under the legend; sources and definitions fold below the town list (judge panel 10/26)',async()=>{
   const {Z,elements}=load();
   const ui=Z.mount({...base,fetchJson:async()=>file('bakery',[{town:'Ponce',group:'gap',tasteRank:1,perTenThousand:1}])});
   await ui.show('bakery');
-  const html=elements['opportunity-legend'].innerHTML;
-  assert.ok(html.indexOf('Not a measure of demand')<html.indexOf('Definitions'),'definitions follow the honesty lines');
-  for(const text of ['311811','municipio boundary','3 km']) assert.ok(html.includes(text),text);
+  const legend=elements['opportunity-legend'].innerHTML, list=elements['opportunity-gaps'].innerHTML;
+  assert.ok(legend.includes('Not a measure of demand'),'the honesty line is visible with the legend');
+  assert.ok(!legend.includes('Definitions'),'the definitions are not above the towns');
+  assert.ok(list.indexOf('data-opportunity-town="Ponce"')<list.indexOf('Sources, rules and limits'),'towns come before the folded sources');
+  for(const text of ['311811','municipio boundary','3 km']) assert.ok(list.includes(text),text);
 });
 
 test('the town readout shows the same definitions inside its sources and limits',()=>{

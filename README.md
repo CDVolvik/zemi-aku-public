@@ -1,34 +1,124 @@
-# Zemi-Aku
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/media/lockup-dark.svg">
+    <img src="docs/media/lockup-light.svg" alt="Zemi-Aku" width="260">
+  </picture>
+</p>
 
-Your music, a way into Puerto Rico. A Qloo Agentic Hackathon project: artist taste
-connections become real place records, a 3D map and a conversation across 78 municipalities.
+<h3 align="center">Where should I open a business in Puerto Rico?</h3>
 
-Choose Bad Bunny, Vico C or Obie Bermúdez, inspect Qloo's actual place affinities, open a
-record and explore OSM building geometry. Ask the agent for places in a town, then follow
-up to open a verified result. Qloo coverage, ground data and Census estimates are labeled
-separately. An affinity is not evidence of an artist visit or a forecast of business demand.
+<p align="center">
+  Qloo's taste data, town by town, against the businesses the Census already counts.<br>
+  Ask in Spanish or English; a model agent answers from 18 read-only tools and shows its evidence.
+</p>
 
-**Status, October 17, 2026:** the [live demo](https://zemi.r21digital.com) runs on an
-isolated Always Free Oracle VM with HTTPS and OSM 3D. Typed and spoken questions go to the
-in-app model agent (DeepSeek V4.1 Flash via OpenRouter, 18 read-only tools, two dollars a day,
-forty turns per visitor) with Deepgram Aura-2 voices in five languages under a daily cap; see the
-[model agent release](docs/PUBLIC-AGENT-2026-10-11.md) and the
-[voices release](docs/PUBLIC-VOICES-2026-10-11.md). Every model answer carries a folded evidence
-line (tool calls, sources, counts, timing, model); three saved runs stand in, labeled replay, when
-the model falls back ([judge dry run, October 14](docs/JUDGE-DRYRUN-2026-10-14.md)). Earlier evidence:
-[public demo](docs/PUBLIC-DEMO-2026-10-08.md). The [with-and-without-Qloo control](https://zemi.r21digital.com/compare)
-runs seven frozen questions through the same model twice, once with the Qloo tools removed (the seventh keeps the place catalog and removes only the taste tools)
-(`node scripts/compare-qloo.mjs` writes `data/compare-qloo.json`; the site serves its saved run).
-The [public coastal demo](docs/PUBLIC-COASTAL-2026-10-08.md) adds five ports,
-received AIS positions and port-to-Qloo discovery. Bounded public reception and the
-ship-to-port-to-place flow are verified; complete coverage and destinations are not promised.
-The [public business research and free voice release](docs/PUBLIC-BUSINESS-2026-10-08.md)
-handles opening a café, demographic follow-ups and nearby listed peers with separate Qloo,
-Overture and Census evidence. Actual browser voice choices prefer Google US English when
-available. All reviewed changes are deployed; the Deepgram voice agent runs under daily caps
-and the hosted MCP connector stays off on the public demo.
-The MIT snapshot is public at https://github.com/CDVolvik/zemi-aku-public; this working
-repository stays private. Deadline October 30, 11:45 PM EDT. [Official rules](https://qloo.devpost.com/rules).
+<p align="center">
+  <a href="https://zemi.r21digital.com/app"><img alt="Live demo" src="https://img.shields.io/badge/live%20demo-zemi.r21digital.com-5a5aa8"></a>
+  <a href="https://zemi.r21digital.com/compare"><img alt="With and without Qloo" src="https://img.shields.io/badge/control-with%20%2F%20without%20Qloo-d4a24c"></a>
+  <img alt="519 tests" src="https://img.shields.io/badge/tests-519-2b8a3e">
+  <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-555"></a>
+  <img alt="Qloo Agentic Hackathon" src="https://img.shields.io/badge/Qloo-Agentic%20Hackathon-262f3a">
+</p>
+
+<p align="center">
+  <img src="docs/media/zemi-flow.gif" alt="Choose Bakeries: the island colours by taste against businesses; tap Río Grande for its verdict, sources and next checks" width="800">
+</p>
+
+Zemi-Aku is a map of Puerto Rico's 78 municipalities for people deciding where to open a café, bakery,
+restaurant, bar, hotel or salon. For each town it sets Qloo's taste affinity for that kind of place against the U.S.
+Census count of businesses with employees, and calls a town a **gap** when the taste is above the island median
+and the businesses are few. It names real places from Qloo's catalog, says what the data cannot tell you (demand,
+rent, permits, profit) and gives the next three checks to make on the ground. You can also start from an artist:
+"Where do Bad Bunny fans eat in San Juan?" turns a music taste into real place records, a 3D map and a conversation.
+
+An affinity is not evidence of an artist visit or a forecast of business demand, and the app says so where it matters.
+
+## Judge it in 60 seconds
+
+1. Open **[/app](https://zemi.r21digital.com/app)** and choose **Bakeries**. The island colours into four groups:
+   gap, competitive, quiet and crowded.
+2. Tap **Río Grande**. The verdict gives its taste rank, the Census count against the median, Qloo's list of places,
+   what the data cannot tell you and the next three checks.
+3. Ask **"Where do Bad Bunny fans eat in San Juan?"** and open **Evidence** under the answer: every tool call,
+   source, count, timing and the engine that answered. **Ask again without Qloo** reruns it with the Qloo tools removed.
+4. Open **[/compare](https://zemi.r21digital.com/compare)**: seven frozen questions asked of the same model twice,
+   once without Qloo, with a line under each pair saying what Qloo changed, or that it added nothing.
+
+Switch to **Español** on the first screen (or open [/app?lang=es](https://zemi.r21digital.com/app?lang=es)) and the whole
+session, including answers and errors, stays in Spanish.
+
+## What you will see
+
+| | |
+|---|---|
+| <img src="docs/media/opportunity-map.png" alt="Opportunity map for bakeries, coloured by taste against businesses" width="420"> | <img src="docs/media/gap-town.png" alt="Río Grande gap verdict with sources, limits and next checks" width="420"> |
+| **Opportunity map.** Qloo heatmap taste per town against Census County Business Patterns 2023, split at the island median. | **A town verdict.** Rank, count against the median, Qloo and Overture lists, what it cannot tell you, three field checks. |
+| <img src="docs/media/agent-evidence.png" alt="Bad Bunny fans in San Juan, with the evidence line open" width="420"> | <img src="docs/media/compare.png" alt="The with-and-without-Qloo control page" width="420"> |
+| **An answer with its evidence.** Tool calls, Qloo IDs, model, rounds and timing; one button reruns it without Qloo. | **The control.** The same model and prompt with and without the Qloo tools, side by side. |
+
+<p align="center"><img src="docs/media/phone-es.png" alt="The first screen and the bakery map on a phone, in Spanish" width="520"><br>
+<sub>A phone, in Spanish.</sub></p>
+
+## How it works
+
+```mermaid
+flowchart LR
+    Q["Question<br/>typed or spoken, ES / EN"] --> R{"Router"}
+    R -->|"business siting"| B["Business answer<br/>opportunity groups + verdict"]
+    R -->|"open question"| A["Model agent<br/>DeepSeek V4.1 Flash via OpenRouter"]
+    A <-->|"18 read-only tools"| T["Tools"]
+    T --> QL["Qloo<br/>REST /v2/insights, /search<br/>+ official harness MCP"]
+    T --> C["Census<br/>CBP 2023, PRCS 2020-2024"]
+    T --> O["Overture, OSM,<br/>Wikidata, NWS"]
+    A -->|"model unavailable"| F["Rules router<br/>says what it can answer"]
+    B --> M["Map actions + Evidence line"]
+    A --> M
+    F --> M
+```
+
+- **Only validated tool results move the map.** The model cannot invent a place or a map action: a place must come
+  from a tool result with a Qloo ID, and every answer carries a folded Evidence line.
+- **Town-level advice only.** A sentence that sites a business inside a town or asserts foot traffic is removed from
+  model answers; the app has no data for either.
+- **Island questions stay island-wide.** "Which town…", "¿En qué pueblo…?" and "besides San Juan" are never answered for
+  the town on screen.
+- **When the model is unavailable** (budget, cap or provider error) a rules router answers the questions it can and
+  says plainly what it cannot; the Evidence line names the engine and the reason.
+
+## Where Qloo is used
+
+| What the app asks | Qloo call | Used by |
+|---|---|---|
+| Which towns lean toward a kind of place | `GET /v2/insights` `filter.type=urn:heatmap`, `filter.location.query=Puerto Rico`, `signal.interests.tags=<genre tag>` | Opportunity map (`scripts/opportunity.mjs`), `opportunity_map` |
+| Which towns lean toward an artist's fans | `GET /v2/insights` `filter.type=urn:heatmap`, `signal.interests.entities=<artist id>` | `artist_towns` |
+| Places an artist's fans like in a town | `GET /search` (artist) → `GET /v2/insights` `filter.type=urn:entity:place`, `signal.interests.entities`, `filter.location.query` | `artist_places`, "More like these" |
+| Every place Qloo knows in a town | `GET /v2/insights` `filter.type=urn:entity:place`, `filter.location.query=<town>, Puerto Rico`, every page | `town_catalog`, `find_places`, `place_details` |
+| Places for a taste ("mofongo", "rooftop") | harness `qloo_find_tags` → `GET /v2/insights` with `filter.tags` or `signal.interests.tags` | `find_places` (taste mode) |
+| A town's cultural profile | `GET /v2/insights` `signal.location.query` for artists, TV shows and place tags (`filter.parents.types=urn:entity:place`) | `town_profile` |
+| What a place's fans also like | `GET /v2/insights` artists and destinations with `signal.interests.entities=<place id>` | `fans_also_love` |
+| Who likes a place | harness `qloo_audience_demographics` | `place_audience` |
+| Describe, recommend, compare, tag, trend | harness `qloo_describe`, `qloo_recommend`, `qloo_compare_audiences`, `qloo_entity_tags`, `qloo_trends` | the tools of the same names |
+
+"Harness" calls go through Qloo's official MCP server from `@qloo/qloo-harness`, kept as one long-lived client
+(`server/qloo-mcp.mjs`). Qloo responses are not stored in this public repository, as Qloo's
+[hackathon guide](https://docs.qloo.com/reference/qloo-llm-hackathon-developer-guide) asks.
+
+## How it was checked
+
+- **519 automated tests** (`pnpm test`), plus browser acceptance checks run against the live site
+  (`scripts/check-ui-states.mjs`, 27 checks; `scripts/check-answer-states.mjs`, 16; `scripts/check-demo.mjs --journeys`).
+- **A preregistered backtest of the gap signal** on Census counts, 2019 to 2023
+  ([BACKTEST-GAP-2026-10-26.md](docs/BACKTEST-GAP-2026-10-26.md)): towns the rule would have called a gap gained more
+  establishments than equally sparse, lower-taste towns in 5 of 6 industries, p = 0.07 one-sided. Suggestive, not
+  proven; bakeries are the one loss, and Qloo's taste was measured after the window.
+- **The with-and-without-Qloo control** at [/compare](https://zemi.r21digital.com/compare): seven frozen questions, the
+  seventh keeping Qloo's place catalog and removing only the taste tools.
+- **Blind review rounds** by AI agents from three vendors working only from the public site, with every report kept:
+  latest [JUDGE-PANEL-2026-10-26.md](docs/JUDGE-PANEL-2026-10-26.md). Each round's findings were fixed and
+  re-reviewed before release ([deploy history](docs/DEPLOY.md)). This is automated review, not user research.
+- **Known limits.** Qloo affinity is not demand; Census counts exclude the self-employed and are suppressed below three;
+  catalog hours are a dated snapshot (October 7); the hosted MCP connector stays off; a real phone, a microphone turn
+  and a screen reader have not been tested end to end.
 
 ## Run locally
 
@@ -57,12 +147,10 @@ the harness's npm shrinkwrap. The committed pnpm lock and Dockerfile use the sam
 Or populate .env and run `docker compose up --build`; open http://localhost:8080/app.
 A clean checkout builds with empty optional ground caches. Town catalogs populate at
 runtime; the 7,717-place count is an October 7 snapshot, not guaranteed live coverage.
-Saved Qloo results are not in the public repository, as Qloo's
-[hackathon guide](https://docs.qloo.com/reference/qloo-llm-hackathon-developer-guide) asks: the
-/compare runs and the three instant samples. With your own keys, `node scripts/compare-qloo.mjs`
-and `node scripts/save-samples.mjs` rebuild them against a local server (see each script's header);
-without them /compare says the runs could not be loaded and the samples are simply absent.
-Ground-cache generation and safe hosting are explained in [deployment](docs/DEPLOY.md).
+Saved Qloo results are not in the public repository: the /compare runs and the three instant samples.
+With your own keys, `node scripts/compare-qloo.mjs` and `node scripts/save-samples.mjs` rebuild them against a
+local server (see each script's header); without them /compare says the runs could not be loaded and the samples
+are simply absent. Ground-cache generation and safe hosting are explained in [deployment](docs/DEPLOY.md).
 
 ## Verify
 
@@ -74,7 +162,7 @@ node scripts/check-demo.mjs http://127.0.0.1:4174
 node scripts/check-demo.mjs http://127.0.0.1:4174 --journeys
 ```
 
-There are 508 local automated tests. A fresh clone of the public repository skips four: the one
+There are 519 local automated tests. A fresh clone of the public repository skips four: the one
 that needs the Census cache and the three that read the saved Qloo results.
 Public HTTPS, Chrome journey/3D, private-path protection and capped WebSocket probes pass.
 Live speech and a real iPhone still require separate verification.
@@ -109,28 +197,35 @@ connector never calls a model or a speech provider; its Qloo use counts against 
 |---|---|
 | app/index.html, app/dossier.js | Island → town → place, artist journey and source cards |
 | app/home.html | Field-atlas landing page |
+| app/opportunity.js, server/opportunity.mjs | Opportunity map: taste against businesses, four groups |
 | server/discovery.mjs, server/catalog.mjs | Validated artist entry and municipality catalogs |
 | app/coastal.js, server/coastal.mjs, server/ships.mjs | Port discovery and optional bounded AIS feed |
 | server/agent.mjs, server/agent-tools.mjs | Conversation and 18 read-only tools |
 | server/business.mjs | Saved business context, demographic/taste research and listed-peer proximity |
-| scripts/serve-eagle.mjs | Single-origin HTTP/WebSocket server and provider boundary |
+| server/qloo-mcp.mjs | One long-lived client to Qloo's official harness MCP server |
+| scripts/serve-eagle.mjs | Single-origin HTTP/WebSocket server, provider boundary and rules router |
 | server/limits.mjs, server/agent.mjs | Visitor limits and persisted model reservations |
 | server/voices.mjs, app/converse.js | Deepgram speech integration and browser conversation |
 | cache/ | Private runtime catalogs, optional ground data, budgets and signup storage |
 | Dockerfile, deploy/ | Pinned container, isolated Ubuntu bootstrap, Caddy/Compose |
 
 Keep exactly one application process: spend and outbox files are not a distributed
-database. The starter calls Qloo directly; the model cannot invent a map action without
-a validated tool result. Pages, APIs and voice callbacks share one HTTPS origin.
+database. Pages, APIs and voice callbacks share one HTTPS origin. The live demo runs on an isolated
+Always Free Oracle VM with HTTPS; the model agent runs under a daily budget and forty model turns per visitor,
+and Deepgram Aura-2 voices run under their own daily cap.
 
 ## Project notes
 
 - [Deploy history and release checks](docs/DEPLOY.md)
+- [Judge walkthrough](docs/JUDGE-WALKTHROUGH.md) and the [judge dry run](docs/JUDGE-DRYRUN-2026-10-14.md)
+- Releases: [model agent](docs/PUBLIC-AGENT-2026-10-11.md), [voices](docs/PUBLIC-VOICES-2026-10-11.md),
+  [business research](docs/PUBLIC-BUSINESS-2026-10-08.md), [coastal](docs/PUBLIC-COASTAL-2026-10-08.md),
+  [first public demo](docs/PUBLIC-DEMO-2026-10-08.md)
 - Second-model reviews: [round 1](docs/CODEX-REVIEW-2026-10-14.md), [round 2](docs/CODEX-REVIEW-2026-10-17.md)
-- [Judge walkthrough](docs/JUDGE-WALKTHROUGH.md)
 - [Submission draft](docs/SUBMISSION-DRAFT.md) and [video script](docs/VIDEO-SCRIPT.md)
 - [Original spec](docs/SPEC.md), [conversation agent](docs/SPEC-2026-10-07-conversation-agent.md)
 - [Voice verification](docs/VOICE-AGENT.md), [Qloo toolkit findings](docs/2026-10-07-qloo-kit-findings.md)
+- [Official rules](https://qloo.devpost.com/rules). Deadline October 30, 11:45 PM EDT.
 
 ## License
 

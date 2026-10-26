@@ -143,7 +143,8 @@ function todayHours(hours) {
   return publishesHours && spans.some((span) => span?.closed) ? "Closed today" : "";
 }
 
-// "Today 5:00 pm–3:00 am" read from a catalog measured on 2026-10-07 → "Oct 7: 5:00 pm–3:00 am".
+// "Today 5:00 pm–3:00 am" read from a catalog measured on 2026-10-07 → "On Oct 7: 5:00 pm–3:00 am" ("On" so a bare
+// date does not read as a schedule for that day; judge panel 10/26).
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 function datedHours(hours, measured) {
   const day = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(measured || ""));
@@ -152,7 +153,7 @@ function datedHours(hours, measured) {
   const on = `${MONTHS[Number(day[2]) - 1]} ${Number(day[3])}`;
   if (/^Today 12:00 am\s*[–-]\s*12:00 am$/i.test(text)) return `Open 24 hours on ${on}`;
   if (/^Closed today$/i.test(text)) return `Closed on ${on}`;
-  return text.replace(/^Today /, `${on}: `);
+  return text.replace(/^Today /, `On ${on}: `);
 }
 // Every read of a saved catalog goes through here, so no loader shows the measuring day's hours as today's (the town
 // catalog, the business research and the coast each read the file). Dating twice changes nothing.
@@ -1558,6 +1559,19 @@ function sameOrigin(req) {
 
 // The headline siting answer keeps its rule-based verdict (it matches the map) and, when the visitor has a
 // model turn and the budget allows, gets two model sentences from the same data (judge panels 10/23, 10/24).
+// A turn the provider refused before any tool ran (no credit, no key, the daily budget) gives the visitor's turn back:
+// judge panel 10/26 lost its forty turns to HTTP 402s and then got the cap message. The agent counts a round before
+// its request, so "no tool call" is the signal, not the round count (Codex review, round ten).
+const providerRefused = (result) => /^(?:http-\d{3}|budget|no-key)$/.test(String(result?.reason || "")) && !(result?.calls?.length);
+// One visitor turn for one model run, refunded on the day it was spent when the provider refused it. Null when the
+// visitor has no turns left.
+async function withVisitorTurn(ip, run) {
+  const day = limiter.spendDay(`chat-turns:${ip}`, 1, CHAT_TURNS_PER_VISITOR);
+  if (!day) return null;
+  const result = await run();
+  if (result?.fallback && providerRefused(result)) limiter.refund(`chat-turns:${ip}`, 1, day);
+  return result;
+}
 // A capped or failed note leaves the template alone; the drawer says which happened.
 const GROUP_ES = { gap: "brecha", competitive: "competido", quiet: "tranquilo", crowded: "saturado", unknown: "sin datos suficientes" };
 async function withVerdictNote(business, asked, ip) {
@@ -1566,7 +1580,8 @@ async function withVerdictNote(business, asked, ip) {
   // The verdict templates exist in English and Spanish only; a French, Italian or German request gets no note
   // rather than a verdict in one language and a note in another.
   if (!["en", "es"].includes(asked.lang)) return { ...business, evidence: { ...business.evidence, note: { fallback: "language" } } };
-  if (!limiter.spend(`chat-turns:${ip}`, 1, CHAT_TURNS_PER_VISITOR)) return { ...business, evidence: { ...business.evidence, note: { fallback: "visitor-cap" } } };
+  const day = limiter.spendDay(`chat-turns:${ip}`, 1, CHAT_TURNS_PER_VISITOR);
+  if (!day) return { ...business, evidence: { ...business.evidence, note: { fallback: "visitor-cap" } } };
   const file = opportunity?.get?.(row.industry);
   const es = asked.lang === "es";
   // No figure reaches the note (judge panel 10/24 round 3: it restated the rate in the wrong unit and once inverted a
@@ -1587,8 +1602,8 @@ async function withVerdictNote(business, asked, ip) {
   const comparison = !gap ? (es ? "No hay otro pueblo del grupo brecha con el que comparar." : "No other gap-group town to compare with.")
     // The other town is introduced as what it is, the next (or top) gap-group town by taste rank (judge panel 10/25: "no se compara con Río
     // Grande" at the end of a Maricao answer read as a non sequitur).
-    : row.suppressed ? (es ? `El Census retiene el conteo de ${business.town}, así que no se puede ordenar frente a ${gap.town}, ${otherEs}.` : `The Census withholds ${business.town}'s count, so it cannot be ordered against ${gap.town}, ${other}.`)
-    : gap.suppressed ? (es ? `${gap.town}, ${otherEs}, no tiene cifra publicada (el Census retiene los conteos pequeños), así que los dos no se pueden ordenar.` : `${gap.town}, ${other}, has no published count (the Census withholds small counts), so the two cannot be ordered.`)
+    : row.suppressed ? (es ? `El Censo retiene el conteo de ${business.town}, así que no se puede ordenar frente a ${gap.town}, ${otherEs}.` : `The Census withholds ${business.town}'s count, so it cannot be ordered against ${gap.town}, ${other}.`)
+    : gap.suppressed ? (es ? `${gap.town}, ${otherEs}, no tiene cifra publicada (el Censo retiene los conteos pequeños), así que los dos no se pueden ordenar.` : `${gap.town}, ${other}, has no published count (the Census withholds small counts), so the two cannot be ordered.`)
     : rate(gap) < rate(row) ? (es ? `${gap.town}, ${otherEs}, tiene menos ${label} por residente que ${business.town}.` : `${gap.town}, ${other}, has fewer ${label} per resident than ${business.town}.`)
     : rate(gap) > rate(row) ? (es ? `${gap.town}, ${otherEs}, tiene más ${label} por residente que ${business.town}.` : `${gap.town}, ${other}, has more ${label} per resident than ${business.town}.`)
     : (es ? `${gap.town}, ${otherEs}, y ${business.town} tienen la misma cifra por residente.` : `${gap.town}, ${other}, and ${business.town} have the same figure per resident.`);
@@ -1596,7 +1611,11 @@ async function withVerdictNote(business, asked, ip) {
   const note = await verdictNote({ lang: asked.lang, town: business.town, industry: row.industry, verdict: business.speech, topGaps, places, comparison,
     row: { group: row.group, groupEs: GROUP_ES[row.group] || row.group, suppressed: Boolean(row.suppressed),
       ...(row.suppressed ? { countNote: "no published count: the Census withholds small counts" } : {}) } });
-  if (note.fallback) { console.warn(`verdict note fallback: ${note.reason}`); return { ...business, evidence: { ...business.evidence, note: { fallback: note.reason } } }; }
+  if (note.fallback) {
+    console.warn(`verdict note fallback: ${note.reason}`);
+    if (providerRefused(note)) limiter.refund(`chat-turns:${ip}`, 1, day);
+    return { ...business, evidence: { ...business.evidence, note: { fallback: note.reason } } };
+  }
   const speech = `${business.speech} ${note.text}`;
   // The voice reads whole sentences within the speak endpoint's limit; the caption shows the whole note.
   return { ...business, speech, spoken: spokenExcerpt(speech, 300), evidence: { ...business.evidence, note: { model: note.model, ms: note.ms } } };
@@ -1616,7 +1635,7 @@ async function patternAnswer(body) {
   // Conversation first: a greeting, "how are you", thanks. No Qloo call needed.
   const facts = { places: catalogTotal };
   if (body.greet) return ({ chat: true, kind: "greet", speech: chatReply(lang, "greet", facts) });
-  if (vagueKind(question)) return clarification(body);
+  if (vagueKind(question, body.history)) return clarification(body);
   const talk = smallTalkKind(question);
   const business = await businessAnswer(body, { force: true });
   if (business) return business;
@@ -1794,10 +1813,10 @@ async function islandArtistBusinessAnswer(question, lang, candidates, industry, 
   const nEs = n === 10 ? "diez" : String(n), nEn = n === 10 ? "ten" : String(n);
   const speech = es
     ? `Para fans de ${ranked.artist}, el mapa de calor de Qloo pone arriba a ${list(top)}. `
-      + (gaps.length ? `De sus ${nEs} primeros, ${list(gaps)} ${gaps.length === 1 ? "está" : "están"} en el grupo brecha para ${label}: gusto sobre la mediana y pocos negocios.` : `Ninguno de sus ${nEs} primeros está en el grupo brecha para ${label}.`)
+      + (gaps.length ? `De sus ${nEs} primeros, ${list(gaps)} ${gaps.length === 1 ? "está" : "están"} en el grupo brecha para ${label}: gusto sobre la mediana y pocos negocios por residente.` : `Ninguno de sus ${nEs} primeros está en el grupo brecha para ${label}.`)
       + " Es afinidad, no demanda."
     : `For ${ranked.artist} fans, Qloo's heatmap puts ${list(top)} on top. `
-      + (gaps.length ? `Of their top ${nEn}, ${list(gaps)} ${gaps.length === 1 ? "is" : "are"} in the ${label} gap group: taste above the median, few businesses.` : `None of their top ${nEn} is in the ${label} gap group.`)
+      + (gaps.length ? `Of their top ${nEn}, ${list(gaps)} ${gaps.length === 1 ? "is" : "are"} in the ${label} gap group: taste above the median, few businesses per resident.` : `None of their top ${nEn} is in the ${label} gap group.`)
       + " That is taste, not demand.";
   return { chat: true, kind: "artist-business", question: question.slice(0, 240), opportunity: { industry }, speech,
     evidence: { mode: "sources", kind: "opportunity", at: new Date().toISOString(), calls: [artistTownsCall(ranked),
@@ -1828,6 +1847,10 @@ function limitAnswer(question, lang, reason, money = false) {
   const t = LIMIT[lang] || LIMIT.en;
   return { chat: true, kind: "limit", question: question.slice(0, 240), speech: `${t[reason] || t.other}, ${t.rest}${money ? ` ${t.money}` : ""}` };
 }
+// Words around a name search that do not make it a sentence: places, articles and the search's own cues ("Find Pizza
+// Hut in Ponce", Codex review, round ten).
+const SMALL_WORDS = new Set(("in en at near de del la el los las the a an un una puerto rico find show search look for please "
+  + "busca buscar busque encuentra encuentre muestrame muestreme por favor").split(" "));
 async function ruleAnswer(body, reason) {
   const question = String(body.question || "").slice(0, 240);
   const lang = body.lang === "es" ? "es" : "en";
@@ -1857,15 +1880,28 @@ async function ruleAnswer(body, reason) {
   // "Is Maricao a good town for a café?" is the siting verdict, not the town's food list ("Hungry in Maricao?").
   const industry = industryIn(question.normalize("NFD").replace(/[̀-ͯ]/g, ""));
   const town = named || (island ? "" : knownTown(String(body.town || "")) || "");
-  if (industry && town && !island && /\b(good|bueno|buena|conviene|vale la pena|should|deberia|worth|recomienda|recommend|oportunidad|opportunity)\b/.test(q)) {
+  // So is "why is San Juan a gap for bakeries… how do you get 0.5 per 10,000?": the verdict card carries the counts, the
+  // rate, the median and why the lists run longer (judge panel 10/26: that question became a food list). A "why" alone
+  // is not enough: "Why do bakeries in Ponce close early?" is not a siting question (Codex review, round ten).
+  const siting = /\b(good|bueno|buena|conviene|vale la pena|should|deberia|worth|recomienda|recommend|oportunidad|opportunity)\b/.test(q);
+  // A method word counts only beside the map's own terms: "Calculate bakery payroll" and "a quiet hotel" are not siting
+  // questions (Codex review, round ten).
+  const methodWord = /\b(why|por que|how|como|explain|explica\w*|calcul\w*)\b/.test(q);
+  const mapTerm = /\b(gap|brecha|competitive|competido|quiet|tranquilo|crowded|saturado|median|mediana|group|grupo|rate|tasa|per 10,?000|por (?:cada )?10,?000)\b/.test(q);
+  if (industry && town && !island && (siting || (methodWord && mapTerm))) {
     const word = { cafe: "cafeteria", bakery: "panaderia", restaurant: "restaurante", hotel: "hotel", salon: "salon de belleza", bar: "barra" }[industry];
     const verdict = await businessAnswer({ ...body, question: lang === "es" ? `abrir una ${word} en ${town}` : `open a ${industry} in ${town}` }, { force: true }).catch(() => null);
     if (verdict) return verdict;
   }
   // An island question searches the island, never the open town, and never with a town it rules out.
   const answer = await patternAnswer(island ? { ...body, question: excluded.length ? withoutExcluded(folded, townNames) : question, town: "" } : body);
-  // A three-word name search that found nothing read a sentence as a business name ("KFC" alone is a real search).
-  const sentence = String(answer?.query || "").split(" ").filter(Boolean).length >= 3;
+  // A name search that found nothing read a sentence as a business name when it took three words, or two words out of a
+  // longer sentence ("Recomienda Aqui", "Pongo Veterinaria", judge panel 10/26). "KFC", "Pizza Hut" and "Pizza Hut in
+  // Ponce" stay searches: nothing is left over but the town and small words (Codex review, round ten).
+  const searched = fold(String(answer?.query || "")).split(/\s+/).filter(Boolean);
+  const leftover = fold(question).replace(/[^a-z0-9ñ ]+/g, " ").split(/\s+/).filter((word) => word
+    && !searched.includes(word) && !SMALL_WORDS.has(word) && !fold(town).split(" ").includes(word));
+  const sentence = searched.length >= 3 || (searched.length === 2 && leftover.length > 0);
   return answer?.catalog && !answer.places?.length && sentence ? limitAnswer(question, lang, reason) : answer;
 }
 
@@ -2161,8 +2197,8 @@ window.ZEMI_PHOTOREAL_ENABLED = ${process.env.ZEMI_PHOTOREAL_ENABLED === "1"};
       if (body.tools === "catalog-only") {
         // Only the local compare build runs this control; the public site keeps the one documented switch.
         if (process.env.ZEMI_COMPARE !== "1") return sendJson(res, 404, { error: "Not available here." });
-        if (!limiter.spend(`chat-turns:${ip}`, 1, CHAT_TURNS_PER_VISITOR)) return sendJson(res, 429, { error: "Your model turns for today are used." });
-        const run = await catalogAgent(checked.value);
+        const run = await withVisitorTurn(ip, () => catalogAgent(checked.value));
+        if (!run) return sendJson(res, 429, { error: "Your model turns for today are used." });
         if (run.fallback) return sendJson(res, 503, { error: "The control run could not answer.", reason: run.reason });
         return sendJson(res, 200, { ...run, control: "catalog-only", evidence: { ...run.evidence, control: "catalog-only" } });
       }
@@ -2173,18 +2209,18 @@ window.ZEMI_PHOTOREAL_ENABLED = ${process.env.ZEMI_PHOTOREAL_ENABLED === "1"};
         // (so browsers preflight) and, when a browser sends Origin, only this site's own.
         if (!/^application\/json\b/i.test(String(req.headers["content-type"] || ""))) return sendJson(res, 415, { error: "Send JSON." });
         if (!sameOrigin(req)) return sendJson(res, 403, { error: "The control run answers this site only." });
-        if (!limiter.spend(`chat-turns:${ip}`, 1, CHAT_TURNS_PER_VISITOR)) return sendJson(res, 429, { error: "Your model turns for today are used." });
-        const bare = await bareAgent(checked.value);
+        const bare = await withVisitorTurn(ip, () => bareAgent(checked.value));
+        if (!bare) return sendJson(res, 429, { error: "Your model turns for today are used." });
         if (bare.fallback) return sendJson(res, 503, { error: "The control run could not answer.", reason: bare.reason });
         return sendJson(res, 200, { ...bare, control: "no-qloo", evidence: { ...bare.evidence, control: "no-qloo" } });
       }
       // An island question naming an artist and a business needs both: the model, or the rules router's two rankings.
       const business = islandArtistBusiness(checked.value.question) || fansWithoutArtist(checked.value.question) ? null : await businessAnswer(checked.value);
       if (business) return sendJson(res, 200, await withVerdictNote(business, checked.value, ip));
-      if (vagueKind(checked.value.question)) return sendJson(res, 200, clarification(checked.value));
+      if (vagueKind(checked.value.question, checked.value.history)) return sendJson(res, 200, clarification(checked.value));
       let answer;
-      if (limiter.spend(`chat-turns:${ip}`, 1, CHAT_TURNS_PER_VISITOR)) answer = await textAgent(checked.value);
-      else { console.warn("agent fallback: visitor-cap"); answer = { fallback: true, reason: "visitor-cap" }; }
+      answer = await withVisitorTurn(ip, () => textAgent(checked.value));
+      if (!answer) { console.warn("agent fallback: visitor-cap"); answer = { fallback: true, reason: "visitor-cap" }; }
       if (!answer.fallback) return sendJson(res, 200, answer);
       // A saved run for this exact question: the page gets the real answer and map, labeled replay.
       const sample = samples.match(checked.value);

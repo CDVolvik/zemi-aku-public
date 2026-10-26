@@ -31,8 +31,9 @@ after the `voices-20261011` release.
    daily budget or your turn allowance is spent it reads “rules router · no model turn”, or
    “saved replay” for the three questions kept as instant samples (the Bad Bunny, Maricao
    and mofongo questions), with the time their data was read.
-   Open /compare for the control: six questions asked twice of the same model, once
-   without the Qloo tools, with what Qloo changed under each pair.
+   Open /compare for the control: seven questions asked twice of the same model, once
+   without the Qloo tools (the seventh keeps Qloo's place catalog and removes only the taste
+   tools), with what Qloo changed under each pair.
 5. Reload /app and type “Where should I open a cafe?” with no town, or open
    /app?opportunity=bakery. The island colors by industry into four groups (gap,
    competitive, quiet, crowded) plus “not enough data”, with the legend and source notes

@@ -65,12 +65,12 @@ test('Qloo entity images, domains and affinity why-lines are read without invent
   assert.equal(domainOf('https://instagram.com/lossocios'), '');
   assert.equal(domainOf('https://linktr.ee/hacienda'), '');
   assert.equal(affinityOf({ query: { affinity: 0.814 } }), 0.81);
-  assert.equal(affinityWhy(0.81, 'Bad Bunny'), 'Strong match for Bad Bunny fans (81%)');
-  assert.equal(affinityWhy(0.81, 'Bad Bunny', 'es'), 'Fuerte afinidad para fans de Bad Bunny (81%)');
-  assert.equal(affinityWhy(0.45, 'Bad Bunny'), 'Good match for Bad Bunny fans (45%)');
-  assert.equal(affinityWhy(0.45, 'Bad Bunny', 'es'), 'Buena afinidad para fans de Bad Bunny (45%)');
+  assert.equal(affinityWhy(0.81, 'Bad Bunny'), 'Strong match for Bad Bunny fans (affinity 81/100)');
+  assert.equal(affinityWhy(0.81, 'Bad Bunny', 'es'), 'Fuerte afinidad para fans de Bad Bunny (81 de 100)');
+  assert.equal(affinityWhy(0.45, 'Bad Bunny'), 'Good match for Bad Bunny fans (affinity 45/100)');
+  assert.equal(affinityWhy(0.45, 'Bad Bunny', 'es'), 'Buena afinidad para fans de Bad Bunny (45 de 100)');
   assert.equal(affinityWhy(0.12, 'Bad Bunny'), '', 'below 0.3 omits the line');
-  assert.equal(affinityWhy(0.81, 'Bad Bunny', 'fr'), 'Strong match for Bad Bunny fans (81%)', 'unsupported langs fall back to en');
+  assert.equal(affinityWhy(0.81, 'Bad Bunny', 'fr'), 'Strong match for Bad Bunny fans (affinity 81/100)', 'unsupported langs fall back to en');
   assert.equal(affinityWhy(null, 'Bad Bunny'), '');
   assert.equal(affinityWhy(0.81, ''), '');
 });

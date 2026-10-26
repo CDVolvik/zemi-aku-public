@@ -12,7 +12,7 @@
     const button = $("dictate");
     button.setAttribute("aria-pressed", String(on));
     button.setAttribute("aria-label", on ? "Stop dictating" : "Dictate your question");
-    $("q").placeholder = on ? "Listening… speak now" : "Ask about any town, or search a place";
+    $("q").placeholder = on ? "Listening… speak now" : "Ask about a town or place";
   }
 
   function stop() {

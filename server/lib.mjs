@@ -214,8 +214,9 @@ export function affinityWhy(affinity, signal, lang = "en") {
   const name = String(signal || "").trim();
   const score = Number(affinity);
   if (!name || !Number.isFinite(score) || score < 0.3) return "";
-  const pct = Math.round(score * 100);
+  // A score out of 100, not a percentage: "(96%)" read as the share of fans who go (judge panels 10/25 and 10/26).
+  const points = Math.round(score * 100);
   const es = lang === "es";
-  if (score >= 0.6) return es ? `Fuerte afinidad para fans de ${name} (${pct}%)` : `Strong match for ${name} fans (${pct}%)`;
-  return es ? `Buena afinidad para fans de ${name} (${pct}%)` : `Good match for ${name} fans (${pct}%)`;
+  if (score >= 0.6) return es ? `Fuerte afinidad para fans de ${name} (${points} de 100)` : `Strong match for ${name} fans (affinity ${points}/100)`;
+  return es ? `Buena afinidad para fans de ${name} (${points} de 100)` : `Good match for ${name} fans (affinity ${points}/100)`;
 }

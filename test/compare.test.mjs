@@ -69,7 +69,7 @@ test('the page exists, reads the committed JSON and the front page and README li
   // October 23: the control run is public ("Ask again without Qloo"), one visitor turn and one reservation like any answer.
   assert.match(server, /if \(body\.tools === "no-qloo"\) \{/);
   assert.ok(server.indexOf('const ip = limiter.visitorIp(req, TRUST_PROXY);') < server.indexOf('if (body.tools === "no-qloo") {'), 'the visitor is known before the control runs');
-  assert.match(server, /limiter\.spend\(`chat-turns:\$\{ip\}`, 1, CHAT_TURNS_PER_VISITOR\)\) return sendJson\(res, 429/);
+  assert.match(server, /const bare = await withVisitorTurn\(ip, \(\) => bareAgent\(checked\.value\)\);\s*if \(!bare\) return sendJson\(res, 429/);
   assert.match(server, /control: "no-qloo", evidence: \{ \.\.\.bare\.evidence, control: "no-qloo" \}/);
   assert.match(server, /if \(!\/\^application\\\/json\\b\/i\.test\(String\(req\.headers\["content-type"\] \|\| ""\)\)\) return sendJson\(res, 415/, 'JSON only, so a cross-origin page preflights');
   assert.match(server, /if \(!sameOrigin\(req\)\) return sendJson\(res, 403/);

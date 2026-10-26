@@ -76,3 +76,44 @@ test("the paid voice route clamps text to a spoken line and gives one visitor at
   assert.match(route, /limiter\.spend\(`speak-chars:\$\{ip\}`, text\.length, Math\.ceil\(CAPS\.speakChars \/ 5\)\)/);
   assert.match(route, /limiter\.spend\("speak-chars", text\.length, CAPS\.speakChars\)/);
 });
+
+test('a model turn the provider refused gives the visitor turn back; a turn the model used stays spent (judge panel 10/26)', () => {
+  const limiter = createLimiter({ now: () => Date.UTC(2026, 9, 26, 12) });
+  assert.equal(limiter.spend('chat-turns:1.2.3.4', 1, 2), true);
+  assert.equal(limiter.spend('chat-turns:1.2.3.4', 1, 2), true);
+  assert.equal(limiter.spend('chat-turns:1.2.3.4', 1, 2), false);
+  limiter.refund('chat-turns:1.2.3.4', 1);
+  assert.equal(limiter.used('chat-turns:1.2.3.4'), 1);
+  assert.equal(limiter.spend('chat-turns:1.2.3.4', 1, 2), true);
+  limiter.refund('chat-turns:9.9.9.9', 1);
+  assert.equal(limiter.used('chat-turns:9.9.9.9'), 0, 'a refund never goes below zero or creates a row');
+  const serve = fs.readFileSync(new URL('../scripts/serve-eagle.mjs', import.meta.url), 'utf8');
+  const refused = serve.match(/const providerRefused = \(result\) => (.+);/)[1];
+  const providerRefused = new Function('result', `return ${refused};`);
+  assert.equal(providerRefused({ reason: 'http-402' }), true);
+  assert.equal(providerRefused({ reason: 'budget' }), true);
+  assert.equal(providerRefused({ reason: 'http-402', rounds: 1 }), true, 'the agent counts a round before its first request');
+  assert.equal(providerRefused({ reason: 'http-402', rounds: 2, calls: [{ tool: 'town_catalog' }] }), false, 'a later round failing after a tool ran keeps the turn spent');
+  assert.equal(providerRefused({ reason: 'claim' }), false, 'a note the model wrote and a check dropped keeps the turn spent');
+  // Every model path goes through one helper, refunding on the day the turn was spent (Codex review, round ten).
+  for (const run of ['textAgent', 'bareAgent', 'catalogAgent']) assert.match(serve, new RegExp(`await withVisitorTurn\\(ip, \\(\\) => ${run}\\(checked\\.value\\)\\)`), run);
+  assert.match(serve, /async function withVisitorTurn\(ip, run\) \{\s*const day = limiter\.spendDay\(`chat-turns:\$\{ip\}`, 1, CHAT_TURNS_PER_VISITOR\);\s*if \(!day\) return null;[^]*?if \(result\?\.fallback && providerRefused\(result\)\) limiter\.refund\(`chat-turns:\$\{ip\}`, 1, day\);/);
+  assert.match(serve, /const day = limiter\.spendDay\(`chat-turns:\$\{ip\}`, 1, CHAT_TURNS_PER_VISITOR\);\s*if \(!day\) return \{ \.\.\.business/);
+  assert.match(serve, /if \(providerRefused\(note\)\) limiter\.refund\(`chat-turns:\$\{ip\}`, 1, day\);/);
+});
+
+test('a refund applies only to the day the turn was charged, read from the spend itself (Codex review, round ten)', () => {
+  let t = Date.UTC(2026, 9, 26, 23, 59);
+  const limiter = createLimiter({ now: () => t });
+  const day = limiter.spendDay('chat-turns:a', 1, 40);
+  assert.equal(day, '2026-10-26');
+  t = Date.UTC(2026, 9, 27, 0, 1);
+  assert.equal(limiter.spendDay('chat-turns:a', 1, 40), '2026-10-27');
+  limiter.refund('chat-turns:a', 1, day);
+  assert.equal(limiter.used('chat-turns:a'), 1, "yesterday's refund leaves today's turn spent");
+  // At the boundary the charge and its day come from one read: a turn charged just after midnight refunds that day.
+  const boundary = limiter.spendDay('chat-turns:b', 1, 40);
+  limiter.refund('chat-turns:b', 1, boundary);
+  assert.equal(limiter.used('chat-turns:b'), 0);
+  assert.equal(limiter.spendDay('chat-turns:c', 1, 0), null, 'over the cap: no charge, no day');
+});

@@ -803,7 +803,7 @@ try {
   <div id="caption" hidden></div>
   <ul id="hits" role="listbox" hidden></ul>
   <form id="ask" autocomplete="off">
-    <input id="q" type="search" placeholder="Ask about any town, or search a place" aria-label="Ask Zemi-Aku, or search a town or place" aria-controls="hits" aria-expanded="false">
+    <input id="q" type="search" placeholder="Ask about a town or place" aria-label="Ask Zemi-Aku, or search a town or place" aria-controls="hits" aria-expanded="false">
     <button type="button" id="dictate" aria-pressed="false" aria-label="Dictate your question" title="Speak, watch it type, then press Enter"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-2.08A7 7 0 0 0 19 12h-2Z"/></svg></button>
     <button type="button" id="talk-pause" hidden>Pause</button>
     <button type="button" id="talk-stop" hidden>End</button>
@@ -1245,7 +1245,7 @@ function goStep(next) {
 
 function placeholder() {
   const name = step === "place" ? openPlaces[focusedIndex]?.name : step === "town" ? (pickedId || listTitle) : "";
-  $("q").placeholder = name ? (ZemiConverse.voice().lang === "es" ? `Pregunte por ${name}…` : `Ask about ${name}…`) : CHROME[ZemiConverse.voice().lang === "es" ? "es" : "en"].placeholder;
+  $("q").placeholder = name ? (ZemiConverse.voice().lang === "es" ? `Pregunte por ${name}…` : `Ask about ${name}…`) : basePlaceholder(ZemiConverse.voice().lang === "es" ? "es" : "en");
 }
 
 $("crumbs").addEventListener("click", (event) => {
@@ -1565,9 +1565,11 @@ async function moreLikeThese() {
     if (!res.ok) throw new Error(String(res.status));
     const data = await res.json();
     showCatalog(data);
-    narrate(data);
+    // A list button, not a voice request: the answer shows in the caption without speaking (judge panel 10/26:
+    // speech played that nobody pressed).
+    narrate(data, { voice: false });
   } catch {
-    narrate({ speech: lang === "es" ? "Qloo no respondió ahora mismo." : "Qloo did not answer just now." });
+    narrate({ speech: lang === "es" ? "Qloo no respondió ahora mismo." : "Qloo did not answer just now." }, { voice: false });
   } finally {
     button.disabled = false;
   }
@@ -1642,7 +1644,11 @@ function setTaste(taste) {
 
 // Qloo's list first (fast=1), so the town opens at once. Photos, social links and OpenStreetMap facts
 // follow from a second request (OpenStreetMap allows one lookup a second).
+// A newer town load, or an answer's own list (showCatalog), retires an older load still in flight: a same-town answer
+// was overwritten by the town's default list when an earlier reload landed late (Codex review, round ten).
+let placesToken = 0;
 async function loadPlaces(record) {
+  const token = ++placesToken;
   resetCategory();
   skeleton();
   const taste = currentTaste();
@@ -1650,13 +1656,14 @@ async function loadPlaces(record) {
   const res = await fetch(query + "&fast=1");
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || "places failed");
-  if (pickedId !== record.town) return;
+  if (token !== placesToken || !townView || pickedId !== record.town) return false;
   openPlaces = data.places || [];
   orderByLead();
   showListTitle(directory?.total ? bestKnown() : "");
   renderList();
   drawPlaces(openPlaces);
   if (openPlaces.some((place) => place.osm === "skipped")) enrichPlaces(record.town, taste, query);
+  return true;
 }
 
 // ---------- Ground truth beside the taste: town facts and landmarks ----------
@@ -1959,10 +1966,11 @@ function select(name, opts = {}) {
   if (opts.frame !== false) frameWholeTown(name);
   syncHash();
   return loadPlaces(entry.record)
-    .catch((err) => toast(err.message))
-    .then(() => {
-      // Every place in the town, most popular first, unless an answer has taken the list meanwhile.
-      if (pickedId === name && !leadNames.length && !dirCat) return openCategory("all");
+    .catch((err) => { toast(err.message); return true; }) // a failed fast list still falls back to the full directory
+    .then((applied) => {
+      // Every place in the town, most popular first, unless an answer has taken the list meanwhile: a load that was
+      // retired paints nothing, or a newer answer's panel would be left on the loading skeleton (Codex review, round ten).
+      if (applied && townView && pickedId === name && !leadNames.length && !dirCat) return openCategory("all");
     });
 }
 
@@ -1982,6 +1990,7 @@ async function openFoundPlace(place, town) {
 function showCatalog(data, opts = {}) {
   if (!opts.fromHistory) mapHistory.beginUserNav();
   townView = false;
+  placesToken += 1;
   $("coast-return").hidden = true;
   if (!data.journey) clearJourney();
   journeyData = data.journey ? data : null;
@@ -2046,7 +2055,7 @@ function decisionCard(business, o, places, es) {
   const l = es ? "es" : "en";
   const fix = (n) => Number(n).toFixed(1);
   const count = o.suppressed
-    ? (es ? `de 0 a ${o.establishmentsMax ?? 2} establecimientos con empleados (el Census no publica cifras menores de 3)` : `0 to ${o.establishmentsMax ?? 2} establishments with employees (Census does not publish counts below 3)`)
+    ? (es ? `de 0 a ${o.establishmentsMax ?? 2} establecimientos con empleados (el Censo no publica cifras menores de 3)` : `0 to ${o.establishmentsMax ?? 2} establishments with employees (Census does not publish counts below 3)`)
     : Number.isFinite(o.establishments) ? (es ? `${o.establishments} establecimientos con empleados` : `${o.establishments} establishments with employees`) : "";
   const median = Number.isFinite(o.medianPerTenThousand) ? (es ? ` frente a la mediana de ${fix(o.medianPerTenThousand)} con la que se dividen los grupos` : ` against the median of ${fix(o.medianPerTenThousand)} the groups split on`) : "";
   const rate = o.suppressed
@@ -2062,7 +2071,7 @@ function decisionCard(business, o, places, es) {
   const two = longer.length === 2;
   const subject = two ? (es ? "las listas de Qloo y Overture" : "Qloo's and Overture's lists") : longer[0] || "";
   const axis = scope && subject
-    ? (es ? `El Census cuenta solo ${esc(scope)}; ${subject} ${two ? "incluyen" : "incluye"} lugares sin empleados y con otras etiquetas, por eso ${two ? "son más largas" : "es más larga"}, y el grupo se lee en el eje del Census.`
+    ? (es ? `El Censo cuenta solo ${esc(scope)}; ${subject} ${two ? "incluyen" : "incluye"} lugares sin empleados y con otras etiquetas, por eso ${two ? "son más largas" : "es más larga"}, y el grupo se lee en el eje del Censo.`
       : `The Census counts only ${esc(scope)}; ${subject} ${two ? "include" : "includes"} places without employees and under other tags, so ${two ? "they run" : "it runs"} longer, and the group reads on the Census axis.`)
     : "";
   // What Qloo's taste rank rests on, in words an owner can read (judge panel 10/25, Opus: "in the business path Qloo is
@@ -2089,7 +2098,7 @@ function decisionCard(business, o, places, es) {
     + (overture.length ? (es ? ` y, del mapa de Overture, ${overture.map(esc).join(" y ")}` : ` and, from Overture's map, ${overture.map(esc).join(" and ")}`) : "");
   // The third check follows the group (judge panel 10/24 round 3: "compare with the gap-group towns" on a competitive town).
   const third = es
-    ? { gap: "Compare con el siguiente pueblo del grupo brecha en el mapa antes de decidir.", competitive: "Visite dos competidores y anote qué venden y a qué precio.", quiet: "Pregunte dónde compra la gente esto hoy antes de apostar a la demanda.", crowded: "Mire el pueblo vecino o un nicho que nadie atiende aquí.", unknown: "Pida al municipio su propio conteo de negocios; el Census no publica el de aquí." }
+    ? { gap: "Compare con el siguiente pueblo del grupo brecha en el mapa antes de decidir.", competitive: "Visite dos competidores y anote qué venden y a qué precio.", quiet: "Pregunte dónde compra la gente esto hoy antes de apostar a la demanda.", crowded: "Mire el pueblo vecino o un nicho que nadie atiende aquí.", unknown: "Pida al municipio su propio conteo de negocios; el Censo no publica el de aquí." }
     : { gap: "Compare with the next gap-group town on the map before you decide.", competitive: "Visit two competitors and note what they sell and charge.", quiet: "Ask where people buy this today before you bet on demand.", crowded: "Look at the next town over, or a niche nobody here serves.", unknown: "Ask the municipio for its own business count; the Census does not publish one here." };
   const checks = es
     ? [`Visite ${where} a la hora de apertura y mire fila, precios y horario real.`, "Pregunte rentas en la calle principal y los permisos en el municipio antes de firmar.", third[o.group] || third.gap]
@@ -2148,7 +2157,7 @@ function showBusinessResearch(business) {
   if (opportunity) {
     const supply = ZemiOpportunity.supplyText(opportunity, es ? "es" : "en");
     const island = Number.isFinite(opportunity.islandPerTenThousand) ? ` (${es ? "isla, cifras publicadas" : "island, published counts"}: ${opportunity.islandPerTenThousand.toFixed(1)})` : "";
-    parts.push(`<h4>${es ? "Gusto de Qloo y negocios del Census" : "Qloo taste and Census businesses"}</h4><p>${esc(ZemiOpportunity.LABELS[es ? "es" : "en"][opportunity.group] || "")}${Number.isFinite(opportunity.tasteRank) ? ` · ${es ? "gusto" : "taste"} #${opportunity.tasteRank}` : ""}.<br>${esc(supply.businesses)} (County Business Patterns 2023) · ${esc(supply.per)}${esc(island)}.</p>`
+    parts.push(`<h4>${es ? "Gusto de Qloo y negocios del Censo" : "Qloo taste and Census businesses"}</h4><p>${esc(ZemiOpportunity.LABELS[es ? "es" : "en"][opportunity.group] || "")}${Number.isFinite(opportunity.tasteRank) ? ` · ${es ? "gusto" : "taste"} #${opportunity.tasteRank}` : ""}.<br>${esc(supply.businesses)} (County Business Patterns 2023) · ${esc(supply.per)}${esc(island)}.</p>`
       + `<details class="small"><summary>${es ? "Fuentes y límites" : "Sources and limits"}</summary>${(opportunity.notes || []).map(line => `<p>${esc(line)}</p>`).join("")}${ZemiOpportunity.definitionsHtml(es ? "es" : "en", opportunity)}</details>`);
   }
   if (business.proximity) parts.push(`<p>${business.proximity.reference ? `${esc(business.proximity.reference.name)} · ${esc(business.proximity.note)}` : (es ? 'Abra un lugar para usarlo como referencia de distancia.' : 'Open a place to use as the distance reference.')}</p>`);
@@ -3104,7 +3113,7 @@ async function speak(text, voice) {
 
 if (window.speechSynthesis) speechSynthesis.getVoices();
 
-function narrate(data) {
+function narrate(data, { voice = true } = {}) {
   const text = data?.speech || data?.error || "";
   if (!text) return;
   // Spoken answers live in the caption; the panel keeps only the list, so nothing shows twice.
@@ -3113,7 +3122,7 @@ function narrate(data) {
     ? leadNames.map((name) => openPlaces.find((place) => place.name === name)).filter(Boolean)
     : []);
   showCaption("zemi", text, data?.evidence, places);
-  speak(data?.spoken || text, ZemiConverse.voice());
+  if (voice) speak(data?.spoken || text, ZemiConverse.voice());
 }
 
 // ---------- Asking ----------
@@ -3256,7 +3265,13 @@ async function runQuestion(question) {
     // A rules answer may move the map too: an island ranking flies to its first town, so the old town's cards and
     // breadcrumb do not sit under it (round-nine review).
     if (Array.isArray(data.actions) && data.actions.length) await applyMapActions(data.actions, data.speech);
-    else if (step !== "island") renderList();
+    else if (["limit", "outside"].includes(data.kind) && !townView && pickedId && byName.has(pickedId)) {
+      // A refusal or an off-map town shows nothing new, so the last question's list does not stay beside it
+      // (judge panel 10/26: "Recomienda Aqui" stayed under the Atlantis and profit answers). Back to the town.
+      const record = byName.get(pickedId).record;
+      openTownView(record);
+      Promise.all([loadPlaces(record).catch(() => {}), loadDirectory(record.town)]);
+    } else if (step !== "island") renderList();
     showCaption("zemi", data.speech, data.evidence, data.places);
     return data;
   }
@@ -3568,14 +3583,14 @@ $("suggest").addEventListener("click", (event) => {
 // ---------- Island hero: the decision question first, the artists as the on-ramp ----------
 const HERO = {
   en: { title: "Where should I open a business in Puerto Rico?", lede: "Qloo's taste town by town, against the businesses the Census already counts. Pick an industry.", or: "Or start with an artist" },
-  es: { title: "¿Dónde abro un negocio en Puerto Rico?", lede: "El gusto de Qloo pueblo por pueblo, frente a los negocios que el Census ya cuenta. Escoja una industria.", or: "O empiece por un artista" },
+  es: { title: "¿Dónde abro un negocio en Puerto Rico?", lede: "El gusto de Qloo pueblo por pueblo, frente a los negocios que el Censo ya cuenta. Escoja una industria.", or: "O empiece por un artista" },
 };
 // Everything on the first screen follows the picked language (judge panel 10/23: after Español the tours,
 // the example questions, the search placeholder and the voice preview still read in English).
 const CHROME = {
-  en: { tagline: "Puerto Rico, through Qloo's taste data", placeholder: "Ask about any town, or search a place", preview: "Hear this voice",
+  en: { tagline: "Puerto Rico, through Qloo's taste data", placeholder: "Ask about a town or place", preview: "Hear this voice",
     jobs: { bakery: "Where to open a bakery", ponce: "Open a restaurant in Ponce", surf: "Surf spots in Rincón", mofongo: "Where to eat mofongo" } },
-  es: { tagline: "Puerto Rico, a través del gusto de Qloo", placeholder: "Pregunte por un pueblo o busque un lugar", preview: "Escuchar esta voz",
+  es: { tagline: "Puerto Rico, a través del gusto de Qloo", placeholder: "Pregunte por un pueblo o lugar", preview: "Escuchar esta voz",
     jobs: { bakery: "Dónde abrir una panadería", ponce: "Abrir un restaurante en Ponce", surf: "Dónde surfear en Rincón", mofongo: "Dónde comer mofongo" } },
 };
 // Labels written into the page's markup (judge panels 10/24-10/25: "By category", "Ask Zemi-Aku", "All places",
@@ -3659,6 +3674,12 @@ function applyStatic(lang) {
   const folded = $("panel").dataset.collapsed === "true";
   $("panel-collapse").setAttribute("aria-label", es ? (folded ? "Abrir el panel" : "Plegar el panel") : (folded ? "Expand panel" : "Collapse panel"));
 }
+// A phone gets a hint that fits whole (judge panel 10/26: "Pregunte por un pueblo o lu" at 390 px).
+function basePlaceholder(lang) {
+  return matchMedia("(max-width: 420px)").matches ? (lang === "es" ? "Pregunte o busque" : "Ask or search") : CHROME[lang].placeholder;
+}
+// A turn or a resize across 420 px redraws the hint too (Codex review, round ten).
+matchMedia("(max-width: 420px)").addEventListener("change", () => placeholder());
 function renderHero(next) {
   const lang = (next || ZemiConverse.voice().lang) === "es" ? "es" : "en";
   const t = CHROME[lang];
@@ -3676,7 +3697,7 @@ function renderHero(next) {
     const key = button.dataset.job || button.dataset.opportunity;
     if (t.jobs[key]) button.textContent = t.jobs[key];
   }
-  if (!pickedId) $("q").placeholder = t.placeholder;
+  if (!pickedId) $("q").placeholder = basePlaceholder(lang);
   if (typeof showMotion === "function" && typeof ZemiFlight !== "undefined") showMotion(); // the camera pill follows too
 }
 // A link that names the language (the front page's "En español") is a pick, kept like a menu pick.

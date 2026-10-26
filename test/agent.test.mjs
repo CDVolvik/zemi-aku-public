@@ -292,7 +292,8 @@ test("the prompt asks for short plain answers with at most three places", () => 
 test("one visitor gets a bounded share of the day's model turns and fallbacks are counted, never quoted", () => {
   const server = fs.readFileSync(new URL("../scripts/serve-eagle.mjs", import.meta.url), "utf8");
   const route = server.slice(server.indexOf('url.pathname === "/api/chat"'), server.indexOf('url.pathname === "/api/ask"'));
-  assert.match(route, /limiter\.spend\(`chat-turns:\$\{ip\}`, 1, CHAT_TURNS_PER_VISITOR\)/, "per-visitor daily turn cap");
+  assert.match(route, /answer = await withVisitorTurn\(ip, \(\) => textAgent\(checked\.value\)\);/, "per-visitor daily turn cap");
+  assert.match(server, /async function withVisitorTurn\(ip, run\) \{[^]*?limiter\.spendDay\(`chat-turns:\$\{ip\}`, 1, CHAT_TURNS_PER_VISITOR\)/);
   assert.match(server, /const CHAT_TURNS_PER_VISITOR = 40;/);
   assert.match(server, /onFallback: \(reason\) => console\.warn\(`agent fallback: \$\{reason\}`\)/);
   assert.match(route, /console\.warn\("agent fallback: visitor-cap"\)/);
@@ -543,11 +544,11 @@ test('the verdict note is one plain model call on the data given, charged to the
   assert.ok(sent.max_tokens >= 400);
   assert.deepEqual(sent.reasoning, { enabled: false });
   // A note that echoes the verdict is dropped (a probe saw the whole verdict sentence come back).
-  const verdict = 'San Juan is a gap for bakeries: taste above the median, rank 5 of 76, and few businesses, 16 establishments with employees. Qloo lists 37. A lead, not proof: visit and check rents.';
+  const verdict = 'San Juan is a gap for bakeries: taste above the median, rank 5 of 76, and few businesses per resident, 16 establishments with employees. Qloo lists 37. A lead, not proof: visit and check rents.';
   const echo = createNote({ key: 'test', ledger: ledger(t), fetchImpl: async () => reply({ content: verdict }) });
   assert.deepEqual(await echo({ town: 'San Juan', verdict }), { fallback: true, reason: 'echo' });
   assert.equal(echoes('Visit El Horno early and check the queue. Compare with Río Grande, rank 2.', verdict), false);
-  assert.equal(echoes('San Juan is a gap for bakeries with taste above the median and few businesses, 16 establishments with employees, rank 5 of 76.', verdict), true);
+  assert.equal(echoes('San Juan is a gap for bakeries with taste above the median and few businesses per resident, 16 establishments with employees, rank 5 of 76.', verdict), true);
   // The output contract: the requested language, no claim the data cannot carry, three sentences at most.
   const english = createNote({ key: 'test', ledger: ledger(t), fetchImpl: async () => reply({ content: 'Visit El Horno early and check the queue. Compare with Río Grande, which has fewer bakeries per resident.' }) });
   assert.deepEqual(await english({ town: 'San Juan', lang: 'es', verdict }), { fallback: true, reason: 'language' });
@@ -803,4 +804,20 @@ test('fourth pass: opening hours are a visit tip, and light traffic or "they sho
 test('second pass: only the lowercase group word changes, so names keep theirs (round-nine review)', () => {
   for (const name of ['Visit Café Brecha.', 'Visit Brecha Café.', 'Visit La Gran Brecha.']) assert.equal(groupWords(name, 'en'), name);
   assert.equal(groupWords('Luquillo is in brecha.', 'en'), 'Luquillo is in gap.');
+});
+
+test('a first request the provider refuses carries no tool call, so the visitor turn comes back; a refusal after a tool keeps it (Codex review, round ten)', async (t) => {
+  const serve = fs.readFileSync(new URL('../scripts/serve-eagle.mjs', import.meta.url), 'utf8');
+  const providerRefused = new Function('result', `return ${serve.match(/const providerRefused = \(result\) => (.+);/)[1]};`);
+  const first = createAgent({ key: 'k', tools, ledger: ledger(t), fetchImpl: async () => ({ ok: false, status: 402 }) });
+  const refusedFirst = await first({ question: 'hi' });
+  assert.equal(refusedFirst.reason, 'http-402');
+  assert.equal(providerRefused(refusedFirst), true);
+  let requests = 0;
+  const catalog = { ...tools[0], run: async () => ({ source: 'Qloo', count: 1, places: [{ id: '11111111-1111-1111-1111-111111111111', name: 'Real café' }] }) };
+  const later = createAgent({ key: 'k', tools: [catalog], ledger: ledger(t), fetchImpl: async () => (++requests === 1
+    ? reply({ role: 'assistant', content: null, tool_calls: [call('town_catalog', { town: 'Ponce' })] }) : { ok: false, status: 402 }) });
+  const refusedLater = await later({ question: 'cafés in Ponce' });
+  assert.equal(refusedLater.reason, 'http-402');
+  assert.equal(providerRefused(refusedLater), false);
 });

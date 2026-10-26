@@ -8,10 +8,10 @@
   const GROUPS = ["gap", "competitive", "quiet", "crowded", "unknown"];
   const GROUP_COLORS = { gap: "#e07a3d", competitive: "#2f8f7a", quiet: "#9cc3b4", crowded: "#7c5cff", unknown: "#6b7280" };
   const LABELS = {
-    en: { gap: "Gap: taste above the median, few businesses", competitive: "Competitive: taste above the median, many businesses",
-      quiet: "Quiet: taste below the median, few businesses", crowded: "Crowded: taste below the median, many businesses", unknown: "Not enough data" },
-    es: { gap: "Brecha: afinidad sobre la mediana, pocos negocios", competitive: "Competido: afinidad sobre la mediana, muchos negocios",
-      quiet: "Tranquilo: afinidad bajo la mediana, pocos negocios", crowded: "Saturado: afinidad bajo la mediana, muchos negocios", unknown: "Datos insuficientes" },
+    en: { gap: "Gap: taste above the median, few businesses per resident", competitive: "Competitive: taste above the median, many businesses per resident",
+      quiet: "Quiet: taste below the median, few businesses per resident", crowded: "Crowded: taste below the median, many businesses per resident", unknown: "Not enough data" },
+    es: { gap: "Brecha: afinidad sobre la mediana, pocos negocios por residente", competitive: "Competido: afinidad sobre la mediana, muchos negocios por residente",
+      quiet: "Tranquilo: afinidad bajo la mediana, pocos negocios por residente", crowded: "Saturado: afinidad bajo la mediana, muchos negocios por residente", unknown: "Datos insuficientes" },
   };
   const INDUSTRIES = [
     ["cafe", "café", "una cafetería", "Cafés", "Cafeterías"], ["bakery", "bakery", "una panadería", "Bakeries", "Panaderías"],
@@ -19,10 +19,10 @@
     ["hotel", "hotel", "un hotel", "Hotels", "Hoteles"], ["salon", "salon", "un salón de belleza", "Salons", "Salones de belleza"],
   ].map(([id, en, es, pluralEn, pluralEs]) => ({ id, en, es, pluralEn, pluralEs }));
   const TEXT = {
-    en: { kicker: "PUERTO RICO · WHERE TO OPEN", title: name => `Where should I open a ${name}?`, gaps: "Strongest taste with few businesses",
+    en: { kicker: "PUERTO RICO · WHERE TO OPEN", title: name => `Where should I open a ${name}?`, gaps: "Strongest taste with few businesses per resident",
       loading: "Loading…", unavailable: name => `Opportunity data is unavailable for ${name}.`, close: "Back to the island", rank: (n, of) => (of ? `taste #${n} of ${of}` : `taste #${n}`),
       tap: "Tap a town on the map or below to see its numbers." },
-    es: { kicker: "PUERTO RICO · DÓNDE ABRIR", title: name => `¿Dónde abro ${name}?`, gaps: "Más gusto y pocos negocios",
+    es: { kicker: "PUERTO RICO · DÓNDE ABRIR", title: name => `¿Dónde abro ${name}?`, gaps: "Más gusto y pocos negocios por residente",
       loading: "Cargando…", unavailable: name => `Los datos de oportunidad no están disponibles para ${name}.`, close: "Volver a la isla",
       rank: (n, of) => (of ? `gusto #${n} de ${of}` : `gusto #${n}`), tap: "Toque un pueblo en el mapa o abajo para ver sus números." },
   };
@@ -30,13 +30,18 @@
 
   function legendHtml(lang, notes = []) {
     const l = lang2(lang);
-    return `<ul class="opportunity-legend">${GROUPS.map(group => `<li><span class="swatch" style="background:${GROUP_COLORS[group]}" aria-hidden="true"></span>${esc(LABELS[l][group])}</li>`).join("")}</ul>`
+    // "Gap: taste above…" splits into the name and its rule, so a phone can show the names alone (judge panel 10/26).
+    const item = (label) => {
+      const at = label.indexOf(": ");
+      return at < 0 ? esc(label) : `<span class="legend-name">${esc(label.slice(0, at))}</span><span class="legend-rule">${esc(label.slice(at))}</span>`;
+    };
+    return `<ul class="opportunity-legend">${GROUPS.map(group => `<li><span class="swatch" style="background:${GROUP_COLORS[group]}" aria-hidden="true"></span><span>${item(LABELS[l][group])}</span></li>`).join("")}</ul>`
       + `<div class="opportunity-notes">${notes.map(line => `<p class="small">${esc(line)}</p>`).join("")}</div>`;
   }
 
   // Census NAICS 2017 titles for the codes the build sums, in plain words.
   const NAICS = {
-    "722515": { en: "snack and nonalcoholic beverage bars, where the Census counts cafés and coffee shops", es: "barras de meriendas y bebidas sin alcohol, donde el Census cuenta las cafeterías" },
+    "722515": { en: "snack and nonalcoholic beverage bars, where the Census counts cafés and coffee shops", es: "barras de meriendas y bebidas sin alcohol, donde el Censo cuenta las cafeterías" },
     "311811": { en: "retail bakeries", es: "panaderías al detal" },
     "722511": { en: "full-service restaurants", es: "restaurantes con servicio de mesa" },
     "722513": { en: "limited-service restaurants, counter service and fast food", es: "restaurantes de servicio limitado, mostrador y comida rápida" },
@@ -73,16 +78,16 @@
     const l = lang2(lang), es = l === "es";
     const kind = industryById(industry);
     const name = kind ? (es ? kind.pluralEs : kind.pluralEn) : (es ? "Esta industria" : "This industry");
-    const codes = (sources?.cbp?.naics || []).map(code => `${code} (${NAICS[code]?.[l] || (es ? "código del Census" : "Census code")})`);
+    const codes = (sources?.cbp?.naics || []).map(code => `${code} (${NAICS[code]?.[l] || (es ? "código del Censo" : "Census code")})`);
     const year = sources?.cbp?.vintage ? String(sources.cbp.vintage) : "";
     const period = sources?.census?.period || "";
     const tag = sources?.qloo?.tag || "";
     const lines = es ? [
-      `Industria: ${name}. Negocios = ${codes.length ? `código NAICS ${codes.join(" + ")} del Census` : "la cifra del Census para esta industria"}.`
+      `Industria: ${name}. Negocios = ${codes.length ? `código NAICS ${codes.join(" + ")} del Censo` : "la cifra del Censo para esta industria"}.`
         + ` Gusto = ${tag ? `lugares que Qloo etiqueta como ${tag}` : "la afinidad de Qloo por esta industria"}, promediada sobre las celdas del pueblo.`,
       `Negocios: County Business Patterns${year ? ` ${year}` : ""} cuenta los establecimientos con empleados${year ? ` a marzo de ${year}` : ""} a partir de registros contributivos; es un conteo, sin margen de error, pero deja fuera a quienes trabajan por cuenta propia.`,
       `Población: Puerto Rico Community Survey${period ? ` ${period}` : ""}, estimado de cinco años; tiene un margen de error que la cifra por cada 10,000 no muestra, así que una diferencia pequeña entre pueblos no significa nada.`,
-      "El Census no publica cifras menores de 3: un pueblo sin cifra publicada tiene de 0 a 2 establecimientos, nunca un cero seguro.",
+      "El Censo no publica cifras menores de 3: un pueblo sin cifra publicada tiene de 0 a 2 establecimientos, nunca un cero seguro.",
       "Los colores y las cifras siguen el límite del municipio. La lista de negocios parecidos dentro de un pueblo usa un círculo de 3 km en línea recta alrededor del lugar escogido, que puede cruzar al pueblo vecino; no son la misma área.",
       "Esto es un primer filtro: dónde el gusto va por delante de la oferta. Este mapa no mide demanda, ingresos ni ganancias, y no sustituye una visita ni un plan de negocio.",
     ] : [
@@ -104,7 +109,7 @@
     const people = Number(row.employees || 0).toLocaleString("en-US");
     if (!row.suppressed) return { businesses: es ? `${row.establishments} establecimientos · ${people} empleados` : `${row.establishments} establishments · ${people} employees`,
       per: es ? `${fix(row.perTenThousand)} por cada 10,000 residentes` : `${fix(row.perTenThousand)} per 10,000 residents` };
-    if (!row.establishments) return { businesses: es ? `de 0 a ${row.establishmentsMax} establecimientos (el Census no publica cifras menores de 3)` : `0–${row.establishmentsMax} establishments (Census does not publish counts below 3)`,
+    if (!row.establishments) return { businesses: es ? `de 0 a ${row.establishmentsMax} establecimientos (el Censo no publica cifras menores de 3)` : `0–${row.establishmentsMax} establishments (Census does not publish counts below 3)`,
       per: es ? `hasta ${fix(row.perTenThousandMax)} por cada 10,000 residentes` : `up to ${fix(row.perTenThousandMax)} per 10,000 residents` };
     return { businesses: es ? `al menos ${row.establishments} establecimientos · al menos ${row.employees} empleados` : `at least ${row.establishments} establishments · at least ${row.employees} employees`,
       per: es ? `${fix(row.perTenThousand)}–${fix(row.perTenThousandMax)} por cada 10,000 residentes` : `${fix(row.perTenThousand)}–${fix(row.perTenThousandMax)} per 10,000 residents` };
@@ -124,7 +129,12 @@
       $("opportunity-close").textContent = text.close;
       if (!current) { $("opportunity-legend").innerHTML = ""; $("opportunity-gaps").innerHTML = ""; $("opportunity-gaps-heading").textContent = ""; return; }
       $("opportunity-note").textContent = text.tap;
-      $("opportunity-legend").innerHTML = legendHtml(l, current.data.notes?.[l] || []) + definitionsHtml(l, current.data);
+      // The honesty line stays under the legend; the sources, rules and definitions fold below the town list, so on a
+      // phone the towns come before a screen of notes (judge panel 10/26, 390 px: no town visible without scrolling).
+      const notes = current.data.notes?.[l] || [];
+      $("opportunity-legend").innerHTML = legendHtml(l, notes.slice(0, 1));
+      const sources = `<details class="opportunity-sources"><summary>${l === "es" ? "Fuentes, reglas y límites" : "Sources, rules and limits"}</summary>`
+        + `<div class="opportunity-notes">${notes.slice(1).map(line => `<p class="small">${esc(line)}</p>`).join("")}</div>${definitionsHtml(l, current.data)}</details>`;
       $("opportunity-gaps-heading").textContent = text.gaps;
       const gaps = current.data.towns.filter(row => row.group === "gap").sort((a, b) => a.tasteRank - b.tasteRank).slice(0, 8);
       const ranked = current.data.towns.filter(row => Number.isFinite(row.tasteRank)).length;
@@ -132,7 +142,7 @@
       const withheld = current.data.towns.filter(row => row.group === "unknown" && Number.isFinite(row.tasteRank) && row.tasteRank <= (gaps[gaps.length - 1]?.tasteRank ?? 0))
         .sort((a, b) => a.tasteRank - b.tasteRank);
       const withheldNote = withheld.length
-        ? `<p class="note">${l === "es" ? `${withheld.map(row => `${esc(row.town)} (gusto #${row.tasteRank})`).join(", ")} no ${withheld.length > 1 ? "están" : "está"} aquí: el Census no publica su conteo, así que no se sabe si tiene pocos negocios.`
+        ? `<p class="note">${l === "es" ? `${withheld.map(row => `${esc(row.town)} (gusto #${row.tasteRank})`).join(", ")} no ${withheld.length > 1 ? "están" : "está"} aquí: el Censo no publica su conteo, así que no se sabe si tiene pocos negocios por residente.`
           : `${withheld.map(row => `${esc(row.town)} (taste #${row.tasteRank})`).join(", ")} ${withheld.length > 1 ? "are" : "is"} not here: the Census withholds its count, so few or many cannot be told.`}</p>`
         : "";
       $("opportunity-gaps").innerHTML = gaps.map(row => {
@@ -140,7 +150,7 @@
           Number.isFinite(row.perTenThousand) ? supplyText(row, l).per : ""].filter(Boolean).join(" · ");
         return `<button type="button" class="coast-card" data-opportunity-town="${esc(row.town)}"><strong>${esc(row.town)}</strong><span>${esc(facts)}</span></button>`;
       }).join("") + withheldNote + (ranked < current.data.towns.length
-        ? `<p class="note">${l === "es" ? `Los puestos son entre los ${ranked} de ${current.data.towns.length} pueblos con datos de gusto de Qloo.` : `Ranks are among the ${ranked} of ${current.data.towns.length} towns with Qloo taste data.`}</p>` : "");
+        ? `<p class="note">${l === "es" ? `Los puestos son entre los ${ranked} de ${current.data.towns.length} pueblos con datos de gusto de Qloo.` : `Ranks are among the ${ranked} of ${current.data.towns.length} towns with Qloo taste data.`}</p>` : "") + sources;
     }
 
     async function show(id) {

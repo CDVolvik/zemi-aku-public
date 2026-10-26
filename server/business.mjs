@@ -5,6 +5,7 @@ import { fold, islandText, withoutExcluded } from './lib.mjs';
 import { categoryOf, genreRoot, summarize } from './catalog.mjs';
 import { distanceKm } from './coastal.mjs';
 import { industryOf } from './opportunity.mjs';
+import { isBar } from './agent-tools.mjs';
 
 const purchase = /\b(?:buy|buying|purchase|acquire|acquisition|comprar|compra|adquirir)\b[^.?!]{0,90}\b(?:business|businesses|restaurant|cafe|coffee shop|bakery|bar|hotel|store|salon|negocio|negocios|restaurante|cafeteria|panaderia|tienda)\b|\b(?:business(?:es)?|negocios?) (?:for sale|en venta)\b/;
 // "abro / pongo / monto" count only when an article follows ("¿Dónde abro una panadería?"), so "monto del
@@ -81,7 +82,7 @@ const namedTowns = (text, towns) => towns.filter(town => new RegExp(`\\b${fold(t
 // to open in Ponce") is one-town research and stays on the template.
 const comparing = /\b(?:compare|comparing|comparison|comparar|compara|comparacion|versus|vs|which town|what town|better town|best town|cual pueblo|que pueblo|mejor pueblo|cual municipio|que municipio|o en|or in)\b/;
 // Money questions leave the template: the verdict never says what a business would earn (judge panel 10/25 round 7).
-const MONEY_ASK = /\b(?:ganar(?:ia|e|ias|an|ian)?|ganancias?|facturar(?:ia)?|facturacion|rentabilidad|rentable|cuanto (?:gana|vende|factura|deja|produce)|profits?|profitable|revenue|earn(?:s|ings)?|make (?:per|a|each) (?:month|year|week)|roi|payback|margins?|margen(?:es)?|return on investment|retorno)\b/;
+const MONEY_ASK = /\b(?:ganar(?:ia|e|ias|an|ian)?|ganancias?|facturar(?:ia)?|facturacion|rentabilidad|rentable|cuanto (?:gana|vende|factura|deja|produce)|profits?|profitable|revenue|earn(?:s|ings)?|make (?:per|a|each) (?:month|year|week)|roi|payback|margins?|margen(?:es)?|return on investment|retorno|(?:make|makes|making|earn|earns) (?:the )?(?:most|more) money|mas dinero)\b/;
 // The rules router reads the same list, so a money question never becomes a place list there either.
 export const MONEY_QUESTION = MONEY_ASK;
 const choosing = /\b(?:which|better|best|cual|cuales|mejor|conviene mas)\b/;
@@ -264,6 +265,9 @@ export function createBusinessDiscovery({ towns, catalog, context = async () => 
     try { places = await catalog(town); } catch { /* Missing saved data must not trigger a harvest. */ }
     const available = Array.isArray(places);
     let rows = (places || []).filter(p => matchesType(p, request));
+    // Qloo files bars under its restaurant genres, so restaurant research led with a bar (judge panel 10/26: La Placita
+    // first in San Juan). Places that serve meals come first; the bars stay, last, in their own order.
+    if (request.type === 'restaurant') rows = [...rows.filter(p => !isBar(p)), ...rows.filter(p => isBar(p))];
     let local = {};
     try { local = await context(town) || {}; } catch { /* Missing evidence stays unknown. */ }
     const evidence = evidenceOf(local, request);

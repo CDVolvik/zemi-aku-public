@@ -1,0 +1,3851 @@
+{
+  "ranAt": "2026-10-26T04:00:12.110Z",
+  "preregistration": "docs/BACKTEST-GAP-2026-10-26.md",
+  "sources": {
+    "cbp": [
+      2019,
+      2023
+    ],
+    "qlooTasteRetrieved": "2026-10-11",
+    "residents": "PRCS 2020–2024"
+  },
+  "primary": {
+    "comparison": "gap vs quiet, pooled",
+    "nA": 53,
+    "nB": 41,
+    "meanA": 0.721,
+    "meanB": 1.072,
+    "difference": -0.351,
+    "gainedA": 0.679,
+    "gainedB": 0.78,
+    "permutation": {
+      "observed": -0.351,
+      "pOneSided": 0.0735,
+      "draws": 10000,
+      "seed": 20261026
+    }
+  },
+  "perIndustry": [
+    {
+      "industry": "cafe",
+      "nA": 10,
+      "nB": 6,
+      "meanA": 0.895,
+      "meanB": 0.409,
+      "difference": 0.485,
+      "gainedA": 0.9,
+      "gainedB": 0.833
+    },
+    {
+      "industry": "bakery",
+      "nA": 12,
+      "nB": 6,
+      "meanA": 0.023,
+      "meanB": 0.196,
+      "difference": -0.173,
+      "gainedA": 0.417,
+      "gainedB": 0.667
+    },
+    {
+      "industry": "restaurant",
+      "nA": 10,
+      "nB": 22,
+      "meanA": 2.274,
+      "meanB": 1.796,
+      "difference": 0.478,
+      "gainedA": 1,
+      "gainedB": 0.909
+    },
+    {
+      "industry": "bar",
+      "nA": 8,
+      "nB": 2,
+      "meanA": 0.504,
+      "meanB": 0.134,
+      "difference": 0.371,
+      "gainedA": 0.875,
+      "gainedB": 0.5
+    },
+    {
+      "industry": "hotel",
+      "nA": 7,
+      "nB": 2,
+      "meanA": 0.043,
+      "meanB": 0,
+      "difference": 0.043,
+      "gainedA": 0.286,
+      "gainedB": 0
+    },
+    {
+      "industry": "salon",
+      "nA": 6,
+      "nB": 3,
+      "meanA": 0.319,
+      "meanB": 0.176,
+      "difference": 0.144,
+      "gainedA": 0.5,
+      "gainedB": 0.667
+    }
+  ],
+  "gapVsOthers": {
+    "nA": 53,
+    "nB": 142,
+    "meanA": 0.721,
+    "meanB": 0.965,
+    "difference": -0.244,
+    "gainedA": 0.679,
+    "gainedB": 0.641
+  },
+  "exploratory": {
+    "meanOfIndustryDifferences": 0.225,
+    "industriesGapAhead": 5,
+    "industries": 6
+  },
+  "excluded": 273,
+  "rows": [
+    {
+      "industry": "cafe",
+      "town": "San Juan",
+      "group2019": "competitive",
+      "establishments2019": 65,
+      "establishments2023": 81,
+      "changePerTenThousand": 0.476
+    },
+    {
+      "industry": "cafe",
+      "town": "Bayamón",
+      "group2019": "competitive",
+      "establishments2019": 23,
+      "establishments2023": 31,
+      "changePerTenThousand": 0.4384
+    },
+    {
+      "industry": "cafe",
+      "town": "Carolina",
+      "group2019": "gap",
+      "establishments2019": 16,
+      "establishments2023": 24,
+      "changePerTenThousand": 0.5256
+    },
+    {
+      "industry": "cafe",
+      "town": "Ponce",
+      "group2019": "gap",
+      "establishments2019": 13,
+      "establishments2023": 21,
+      "changePerTenThousand": 0.6026
+    },
+    {
+      "industry": "cafe",
+      "town": "Caguas",
+      "group2019": "competitive",
+      "establishments2019": 26,
+      "establishments2023": 29,
+      "changePerTenThousand": 0.2389
+    },
+    {
+      "industry": "cafe",
+      "town": "Guaynabo",
+      "group2019": "gap",
+      "establishments2019": 7,
+      "establishments2023": 17,
+      "changePerTenThousand": 1.1188
+    },
+    {
+      "industry": "cafe",
+      "town": "Mayagüez",
+      "group2019": "competitive",
+      "establishments2019": 13,
+      "establishments2023": 16,
+      "changePerTenThousand": 0.4236
+    },
+    {
+      "industry": "cafe",
+      "town": "Aguadilla",
+      "group2019": "gap",
+      "establishments2019": 5,
+      "establishments2023": 11,
+      "changePerTenThousand": 1.1083
+    },
+    {
+      "industry": "cafe",
+      "town": "Arecibo",
+      "group2019": "competitive",
+      "establishments2019": 12,
+      "establishments2023": 13,
+      "changePerTenThousand": 0.1157
+    },
+    {
+      "industry": "cafe",
+      "town": "Cabo Rojo",
+      "group2019": "gap",
+      "establishments2019": 4,
+      "establishments2023": 10,
+      "changePerTenThousand": 1.28
+    },
+    {
+      "industry": "cafe",
+      "town": "Fajardo",
+      "group2019": "gap",
+      "establishments2019": 3,
+      "establishments2023": 6,
+      "changePerTenThousand": 0.9527
+    },
+    {
+      "industry": "cafe",
+      "town": "Aguada",
+      "group2019": "gap",
+      "establishments2019": 4,
+      "establishments2023": 6,
+      "changePerTenThousand": 0.5297
+    },
+    {
+      "industry": "cafe",
+      "town": "Humacao",
+      "group2019": "competitive",
+      "establishments2019": 8,
+      "establishments2023": 9,
+      "changePerTenThousand": 0.1996
+    },
+    {
+      "industry": "cafe",
+      "town": "Hatillo",
+      "group2019": "competitive",
+      "establishments2019": 7,
+      "establishments2023": 8,
+      "changePerTenThousand": 0.2621
+    },
+    {
+      "industry": "cafe",
+      "town": "Toa Baja",
+      "group2019": "quiet",
+      "establishments2019": 6,
+      "establishments2023": 8,
+      "changePerTenThousand": 0.2738
+    },
+    {
+      "industry": "cafe",
+      "town": "Isabela",
+      "group2019": "gap",
+      "establishments2019": 4,
+      "establishments2023": 11,
+      "changePerTenThousand": 1.6321
+    },
+    {
+      "industry": "cafe",
+      "town": "Dorado",
+      "group2019": "competitive",
+      "establishments2019": 8,
+      "establishments2023": 12,
+      "changePerTenThousand": 1.117
+    },
+    {
+      "industry": "cafe",
+      "town": "Rincón",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": 5,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "cafe",
+      "town": "Cayey",
+      "group2019": "gap",
+      "establishments2019": 4,
+      "establishments2023": 4,
+      "changePerTenThousand": 0
+    },
+    {
+      "industry": "cafe",
+      "town": "Río Grande",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": 3,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "cafe",
+      "town": "Vega Baja",
+      "group2019": "quiet",
+      "establishments2019": 4,
+      "establishments2023": 4,
+      "changePerTenThousand": 0
+    },
+    {
+      "industry": "cafe",
+      "town": "Manatí",
+      "group2019": "competitive",
+      "establishments2019": 6,
+      "establishments2023": 5,
+      "changePerTenThousand": -0.2568
+    },
+    {
+      "industry": "cafe",
+      "town": "Barceloneta",
+      "group2019": "crowded",
+      "establishments2019": 6,
+      "establishments2023": 7,
+      "changePerTenThousand": 0.4446
+    },
+    {
+      "industry": "cafe",
+      "town": "Guayama",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": 3,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "cafe",
+      "town": "San Sebastián",
+      "group2019": "quiet",
+      "establishments2019": 3,
+      "establishments2023": 4,
+      "changePerTenThousand": 0.2558
+    },
+    {
+      "industry": "cafe",
+      "town": "Trujillo Alto",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": 4,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "cafe",
+      "town": "Canóvanas",
+      "group2019": "quiet",
+      "establishments2019": 5,
+      "establishments2023": 7,
+      "changePerTenThousand": 0.4783
+    },
+    {
+      "industry": "cafe",
+      "town": "Salinas",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "cafe",
+      "town": "Luquillo",
+      "group2019": "competitive",
+      "establishments2019": 3,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "cafe",
+      "town": "Yauco",
+      "group2019": "crowded",
+      "establishments2019": 5,
+      "establishments2023": 8,
+      "changePerTenThousand": 0.9093
+    },
+    {
+      "industry": "cafe",
+      "town": "Toa Alta",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": 6,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "cafe",
+      "town": "Loíza",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "cafe",
+      "town": "Quebradillas",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "cafe",
+      "town": "Vieques",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "cafe",
+      "town": "Juana Díaz",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "cafe",
+      "town": "Añasco",
+      "group2019": "gap",
+      "establishments2019": 3,
+      "establishments2023": 6,
+      "changePerTenThousand": 1.1955
+    },
+    {
+      "industry": "cafe",
+      "town": "Vega Alta",
+      "group2019": "quiet",
+      "establishments2019": 3,
+      "establishments2023": 6,
+      "changePerTenThousand": 0.8591
+    },
+    {
+      "industry": "cafe",
+      "town": "Naranjito",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "cafe",
+      "town": "San Germán",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "cafe",
+      "town": "Moca",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": 3,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "cafe",
+      "town": "Cidra",
+      "group2019": "quiet",
+      "establishments2019": 3,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "cafe",
+      "town": "San Lorenzo",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "cafe",
+      "town": "Santa Isabel",
+      "group2019": "crowded",
+      "establishments2019": 3,
+      "establishments2023": 6,
+      "changePerTenThousand": 1.5073
+    },
+    {
+      "industry": "cafe",
+      "town": "Camuy",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": 3,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "cafe",
+      "town": "Corozal",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": 4,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "cafe",
+      "town": "Jayuya",
+      "group2019": "competitive",
+      "establishments2019": 4,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "cafe",
+      "town": "Las Piedras",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": 3,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "cafe",
+      "town": "Coamo",
+      "group2019": "quiet",
+      "establishments2019": 3,
+      "establishments2023": 5,
+      "changePerTenThousand": 0.5883
+    },
+    {
+      "industry": "cafe",
+      "town": "Lajas",
+      "group2019": "competitive",
+      "establishments2019": 3,
+      "establishments2023": 3,
+      "changePerTenThousand": 0
+    },
+    {
+      "industry": "cafe",
+      "town": "Culebra",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "cafe",
+      "town": "Gurabo",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "cafe",
+      "town": "Lares",
+      "group2019": "competitive",
+      "establishments2019": 5,
+      "establishments2023": 3,
+      "changePerTenThousand": -0.718
+    },
+    {
+      "industry": "cafe",
+      "town": "Aibonito",
+      "group2019": "crowded",
+      "establishments2019": 3,
+      "establishments2023": 4,
+      "changePerTenThousand": 0.4059
+    },
+    {
+      "industry": "cafe",
+      "town": "Barranquitas",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": 5,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "cafe",
+      "town": "Utuado",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "cafe",
+      "town": "Juncos",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "cafe",
+      "town": "Morovis",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "cafe",
+      "town": "Naguabo",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "cafe",
+      "town": "Guánica",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "cafe",
+      "town": "Cataño",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "cafe",
+      "town": "Adjuntas",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "cafe",
+      "town": "Hormigueros",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": 4,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "cafe",
+      "town": "Ciales",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "cafe",
+      "town": "Yabucoa",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "cafe",
+      "town": "Orocovis",
+      "group2019": "competitive",
+      "establishments2019": 4,
+      "establishments2023": 4,
+      "changePerTenThousand": 0
+    },
+    {
+      "industry": "cafe",
+      "town": "Patillas",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "cafe",
+      "town": "Aguas Buenas",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "cafe",
+      "town": "Villalba",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "cafe",
+      "town": "Guayanilla",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "cafe",
+      "town": "Sabana Grande",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "cafe",
+      "town": "Arroyo",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "cafe",
+      "town": "Peñuelas",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "cafe",
+      "town": "Comerío",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "cafe",
+      "town": "Ceiba",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "cafe",
+      "town": "Maunabo",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "cafe",
+      "town": "Florida",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "cafe",
+      "town": "Las Marías",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "cafe",
+      "town": "Maricao",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bakery",
+      "town": "San Juan",
+      "group2019": "gap",
+      "establishments2019": 17,
+      "establishments2023": 16,
+      "changePerTenThousand": -0.0297
+    },
+    {
+      "industry": "bakery",
+      "town": "Bayamón",
+      "group2019": "gap",
+      "establishments2019": 19,
+      "establishments2023": 20,
+      "changePerTenThousand": 0.0548
+    },
+    {
+      "industry": "bakery",
+      "town": "Carolina",
+      "group2019": "gap",
+      "establishments2019": 5,
+      "establishments2023": 6,
+      "changePerTenThousand": 0.0657
+    },
+    {
+      "industry": "bakery",
+      "town": "Ponce",
+      "group2019": "gap",
+      "establishments2019": 11,
+      "establishments2023": 15,
+      "changePerTenThousand": 0.3013
+    },
+    {
+      "industry": "bakery",
+      "town": "Caguas",
+      "group2019": "gap",
+      "establishments2019": 10,
+      "establishments2023": 9,
+      "changePerTenThousand": -0.0796
+    },
+    {
+      "industry": "bakery",
+      "town": "Guaynabo",
+      "group2019": "gap",
+      "establishments2019": 6,
+      "establishments2023": 5,
+      "changePerTenThousand": -0.1119
+    },
+    {
+      "industry": "bakery",
+      "town": "Mayagüez",
+      "group2019": "competitive",
+      "establishments2019": 14,
+      "establishments2023": 13,
+      "changePerTenThousand": -0.1412
+    },
+    {
+      "industry": "bakery",
+      "town": "Aguadilla",
+      "group2019": "gap",
+      "establishments2019": 6,
+      "establishments2023": 3,
+      "changePerTenThousand": -0.5541
+    },
+    {
+      "industry": "bakery",
+      "town": "Arecibo",
+      "group2019": "quiet",
+      "establishments2019": 6,
+      "establishments2023": 5,
+      "changePerTenThousand": -0.1157
+    },
+    {
+      "industry": "bakery",
+      "town": "Cabo Rojo",
+      "group2019": "crowded",
+      "establishments2019": 9,
+      "establishments2023": 7,
+      "changePerTenThousand": -0.4267
+    },
+    {
+      "industry": "bakery",
+      "town": "Fajardo",
+      "group2019": "competitive",
+      "establishments2019": 6,
+      "establishments2023": 3,
+      "changePerTenThousand": -0.9527
+    },
+    {
+      "industry": "bakery",
+      "town": "Aguada",
+      "group2019": "crowded",
+      "establishments2019": 9,
+      "establishments2023": 9,
+      "changePerTenThousand": 0
+    },
+    {
+      "industry": "bakery",
+      "town": "Humacao",
+      "group2019": "gap",
+      "establishments2019": 4,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bakery",
+      "town": "Hatillo",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bakery",
+      "town": "Toa Baja",
+      "group2019": "quiet",
+      "establishments2019": 5,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bakery",
+      "town": "Isabela",
+      "group2019": "gap",
+      "establishments2019": 5,
+      "establishments2023": 8,
+      "changePerTenThousand": 0.6995
+    },
+    {
+      "industry": "bakery",
+      "town": "Dorado",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bakery",
+      "town": "Rincón",
+      "group2019": "competitive",
+      "establishments2019": 4,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bakery",
+      "town": "Cayey",
+      "group2019": "gap",
+      "establishments2019": 5,
+      "establishments2023": 5,
+      "changePerTenThousand": 0
+    },
+    {
+      "industry": "bakery",
+      "town": "Río Grande",
+      "group2019": "gap",
+      "establishments2019": 4,
+      "establishments2023": 3,
+      "changePerTenThousand": -0.2172
+    },
+    {
+      "industry": "bakery",
+      "town": "Vega Baja",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bakery",
+      "town": "Manatí",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bakery",
+      "town": "Barceloneta",
+      "group2019": "crowded",
+      "establishments2019": 3,
+      "establishments2023": 3,
+      "changePerTenThousand": 0
+    },
+    {
+      "industry": "bakery",
+      "town": "Guayama",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bakery",
+      "town": "San Sebastián",
+      "group2019": "crowded",
+      "establishments2019": 5,
+      "establishments2023": 7,
+      "changePerTenThousand": 0.5117
+    },
+    {
+      "industry": "bakery",
+      "town": "Trujillo Alto",
+      "group2019": "gap",
+      "establishments2019": 3,
+      "establishments2023": 4,
+      "changePerTenThousand": 0.1491
+    },
+    {
+      "industry": "bakery",
+      "town": "Canóvanas",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": 3,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bakery",
+      "town": "Salinas",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bakery",
+      "town": "Luquillo",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bakery",
+      "town": "Yauco",
+      "group2019": "crowded",
+      "establishments2019": 6,
+      "establishments2023": 6,
+      "changePerTenThousand": 0
+    },
+    {
+      "industry": "bakery",
+      "town": "Toa Alta",
+      "group2019": "quiet",
+      "establishments2019": 3,
+      "establishments2023": 5,
+      "changePerTenThousand": 0.3016
+    },
+    {
+      "industry": "bakery",
+      "town": "Loíza",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bakery",
+      "town": "Quebradillas",
+      "group2019": "competitive",
+      "establishments2019": 4,
+      "establishments2023": 3,
+      "changePerTenThousand": -0.4272
+    },
+    {
+      "industry": "bakery",
+      "town": "Vieques",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bakery",
+      "town": "Juana Díaz",
+      "group2019": "crowded",
+      "establishments2019": 8,
+      "establishments2023": 5,
+      "changePerTenThousand": -0.65
+    },
+    {
+      "industry": "bakery",
+      "town": "Añasco",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": 5,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bakery",
+      "town": "Vega Alta",
+      "group2019": "quiet",
+      "establishments2019": 4,
+      "establishments2023": 5,
+      "changePerTenThousand": 0.2864
+    },
+    {
+      "industry": "bakery",
+      "town": "Naranjito",
+      "group2019": "quiet",
+      "establishments2019": 3,
+      "establishments2023": 4,
+      "changePerTenThousand": 0.3412
+    },
+    {
+      "industry": "bakery",
+      "town": "San Germán",
+      "group2019": "quiet",
+      "establishments2019": 3,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bakery",
+      "town": "Moca",
+      "group2019": "crowded",
+      "establishments2019": 5,
+      "establishments2023": 5,
+      "changePerTenThousand": 0
+    },
+    {
+      "industry": "bakery",
+      "town": "Cidra",
+      "group2019": "crowded",
+      "establishments2019": 5,
+      "establishments2023": 4,
+      "changePerTenThousand": -0.2523
+    },
+    {
+      "industry": "bakery",
+      "town": "San Lorenzo",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bakery",
+      "town": "Santa Isabel",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bakery",
+      "town": "Camuy",
+      "group2019": "quiet",
+      "establishments2019": 3,
+      "establishments2023": 3,
+      "changePerTenThousand": 0
+    },
+    {
+      "industry": "bakery",
+      "town": "Corozal",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": 3,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bakery",
+      "town": "Jayuya",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bakery",
+      "town": "Las Piedras",
+      "group2019": "gap",
+      "establishments2019": 4,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bakery",
+      "town": "Coamo",
+      "group2019": "quiet",
+      "establishments2019": 4,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bakery",
+      "town": "Lajas",
+      "group2019": "crowded",
+      "establishments2019": 3,
+      "establishments2023": 3,
+      "changePerTenThousand": 0
+    },
+    {
+      "industry": "bakery",
+      "town": "Culebra",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bakery",
+      "town": "Gurabo",
+      "group2019": "gap",
+      "establishments2019": 3,
+      "establishments2023": 3,
+      "changePerTenThousand": 0
+    },
+    {
+      "industry": "bakery",
+      "town": "Lares",
+      "group2019": "crowded",
+      "establishments2019": 5,
+      "establishments2023": 5,
+      "changePerTenThousand": 0
+    },
+    {
+      "industry": "bakery",
+      "town": "Aibonito",
+      "group2019": "crowded",
+      "establishments2019": 8,
+      "establishments2023": 8,
+      "changePerTenThousand": 0
+    },
+    {
+      "industry": "bakery",
+      "town": "Barranquitas",
+      "group2019": "crowded",
+      "establishments2019": 4,
+      "establishments2023": 5,
+      "changePerTenThousand": 0.3442
+    },
+    {
+      "industry": "bakery",
+      "town": "Utuado",
+      "group2019": "quiet",
+      "establishments2019": 3,
+      "establishments2023": 4,
+      "changePerTenThousand": 0.362
+    },
+    {
+      "industry": "bakery",
+      "town": "Juncos",
+      "group2019": "quiet",
+      "establishments2019": 3,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bakery",
+      "town": "Morovis",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bakery",
+      "town": "Naguabo",
+      "group2019": "competitive",
+      "establishments2019": 3,
+      "establishments2023": 3,
+      "changePerTenThousand": 0
+    },
+    {
+      "industry": "bakery",
+      "town": "Guánica",
+      "group2019": "competitive",
+      "establishments2019": 3,
+      "establishments2023": 3,
+      "changePerTenThousand": 0
+    },
+    {
+      "industry": "bakery",
+      "town": "Cataño",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bakery",
+      "town": "Adjuntas",
+      "group2019": "competitive",
+      "establishments2019": 3,
+      "establishments2023": 5,
+      "changePerTenThousand": 1.1136
+    },
+    {
+      "industry": "bakery",
+      "town": "Hormigueros",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bakery",
+      "town": "Ciales",
+      "group2019": "competitive",
+      "establishments2019": 3,
+      "establishments2023": 3,
+      "changePerTenThousand": 0
+    },
+    {
+      "industry": "bakery",
+      "town": "Yabucoa",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bakery",
+      "town": "Orocovis",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bakery",
+      "town": "Patillas",
+      "group2019": "crowded",
+      "establishments2019": 3,
+      "establishments2023": 3,
+      "changePerTenThousand": 0
+    },
+    {
+      "industry": "bakery",
+      "town": "Aguas Buenas",
+      "group2019": "crowded",
+      "establishments2019": 3,
+      "establishments2023": 3,
+      "changePerTenThousand": 0
+    },
+    {
+      "industry": "bakery",
+      "town": "Villalba",
+      "group2019": "crowded",
+      "establishments2019": 3,
+      "establishments2023": 3,
+      "changePerTenThousand": 0
+    },
+    {
+      "industry": "bakery",
+      "town": "Guayanilla",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bakery",
+      "town": "Sabana Grande",
+      "group2019": "crowded",
+      "establishments2019": 3,
+      "establishments2023": 3,
+      "changePerTenThousand": 0
+    },
+    {
+      "industry": "bakery",
+      "town": "Arroyo",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bakery",
+      "town": "Peñuelas",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bakery",
+      "town": "Comerío",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bakery",
+      "town": "Ceiba",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bakery",
+      "town": "Maunabo",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bakery",
+      "town": "Florida",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bakery",
+      "town": "Las Marías",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bakery",
+      "town": "Maricao",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "restaurant",
+      "town": "San Juan",
+      "group2019": "competitive",
+      "establishments2019": 756,
+      "establishments2023": 821,
+      "changePerTenThousand": 1.9336
+    },
+    {
+      "industry": "restaurant",
+      "town": "Bayamón",
+      "group2019": "competitive",
+      "establishments2019": 217,
+      "establishments2023": 235,
+      "changePerTenThousand": 0.9865
+    },
+    {
+      "industry": "restaurant",
+      "town": "Carolina",
+      "group2019": "competitive",
+      "establishments2019": 191,
+      "establishments2023": 197,
+      "changePerTenThousand": 0.3942
+    },
+    {
+      "industry": "restaurant",
+      "town": "Ponce",
+      "group2019": "competitive",
+      "establishments2019": 176,
+      "establishments2023": 198,
+      "changePerTenThousand": 1.6571
+    },
+    {
+      "industry": "restaurant",
+      "town": "Caguas",
+      "group2019": "competitive",
+      "establishments2019": 172,
+      "establishments2023": 187,
+      "changePerTenThousand": 1.1944
+    },
+    {
+      "industry": "restaurant",
+      "town": "Guaynabo",
+      "group2019": "competitive",
+      "establishments2019": 168,
+      "establishments2023": 181,
+      "changePerTenThousand": 1.4545
+    },
+    {
+      "industry": "restaurant",
+      "town": "Mayagüez",
+      "group2019": "competitive",
+      "establishments2019": 110,
+      "establishments2023": 113,
+      "changePerTenThousand": 0.4236
+    },
+    {
+      "industry": "restaurant",
+      "town": "Aguadilla",
+      "group2019": "competitive",
+      "establishments2019": 76,
+      "establishments2023": 92,
+      "changePerTenThousand": 2.9555
+    },
+    {
+      "industry": "restaurant",
+      "town": "Arecibo",
+      "group2019": "gap",
+      "establishments2019": 68,
+      "establishments2023": 84,
+      "changePerTenThousand": 1.8504
+    },
+    {
+      "industry": "restaurant",
+      "town": "Cabo Rojo",
+      "group2019": "competitive",
+      "establishments2019": 60,
+      "establishments2023": 84,
+      "changePerTenThousand": 5.1199
+    },
+    {
+      "industry": "restaurant",
+      "town": "Fajardo",
+      "group2019": "competitive",
+      "establishments2019": 48,
+      "establishments2023": 62,
+      "changePerTenThousand": 4.446
+    },
+    {
+      "industry": "restaurant",
+      "town": "Aguada",
+      "group2019": "competitive",
+      "establishments2019": 44,
+      "establishments2023": 61,
+      "changePerTenThousand": 4.5024
+    },
+    {
+      "industry": "restaurant",
+      "town": "Humacao",
+      "group2019": "competitive",
+      "establishments2019": 47,
+      "establishments2023": 51,
+      "changePerTenThousand": 0.7984
+    },
+    {
+      "industry": "restaurant",
+      "town": "Hatillo",
+      "group2019": "crowded",
+      "establishments2019": 53,
+      "establishments2023": 61,
+      "changePerTenThousand": 2.0966
+    },
+    {
+      "industry": "restaurant",
+      "town": "Toa Baja",
+      "group2019": "gap",
+      "establishments2019": 57,
+      "establishments2023": 67,
+      "changePerTenThousand": 1.3691
+    },
+    {
+      "industry": "restaurant",
+      "town": "Isabela",
+      "group2019": "competitive",
+      "establishments2019": 45,
+      "establishments2023": 64,
+      "changePerTenThousand": 4.4299
+    },
+    {
+      "industry": "restaurant",
+      "town": "Dorado",
+      "group2019": "competitive",
+      "establishments2019": 45,
+      "establishments2023": 55,
+      "changePerTenThousand": 2.7925
+    },
+    {
+      "industry": "restaurant",
+      "town": "Rincón",
+      "group2019": "competitive",
+      "establishments2019": 31,
+      "establishments2023": 43,
+      "changePerTenThousand": 7.8034
+    },
+    {
+      "industry": "restaurant",
+      "town": "Cayey",
+      "group2019": "competitive",
+      "establishments2019": 46,
+      "establishments2023": 49,
+      "changePerTenThousand": 0.7332
+    },
+    {
+      "industry": "restaurant",
+      "town": "Río Grande",
+      "group2019": "gap",
+      "establishments2019": 23,
+      "establishments2023": 32,
+      "changePerTenThousand": 1.9544
+    },
+    {
+      "industry": "restaurant",
+      "town": "Vega Baja",
+      "group2019": "quiet",
+      "establishments2019": 31,
+      "establishments2023": 47,
+      "changePerTenThousand": 2.9689
+    },
+    {
+      "industry": "restaurant",
+      "town": "Manatí",
+      "group2019": "competitive",
+      "establishments2019": 35,
+      "establishments2023": 41,
+      "changePerTenThousand": 1.5407
+    },
+    {
+      "industry": "restaurant",
+      "town": "Barceloneta",
+      "group2019": "competitive",
+      "establishments2019": 28,
+      "establishments2023": 31,
+      "changePerTenThousand": 1.3337
+    },
+    {
+      "industry": "restaurant",
+      "town": "Guayama",
+      "group2019": "crowded",
+      "establishments2019": 41,
+      "establishments2023": 51,
+      "changePerTenThousand": 2.833
+    },
+    {
+      "industry": "restaurant",
+      "town": "San Sebastián",
+      "group2019": "crowded",
+      "establishments2019": 32,
+      "establishments2023": 49,
+      "changePerTenThousand": 4.3492
+    },
+    {
+      "industry": "restaurant",
+      "town": "Trujillo Alto",
+      "group2019": "quiet",
+      "establishments2019": 39,
+      "establishments2023": 41,
+      "changePerTenThousand": 0.2981
+    },
+    {
+      "industry": "restaurant",
+      "town": "Canóvanas",
+      "group2019": "quiet",
+      "establishments2019": 33,
+      "establishments2023": 37,
+      "changePerTenThousand": 0.9566
+    },
+    {
+      "industry": "restaurant",
+      "town": "Salinas",
+      "group2019": "competitive",
+      "establishments2019": 21,
+      "establishments2023": 29,
+      "changePerTenThousand": 3.1899
+    },
+    {
+      "industry": "restaurant",
+      "town": "Luquillo",
+      "group2019": "competitive",
+      "establishments2019": 27,
+      "establishments2023": 26,
+      "changePerTenThousand": -0.5704
+    },
+    {
+      "industry": "restaurant",
+      "town": "Yauco",
+      "group2019": "crowded",
+      "establishments2019": 31,
+      "establishments2023": 32,
+      "changePerTenThousand": 0.3031
+    },
+    {
+      "industry": "restaurant",
+      "town": "Toa Alta",
+      "group2019": "quiet",
+      "establishments2019": 20,
+      "establishments2023": 25,
+      "changePerTenThousand": 0.7539
+    },
+    {
+      "industry": "restaurant",
+      "town": "Loíza",
+      "group2019": "gap",
+      "establishments2019": 10,
+      "establishments2023": 18,
+      "changePerTenThousand": 3.5137
+    },
+    {
+      "industry": "restaurant",
+      "town": "Quebradillas",
+      "group2019": "gap",
+      "establishments2019": 16,
+      "establishments2023": 21,
+      "changePerTenThousand": 2.1359
+    },
+    {
+      "industry": "restaurant",
+      "town": "Vieques",
+      "group2019": "competitive",
+      "establishments2019": 12,
+      "establishments2023": 19,
+      "changePerTenThousand": 8.6655
+    },
+    {
+      "industry": "restaurant",
+      "town": "Juana Díaz",
+      "group2019": "quiet",
+      "establishments2019": 21,
+      "establishments2023": 25,
+      "changePerTenThousand": 0.8666
+    },
+    {
+      "industry": "restaurant",
+      "town": "Añasco",
+      "group2019": "competitive",
+      "establishments2019": 25,
+      "establishments2023": 30,
+      "changePerTenThousand": 1.9925
+    },
+    {
+      "industry": "restaurant",
+      "town": "Vega Alta",
+      "group2019": "crowded",
+      "establishments2019": 38,
+      "establishments2023": 32,
+      "changePerTenThousand": -1.7182
+    },
+    {
+      "industry": "restaurant",
+      "town": "Naranjito",
+      "group2019": "quiet",
+      "establishments2019": 18,
+      "establishments2023": 30,
+      "changePerTenThousand": 4.0942
+    },
+    {
+      "industry": "restaurant",
+      "town": "San Germán",
+      "group2019": "crowded",
+      "establishments2019": 32,
+      "establishments2023": 35,
+      "changePerTenThousand": 0.9583
+    },
+    {
+      "industry": "restaurant",
+      "town": "Moca",
+      "group2019": "quiet",
+      "establishments2019": 21,
+      "establishments2023": 30,
+      "changePerTenThousand": 2.4049
+    },
+    {
+      "industry": "restaurant",
+      "town": "Cidra",
+      "group2019": "quiet",
+      "establishments2019": 25,
+      "establishments2023": 37,
+      "changePerTenThousand": 3.027
+    },
+    {
+      "industry": "restaurant",
+      "town": "San Lorenzo",
+      "group2019": "quiet",
+      "establishments2019": 17,
+      "establishments2023": 23,
+      "changePerTenThousand": 1.6029
+    },
+    {
+      "industry": "restaurant",
+      "town": "Santa Isabel",
+      "group2019": "crowded",
+      "establishments2019": 27,
+      "establishments2023": 29,
+      "changePerTenThousand": 1.0049
+    },
+    {
+      "industry": "restaurant",
+      "town": "Camuy",
+      "group2019": "gap",
+      "establishments2019": 25,
+      "establishments2023": 37,
+      "changePerTenThousand": 3.6659
+    },
+    {
+      "industry": "restaurant",
+      "town": "Corozal",
+      "group2019": "quiet",
+      "establishments2019": 19,
+      "establishments2023": 33,
+      "changePerTenThousand": 4.0646
+    },
+    {
+      "industry": "restaurant",
+      "town": "Jayuya",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": 14,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "restaurant",
+      "town": "Las Piedras",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": 26,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "restaurant",
+      "town": "Coamo",
+      "group2019": "crowded",
+      "establishments2019": 28,
+      "establishments2023": 38,
+      "changePerTenThousand": 2.9413
+    },
+    {
+      "industry": "restaurant",
+      "town": "Lajas",
+      "group2019": "quiet",
+      "establishments2019": 15,
+      "establishments2023": 22,
+      "changePerTenThousand": 3.0389
+    },
+    {
+      "industry": "restaurant",
+      "town": "Culebra",
+      "group2019": "competitive",
+      "establishments2019": null,
+      "establishments2023": 10,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "restaurant",
+      "town": "Gurabo",
+      "group2019": "quiet",
+      "establishments2019": 21,
+      "establishments2023": 39,
+      "changePerTenThousand": 4.4745
+    },
+    {
+      "industry": "restaurant",
+      "town": "Lares",
+      "group2019": "quiet",
+      "establishments2019": 17,
+      "establishments2023": 18,
+      "changePerTenThousand": 0.359
+    },
+    {
+      "industry": "restaurant",
+      "town": "Aibonito",
+      "group2019": "quiet",
+      "establishments2019": 18,
+      "establishments2023": 25,
+      "changePerTenThousand": 2.8414
+    },
+    {
+      "industry": "restaurant",
+      "town": "Barranquitas",
+      "group2019": "quiet",
+      "establishments2019": 20,
+      "establishments2023": 25,
+      "changePerTenThousand": 1.7209
+    },
+    {
+      "industry": "restaurant",
+      "town": "Utuado",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": 13,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "restaurant",
+      "town": "Juncos",
+      "group2019": "quiet",
+      "establishments2019": 16,
+      "establishments2023": 18,
+      "changePerTenThousand": 0.5431
+    },
+    {
+      "industry": "restaurant",
+      "town": "Morovis",
+      "group2019": "quiet",
+      "establishments2019": 14,
+      "establishments2023": 20,
+      "changePerTenThousand": 2.1129
+    },
+    {
+      "industry": "restaurant",
+      "town": "Naguabo",
+      "group2019": "gap",
+      "establishments2019": 14,
+      "establishments2023": 21,
+      "changePerTenThousand": 3.0363
+    },
+    {
+      "industry": "restaurant",
+      "town": "Guánica",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "restaurant",
+      "town": "Cataño",
+      "group2019": "gap",
+      "establishments2019": 16,
+      "establishments2023": 18,
+      "changePerTenThousand": 0.8902
+    },
+    {
+      "industry": "restaurant",
+      "town": "Adjuntas",
+      "group2019": "gap",
+      "establishments2019": 12,
+      "establishments2023": 14,
+      "changePerTenThousand": 1.1136
+    },
+    {
+      "industry": "restaurant",
+      "town": "Hormigueros",
+      "group2019": "competitive",
+      "establishments2019": 17,
+      "establishments2023": 13,
+      "changePerTenThousand": -2.5905
+    },
+    {
+      "industry": "restaurant",
+      "town": "Ciales",
+      "group2019": "quiet",
+      "establishments2019": 10,
+      "establishments2023": 9,
+      "changePerTenThousand": -0.5951
+    },
+    {
+      "industry": "restaurant",
+      "town": "Yabucoa",
+      "group2019": "quiet",
+      "establishments2019": 13,
+      "establishments2023": 17,
+      "changePerTenThousand": 1.3605
+    },
+    {
+      "industry": "restaurant",
+      "town": "Orocovis",
+      "group2019": "competitive",
+      "establishments2019": 18,
+      "establishments2023": 18,
+      "changePerTenThousand": 0
+    },
+    {
+      "industry": "restaurant",
+      "town": "Patillas",
+      "group2019": "gap",
+      "establishments2019": 10,
+      "establishments2023": 15,
+      "changePerTenThousand": 3.2127
+    },
+    {
+      "industry": "restaurant",
+      "town": "Aguas Buenas",
+      "group2019": "quiet",
+      "establishments2019": 10,
+      "establishments2023": 15,
+      "changePerTenThousand": 2.1174
+    },
+    {
+      "industry": "restaurant",
+      "town": "Villalba",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": 13,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "restaurant",
+      "town": "Guayanilla",
+      "group2019": "crowded",
+      "establishments2019": 16,
+      "establishments2023": 14,
+      "changePerTenThousand": -1.1668
+    },
+    {
+      "industry": "restaurant",
+      "town": "Sabana Grande",
+      "group2019": "quiet",
+      "establishments2019": 14,
+      "establishments2023": 14,
+      "changePerTenThousand": 0
+    },
+    {
+      "industry": "restaurant",
+      "town": "Arroyo",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "restaurant",
+      "town": "Peñuelas",
+      "group2019": "quiet",
+      "establishments2019": 10,
+      "establishments2023": 11,
+      "changePerTenThousand": 0.5037
+    },
+    {
+      "industry": "restaurant",
+      "town": "Comerío",
+      "group2019": "quiet",
+      "establishments2019": 9,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "restaurant",
+      "town": "Ceiba",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": 6,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "restaurant",
+      "town": "Maunabo",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": 9,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "restaurant",
+      "town": "Florida",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "restaurant",
+      "town": "Las Marías",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "restaurant",
+      "town": "Maricao",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "San Juan",
+      "group2019": "competitive",
+      "establishments2019": 49,
+      "establishments2023": 61,
+      "changePerTenThousand": 0.357
+    },
+    {
+      "industry": "bar",
+      "town": "Bayamón",
+      "group2019": "gap",
+      "establishments2019": 12,
+      "establishments2023": 12,
+      "changePerTenThousand": 0
+    },
+    {
+      "industry": "bar",
+      "town": "Carolina",
+      "group2019": "gap",
+      "establishments2019": 9,
+      "establishments2023": 10,
+      "changePerTenThousand": 0.0657
+    },
+    {
+      "industry": "bar",
+      "town": "Ponce",
+      "group2019": "competitive",
+      "establishments2019": 14,
+      "establishments2023": 12,
+      "changePerTenThousand": -0.1506
+    },
+    {
+      "industry": "bar",
+      "town": "Caguas",
+      "group2019": "gap",
+      "establishments2019": 6,
+      "establishments2023": 13,
+      "changePerTenThousand": 0.5574
+    },
+    {
+      "industry": "bar",
+      "town": "Guaynabo",
+      "group2019": "gap",
+      "establishments2019": 3,
+      "establishments2023": 8,
+      "changePerTenThousand": 0.5594
+    },
+    {
+      "industry": "bar",
+      "town": "Mayagüez",
+      "group2019": "gap",
+      "establishments2019": 4,
+      "establishments2023": 9,
+      "changePerTenThousand": 0.7059
+    },
+    {
+      "industry": "bar",
+      "town": "Aguadilla",
+      "group2019": "gap",
+      "establishments2019": 3,
+      "establishments2023": 8,
+      "changePerTenThousand": 0.9236
+    },
+    {
+      "industry": "bar",
+      "town": "Arecibo",
+      "group2019": "gap",
+      "establishments2019": 6,
+      "establishments2023": 12,
+      "changePerTenThousand": 0.6939
+    },
+    {
+      "industry": "bar",
+      "town": "Cabo Rojo",
+      "group2019": "competitive",
+      "establishments2019": 10,
+      "establishments2023": 11,
+      "changePerTenThousand": 0.2133
+    },
+    {
+      "industry": "bar",
+      "town": "Fajardo",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": 3,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Aguada",
+      "group2019": "gap",
+      "establishments2019": 3,
+      "establishments2023": 5,
+      "changePerTenThousand": 0.5297
+    },
+    {
+      "industry": "bar",
+      "town": "Humacao",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": 4,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Hatillo",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": 6,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Toa Baja",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": 4,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Isabela",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": 4,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Dorado",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": 4,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Rincón",
+      "group2019": "competitive",
+      "establishments2019": 3,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Cayey",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": 5,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Río Grande",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": 3,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Vega Baja",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Manatí",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Barceloneta",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Guayama",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "San Sebastián",
+      "group2019": "quiet",
+      "establishments2019": 3,
+      "establishments2023": 3,
+      "changePerTenThousand": 0
+    },
+    {
+      "industry": "bar",
+      "town": "Trujillo Alto",
+      "group2019": "quiet",
+      "establishments2019": 3,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Canóvanas",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Salinas",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Luquillo",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Yauco",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": 3,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Toa Alta",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": 4,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Loíza",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Quebradillas",
+      "group2019": "competitive",
+      "establishments2019": 3,
+      "establishments2023": 3,
+      "changePerTenThousand": 0
+    },
+    {
+      "industry": "bar",
+      "town": "Vieques",
+      "group2019": "competitive",
+      "establishments2019": 6,
+      "establishments2023": 6,
+      "changePerTenThousand": 0
+    },
+    {
+      "industry": "bar",
+      "town": "Juana Díaz",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Añasco",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": 4,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Vega Alta",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Naranjito",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "San Germán",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Moca",
+      "group2019": "quiet",
+      "establishments2019": 3,
+      "establishments2023": 4,
+      "changePerTenThousand": 0.2672
+    },
+    {
+      "industry": "bar",
+      "town": "Cidra",
+      "group2019": "quiet",
+      "establishments2019": 3,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "San Lorenzo",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": 3,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Santa Isabel",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Camuy",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Corozal",
+      "group2019": "crowded",
+      "establishments2019": 3,
+      "establishments2023": 4,
+      "changePerTenThousand": 0.2903
+    },
+    {
+      "industry": "bar",
+      "town": "Jayuya",
+      "group2019": "competitive",
+      "establishments2019": 3,
+      "establishments2023": 3,
+      "changePerTenThousand": 0
+    },
+    {
+      "industry": "bar",
+      "town": "Las Piedras",
+      "group2019": "crowded",
+      "establishments2019": 3,
+      "establishments2023": 3,
+      "changePerTenThousand": 0
+    },
+    {
+      "industry": "bar",
+      "town": "Coamo",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Lajas",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": 6,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Culebra",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Gurabo",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": 5,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Lares",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Aibonito",
+      "group2019": "crowded",
+      "establishments2019": 4,
+      "establishments2023": 3,
+      "changePerTenThousand": -0.4059
+    },
+    {
+      "industry": "bar",
+      "town": "Barranquitas",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": 6,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Utuado",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Juncos",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Morovis",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Naguabo",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Guánica",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Cataño",
+      "group2019": "competitive",
+      "establishments2019": 4,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Adjuntas",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Hormigueros",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Ciales",
+      "group2019": "competitive",
+      "establishments2019": 3,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Yabucoa",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Orocovis",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": 5,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Patillas",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Aguas Buenas",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Villalba",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Guayanilla",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Sabana Grande",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Arroyo",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Peñuelas",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Comerío",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Ceiba",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Maunabo",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Florida",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Las Marías",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "bar",
+      "town": "Maricao",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "San Juan",
+      "group2019": "competitive",
+      "establishments2019": 66,
+      "establishments2023": 62,
+      "changePerTenThousand": -0.119
+    },
+    {
+      "industry": "hotel",
+      "town": "Bayamón",
+      "group2019": "gap",
+      "establishments2019": 4,
+      "establishments2023": 4,
+      "changePerTenThousand": 0
+    },
+    {
+      "industry": "hotel",
+      "town": "Carolina",
+      "group2019": "gap",
+      "establishments2019": 11,
+      "establishments2023": 12,
+      "changePerTenThousand": 0.0657
+    },
+    {
+      "industry": "hotel",
+      "town": "Ponce",
+      "group2019": "gap",
+      "establishments2019": 9,
+      "establishments2023": 9,
+      "changePerTenThousand": 0
+    },
+    {
+      "industry": "hotel",
+      "town": "Caguas",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": 3,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Guaynabo",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Mayagüez",
+      "group2019": "gap",
+      "establishments2019": 4,
+      "establishments2023": 4,
+      "changePerTenThousand": 0
+    },
+    {
+      "industry": "hotel",
+      "town": "Aguadilla",
+      "group2019": "competitive",
+      "establishments2019": 12,
+      "establishments2023": 9,
+      "changePerTenThousand": -0.5541
+    },
+    {
+      "industry": "hotel",
+      "town": "Arecibo",
+      "group2019": "gap",
+      "establishments2019": 3,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Cabo Rojo",
+      "group2019": "competitive",
+      "establishments2019": 8,
+      "establishments2023": 10,
+      "changePerTenThousand": 0.4267
+    },
+    {
+      "industry": "hotel",
+      "town": "Fajardo",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": 3,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Aguada",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Humacao",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Hatillo",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Toa Baja",
+      "group2019": "gap",
+      "establishments2019": 3,
+      "establishments2023": 3,
+      "changePerTenThousand": 0
+    },
+    {
+      "industry": "hotel",
+      "town": "Isabela",
+      "group2019": "gap",
+      "establishments2019": 4,
+      "establishments2023": 5,
+      "changePerTenThousand": 0.2332
+    },
+    {
+      "industry": "hotel",
+      "town": "Dorado",
+      "group2019": "competitive",
+      "establishments2019": 5,
+      "establishments2023": 6,
+      "changePerTenThousand": 0.2793
+    },
+    {
+      "industry": "hotel",
+      "town": "Rincón",
+      "group2019": "competitive",
+      "establishments2019": 10,
+      "establishments2023": 11,
+      "changePerTenThousand": 0.6503
+    },
+    {
+      "industry": "hotel",
+      "town": "Cayey",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Río Grande",
+      "group2019": "competitive",
+      "establishments2019": 8,
+      "establishments2023": 8,
+      "changePerTenThousand": 0
+    },
+    {
+      "industry": "hotel",
+      "town": "Vega Baja",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Manatí",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Barceloneta",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Guayama",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "San Sebastián",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Trujillo Alto",
+      "group2019": "quiet",
+      "establishments2019": 3,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Canóvanas",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Salinas",
+      "group2019": "gap",
+      "establishments2019": 3,
+      "establishments2023": 3,
+      "changePerTenThousand": 0
+    },
+    {
+      "industry": "hotel",
+      "town": "Luquillo",
+      "group2019": "competitive",
+      "establishments2019": 3,
+      "establishments2023": 4,
+      "changePerTenThousand": 0.5704
+    },
+    {
+      "industry": "hotel",
+      "town": "Yauco",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": 3,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Toa Alta",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Loíza",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Quebradillas",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Vieques",
+      "group2019": "competitive",
+      "establishments2019": 9,
+      "establishments2023": 11,
+      "changePerTenThousand": 2.4759
+    },
+    {
+      "industry": "hotel",
+      "town": "Juana Díaz",
+      "group2019": "quiet",
+      "establishments2019": 3,
+      "establishments2023": 3,
+      "changePerTenThousand": 0
+    },
+    {
+      "industry": "hotel",
+      "town": "Añasco",
+      "group2019": "quiet",
+      "establishments2019": 3,
+      "establishments2023": 3,
+      "changePerTenThousand": 0
+    },
+    {
+      "industry": "hotel",
+      "town": "Vega Alta",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Naranjito",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "San Germán",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Moca",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Cidra",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "San Lorenzo",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Santa Isabel",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Camuy",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Corozal",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Jayuya",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Las Piedras",
+      "group2019": "crowded",
+      "establishments2019": 6,
+      "establishments2023": 6,
+      "changePerTenThousand": 0
+    },
+    {
+      "industry": "hotel",
+      "town": "Coamo",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Lajas",
+      "group2019": "competitive",
+      "establishments2019": 5,
+      "establishments2023": 4,
+      "changePerTenThousand": -0.4341
+    },
+    {
+      "industry": "hotel",
+      "town": "Culebra",
+      "group2019": "competitive",
+      "establishments2019": 3,
+      "establishments2023": 5,
+      "changePerTenThousand": 14.4196
+    },
+    {
+      "industry": "hotel",
+      "town": "Gurabo",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Lares",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Aibonito",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Barranquitas",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Utuado",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Juncos",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Morovis",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Naguabo",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Guánica",
+      "group2019": "competitive",
+      "establishments2019": 3,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Cataño",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Adjuntas",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Hormigueros",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Ciales",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Yabucoa",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Orocovis",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Patillas",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Aguas Buenas",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Villalba",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Guayanilla",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Sabana Grande",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Arroyo",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Peñuelas",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Comerío",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Ceiba",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Maunabo",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Florida",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Las Marías",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "hotel",
+      "town": "Maricao",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "San Juan",
+      "group2019": "competitive",
+      "establishments2019": 75,
+      "establishments2023": 86,
+      "changePerTenThousand": 0.3272
+    },
+    {
+      "industry": "salon",
+      "town": "Bayamón",
+      "group2019": "gap",
+      "establishments2019": 13,
+      "establishments2023": 23,
+      "changePerTenThousand": 0.548
+    },
+    {
+      "industry": "salon",
+      "town": "Carolina",
+      "group2019": "competitive",
+      "establishments2019": 18,
+      "establishments2023": 19,
+      "changePerTenThousand": 0.0657
+    },
+    {
+      "industry": "salon",
+      "town": "Ponce",
+      "group2019": "crowded",
+      "establishments2019": 16,
+      "establishments2023": 26,
+      "changePerTenThousand": 0.7532
+    },
+    {
+      "industry": "salon",
+      "town": "Caguas",
+      "group2019": "gap",
+      "establishments2019": 14,
+      "establishments2023": 21,
+      "changePerTenThousand": 0.5574
+    },
+    {
+      "industry": "salon",
+      "town": "Guaynabo",
+      "group2019": "competitive",
+      "establishments2019": 16,
+      "establishments2023": 21,
+      "changePerTenThousand": 0.5594
+    },
+    {
+      "industry": "salon",
+      "town": "Mayagüez",
+      "group2019": "quiet",
+      "establishments2019": 7,
+      "establishments2023": 9,
+      "changePerTenThousand": 0.2824
+    },
+    {
+      "industry": "salon",
+      "town": "Aguadilla",
+      "group2019": "gap",
+      "establishments2019": 5,
+      "establishments2023": 5,
+      "changePerTenThousand": 0
+    },
+    {
+      "industry": "salon",
+      "town": "Arecibo",
+      "group2019": "gap",
+      "establishments2019": 5,
+      "establishments2023": 12,
+      "changePerTenThousand": 0.8096
+    },
+    {
+      "industry": "salon",
+      "town": "Cabo Rojo",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Fajardo",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": 3,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Aguada",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": 4,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Humacao",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Hatillo",
+      "group2019": "competitive",
+      "establishments2019": 8,
+      "establishments2023": 6,
+      "changePerTenThousand": -0.5242
+    },
+    {
+      "industry": "salon",
+      "town": "Toa Baja",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": 6,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Isabela",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": 4,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Dorado",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": 3,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Rincón",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Cayey",
+      "group2019": "quiet",
+      "establishments2019": 4,
+      "establishments2023": 5,
+      "changePerTenThousand": 0.2444
+    },
+    {
+      "industry": "salon",
+      "town": "Río Grande",
+      "group2019": "gap",
+      "establishments2019": 5,
+      "establishments2023": 5,
+      "changePerTenThousand": 0
+    },
+    {
+      "industry": "salon",
+      "town": "Vega Baja",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Manatí",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": 4,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Barceloneta",
+      "group2019": "competitive",
+      "establishments2019": 3,
+      "establishments2023": 6,
+      "changePerTenThousand": 1.3337
+    },
+    {
+      "industry": "salon",
+      "town": "Guayama",
+      "group2019": "quiet",
+      "establishments2019": 3,
+      "establishments2023": 3,
+      "changePerTenThousand": 0
+    },
+    {
+      "industry": "salon",
+      "town": "San Sebastián",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Trujillo Alto",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": 3,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Canóvanas",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": 3,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Salinas",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Luquillo",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Yauco",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Toa Alta",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Loíza",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Quebradillas",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Vieques",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Juana Díaz",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": 3,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Añasco",
+      "group2019": "competitive",
+      "establishments2019": 3,
+      "establishments2023": 5,
+      "changePerTenThousand": 0.797
+    },
+    {
+      "industry": "salon",
+      "town": "Vega Alta",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Naranjito",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "San Germán",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Moca",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Cidra",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "San Lorenzo",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Santa Isabel",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Camuy",
+      "group2019": "gap",
+      "establishments2019": 3,
+      "establishments2023": 3,
+      "changePerTenThousand": 0
+    },
+    {
+      "industry": "salon",
+      "town": "Corozal",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Jayuya",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Las Piedras",
+      "group2019": "crowded",
+      "establishments2019": 4,
+      "establishments2023": 5,
+      "changePerTenThousand": 0.2861
+    },
+    {
+      "industry": "salon",
+      "town": "Coamo",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Lajas",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Culebra",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Gurabo",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Lares",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Aibonito",
+      "group2019": "crowded",
+      "establishments2019": 3,
+      "establishments2023": 3,
+      "changePerTenThousand": 0
+    },
+    {
+      "industry": "salon",
+      "town": "Barranquitas",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Utuado",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Juncos",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Morovis",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Naguabo",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Guánica",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Cataño",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Adjuntas",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Hormigueros",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": 5,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Ciales",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Yabucoa",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Orocovis",
+      "group2019": "gap",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Patillas",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Aguas Buenas",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Villalba",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Guayanilla",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Sabana Grande",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Arroyo",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Peñuelas",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Comerío",
+      "group2019": "quiet",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Ceiba",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Maunabo",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Florida",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Las Marías",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    },
+    {
+      "industry": "salon",
+      "town": "Maricao",
+      "group2019": "unknown",
+      "establishments2019": null,
+      "establishments2023": null,
+      "changePerTenThousand": null
+    }
+  ]
+}

@@ -85,6 +85,17 @@ test('a bakery that Qloo filed under the plain restaurant genre still counts as 
   assert.equal((await others({ question: 'Should I open a hotel in Ponce?', lang: 'en' })).business.total, 1);
 });
 
+test('restaurant research names places that serve meals before the bars Qloo files as restaurants (judge panel 10/26)', async () => {
+  const sanJuan = createBusinessDiscovery({ towns, catalog: async () => [
+    { id: 'p1', name: 'La Placita de Santurce', genre: 'Bar', genreId: 'urn:tag:genre:place:restaurant:bar', municipality: 'Ponce', lat: 18.0, lon: -66.6 },
+    { id: 'r1', name: 'Mesa 364', genre: 'Restaurant', genreId: 'urn:tag:genre:place:restaurant', municipality: 'Ponce', lat: 18.0, lon: -66.6 },
+    { id: 'j1', name: 'Juice Bar Uno', genre: 'Juice bar', genreId: 'urn:tag:genre:place:restaurant:juice_bar', municipality: 'Ponce', lat: 18.0, lon: -66.6 },
+  ] });
+  const data = await sanJuan({ question: 'Should I open a restaurant in Ponce?', lang: 'en' });
+  assert.deepEqual(data.places.map((p) => p.name), ['Mesa 364', 'Juice Bar Uno', 'La Placita de Santurce']);
+  assert.equal(data.business.total, 3, 'the bars stay in the count');
+});
+
 test('a new dinner question or greeting leaves acquisition research', async () => {
   const history = [{ role: 'user', content: 'Buy a business in Bayamon' }];
   assert.equal(await discover({ question: 'Where can I eat in Ponce?', history }), null);
@@ -122,7 +133,7 @@ test('a no-town opening question opens the opportunity map in English and Spanis
   assert.equal((await withMap({question:'Where should I open a bakery?',lang:'en'})).speech,
     'Here’s where bakery taste runs strong and businesses are few. Tap a town to look closer.');
   assert.equal((await withMap({question:'¿Dónde abro una panadería?',lang:'es'})).speech,
-    'Aquí el gusto por panadería es fuerte y hay pocos negocios. Toque un pueblo para ver más.');
+    'Aquí el gusto por panadería es fuerte y hay pocos negocios por residente. Toque un pueblo para ver más.');
 });
 
 test('an uncovered industry or a missing build does not open the map',async()=>{

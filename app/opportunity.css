@@ -8,10 +8,15 @@
 .opportunity-legend li { display: flex; align-items: center; gap: 8px; }
 .opportunity-legend .swatch { width: 14px; height: 14px; border-radius: 4px; flex: none; }
 .opportunity-notes p { margin: 4px 0; }
+.opportunity-sources { margin: 4px 0 12px; font-size: 13px; }
+.opportunity-sources > summary { cursor: pointer; padding: 12px 0; color: var(--link); }
 .opportunity-definitions { margin: 8px 0 12px; }
 .opportunity-definitions summary { cursor: pointer; }
 .opportunity-definitions p { margin: 6px 0; }
 @media (max-width: 720px) {
   /* Same geometry as the town readout (#panel): clears the dock bar and leaves half the screen of colored map to tap. */
   #opportunity-panel { top: auto; left: calc(8px + var(--left)); right: calc(8px + var(--right)); width: auto; bottom: calc(84px + var(--bottom) + var(--caption-h, 0px)); max-height: 48%; }
+  /* Names only, two columns: the towns come up into the first screen; the rules are in the list heading and the notes. */
+  .opportunity-legend { grid-template-columns: 1fr 1fr; }
+  .opportunity-legend .legend-rule { display: none; }
 }

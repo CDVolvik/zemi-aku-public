@@ -111,7 +111,7 @@ try {
     const page = await (await browser.newContext({ viewport: { width: 1366, height: 900 }, locale: "en-US" })).newPage();
     const island = { chat: true, kind: "artist-towns", speech: "Qloo's heatmap puts Björk's taste strongest in Vieques, Río Grande and Loíza. That is taste, not visits or demand.",
       actions: [{ type: "fly_town", town: "Vieques" }], evidence: { mode: "rules", reason: "budget", at: new Date().toISOString() } };
-    const mix = { chat: true, kind: "artist-business", opportunity: { industry: "cafe" }, speech: "For Marc Anthony fans, Qloo's heatmap puts Maricao, San Juan and Fajardo on top. Of their top ten, Luquillo and Guánica are in the café gap group: taste above the median, few businesses. That is taste, not demand.",
+    const mix = { chat: true, kind: "artist-business", opportunity: { industry: "cafe" }, speech: "For Marc Anthony fans, Qloo's heatmap puts Maricao, San Juan and Fajardo on top. Of their top ten, Luquillo and Guánica are in the café gap group: taste above the median, few businesses per resident. That is taste, not demand.",
       evidence: { mode: "rules", reason: "budget", at: new Date().toISOString() } };
     await page.route("**/api/chat", (route) => {
       const body = JSON.parse(route.request().postData() || "{}");

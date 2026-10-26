@@ -88,7 +88,7 @@ test('a harness error envelope becomes an error result, never a successful Qloo 
 test('town_catalog tool results include structured card fields without dropping older keys',async()=>{
   const place={id:'11111111-1111-1111-1111-111111111111',name:'Café',municipality:'Ponce',genre:'Cafe',
     category:'food',lat:18.01,lon:-66.61,logo:'https://l.png',qlooImage:'https://q.jpg',website:'https://cafe.pr',
-    domain:'cafe.pr',affinity:0.81,why:'Strong match for Bad Bunny fans (81%)',address:'1 Main',description:'Nice',
+    domain:'cafe.pr',affinity:0.81,why:'Strong match for Bad Bunny fans (affinity 81/100)',address:'1 Main',description:'Nice',
     price:'$',rating:4.5,hours:'Today 8–4',facts:[{label:'Phone',text:'1'}]};
   const registry=agentTools({towns:['Ponce'],categories:['food'],catalogFor:async()=>({places:[place],measured:'2026-10-12'}),
     byPopularity:()=>0,publishPlace:p=>p});
@@ -98,7 +98,7 @@ test('town_catalog tool results include structured card fields without dropping 
   assert.equal(row.category,'food');
   assert.equal(row.lat,18.01);
   assert.equal(row.logo,'https://l.png');
-  assert.equal(row.why,'Strong match for Bad Bunny fans (81%)');
+  assert.equal(row.why,'Strong match for Bad Bunny fans (affinity 81/100)');
   assert.equal(row.website,'https://cafe.pr');
   assert.equal(row.kind,'Cafe');
   assert.equal(row.town,'Ponce');
@@ -114,8 +114,8 @@ test('compact fills why from a real affinity signal and never invents one',async
   const registry=agentTools({towns:['Ponce'],categories:['food'],catalogFor:async()=>({places:[withSignal,esSignal,low,bare],measured:'2026-10-12'}),
     byPopularity:()=>0,publishPlace:p=>p});
   const out=await registry.find(t=>t.name==='town_catalog').run({town:'Ponce',category:'food'});
-  assert.equal(out.data.places[0].why,'Strong match for Bad Bunny fans (81%)');
-  assert.equal(out.data.places[1].why,'Fuerte afinidad para fans de Bad Bunny (81%)');
+  assert.equal(out.data.places[0].why,'Strong match for Bad Bunny fans (affinity 81/100)');
+  assert.equal(out.data.places[1].why,'Fuerte afinidad para fans de Bad Bunny (81 de 100)');
   assert.equal(out.data.places[2].why,'');
   assert.equal(out.data.places[3].why,'');
 });
@@ -152,7 +152,7 @@ test('opportunity_map with a town returns that town’s row beside the island fi
   assert.equal(out.data.town.perTenThousand, 0.5);
   assert.ok(Math.abs(out.data.town.islandPerTenThousand - 41 / 600000 * 10000) < 1e-9);
   assert.equal(out.data.town.ranked, 5);
-  assert.match(out.data.town.reading, /^San Juan is a gap for bakery: taste rank 5 of 5; 16 establishments with employees, 0\.5 per 10,000 residents against (?:the median of [\d.]+ the groups split on \(island average 0\.68\)|0\.68 island-wide)\. Taste above the median, few businesses/);
+  assert.match(out.data.town.reading, /^San Juan is a gap for bakery: taste rank 5 of 5; 16 establishments with employees, 0\.5 per 10,000 residents against (?:the median of [\d.]+ the groups split on \(island average 0\.68\)|0\.68 island-wide)\. Taste above the median, few businesses per resident/);
   assert.doesNotMatch(out.data.town.reading, /strong taste/i);
   assert.deepEqual(out.action, { type: 'show_opportunity', industry: 'bakery', town: 'San Juan' }, 'the action names the town asked about');
   const withheld = await tool.run({ industry: 'bakery', town: 'Vieques' });

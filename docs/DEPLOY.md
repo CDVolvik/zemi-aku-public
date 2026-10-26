@@ -367,6 +367,36 @@ the dock at 769, the island's west and east tips project to x 41 and 383 at y 17
 the ion token's origin restriction, not a live condition), the five nav links are 12 px tall each; `check-demo --journeys`
 0 failed. 341 tests.
 
+## Round-ten release (2026-10-26)
+
+Live as `zemi-aku:round10-20261026`, source `7be1d88`, layered on `round9-20261026` with `app/`, `server/` and
+`scripts/serve-eagle.mjs` (`tmp/deploy-round10-20261026.sh`, local only). Rollback set
+`/opt/zemi-aku/round10-20261026-rollback` (previous image `round9-20261026`). The ninth blind panel's findings
+([JUDGE-PANEL-2026-10-26.md](JUDGE-PANEL-2026-10-26.md)), then three Codex review passes (6, 7 and 1 findings, no High;
+every one fixed). No key, cap, cache, Caddy, env or connector change.
+
+The model provider account still has no credit: live model turns return HTTP 402 and the rules router answers.
+
+What changed on the site:
+
+- **Refused model turns are refunded.** A turn the provider refuses before any tool runs (no credit, no key, the daily
+  budget) gives the visitor turn back, on the day it was charged; the panel had lost its forty turns to HTTP 402s.
+- **The rules router declines what it cannot read**: a sentence is no longer searched as a place name ("Recomienda
+  Aqui"); a method question naming a town and an industry ("¿Cómo calculas 0.5 por 10,000?") gets the verdict card; "which
+  makes the most money" gets the plain limit; a bare "¿Dónde?" or "What do you recommend?" at the start of a
+  conversation gets a question back. A refusal or an off-map town returns the panel to the open town.
+- **Evidence** on an answer without a model turn says why "Ask again without Qloo" is missing and links `/compare`.
+- **Numbers that read right**: spoken counts are exact ("You'll see 8 on the map"); affinity is a score out of 100;
+  saved-catalog hours read "On Oct 7"; the groups say "per resident"; restaurant research names places that serve meals
+  before bars; the front page says 18 tools (a test ties every public count to the registry).
+- **Phone**: the bakery sheet shows group names only and folds the sources below the towns; a shorter hint in the ask
+  bar under 420 px. "More like these" no longer speaks; "el Censo" in Spanish; "Why it's here" on cards.
+- `/compare` says why a live answer can differ from the saved run and links the [gap backtest](BACKTEST-GAP-2026-10-26.md).
+
+Checks: container healthy; sixteen changed-file SHA-256 hashes in the container equal the commit's; on the live site
+`check-answer-states` (16) and `check-ui-states` (27) 0 failed; `check-demo --journeys` 0 failed; 519 tests. Real phones,
+a microphone turn and a screen reader not tested.
+
 ## Round-nine release (2026-10-26)
 
 Live as `zemi-aku:round9-20261026`, source `f0c9830` (five commits on `2dea252`), layered on `round8-20261025` with
