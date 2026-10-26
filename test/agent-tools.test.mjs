@@ -190,13 +190,30 @@ test('place_audience returns the age and gender leans the card shows, from a ver
   assert.ok(!withoutQloo(registry).some(t => t.name === 'place_audience'), 'the control run has no audience tool');
 });
 
-test('the public inventory counts the registry: 17 tools with weather, 13 through MCP (Codex review 10/25 round 7)', async () => {
+test('the public inventory counts the registry: 18 tools with weather, 13 through MCP (Codex review 10/25 round 7)', async () => {
   const { mcpTools } = await import('../server/mcp.mjs');
   const registry = agentTools({ towns: ['Ponce'], categories: [], weather: {}, catalogFor: async () => ({ places: [] }), publishPlace: p => p, callQloo: async () => ({ status: 'empty' }) });
-  assert.equal(registry.length, 17);
+  assert.equal(registry.length, 18);
   assert.equal(mcpTools(registry).length, 13);
   const readme = fs.readFileSync(new URL('../README.md', import.meta.url), 'utf8');
-  assert.match(readme, /17 read-only tools/);
-  assert.match(readme, /13 of the app's 17 read-only tools \(all but map_town, town_weather,\s+qloo_trends and place_audience\)/);
-  assert.doesNotMatch(readme, /16 read-only tools/);
+  assert.match(readme, /18 read-only tools/);
+  assert.match(readme, /13 of the app's 18 read-only tools \(all but map_town, town_weather,\s+qloo_trends, place_audience and artist_towns\)/);
+  assert.doesNotMatch(readme, /1[67] read-only tools/);
+});
+
+test('artist_towns ranks towns island-wide and leaves the map to the model; the controls never get it (judge panel 10/25 round 8)', async () => {
+  const registry = agentTools({ towns: ['Vieques', 'Ponce'], categories: [], catalogFor: async () => ({ places: [] }), publishPlace: p => p,
+    artistTowns: async (artist) => artist === 'Björk'
+      ? { artist: 'Björk', ranked: 35, retrievedAt: '2026-10-25T23:00:00.000Z', towns: [{ town: 'Vieques', rank: 1, cells: 21 }, { town: 'Ponce', rank: 2, cells: 8, thin: true }] }
+      : { error: 'Qloo has no artist named Nobody.' } });
+  const tool = registry.find(t => t.name === 'artist_towns');
+  const out = await tool.run({ artist: 'Björk' });
+  assert.equal(out.data.source, 'Qloo heatmap');
+  assert.deepEqual(out.data.towns.map(t => t.town), ['Vieques', 'Ponce']);
+  assert.match(out.data.note, /not visits, sales or demand/);
+  assert.equal(out.action, undefined, 'a thin first row (Maricao for Marc Anthony, five cells) is not where the answer leads');
+  assert.match(out.data.note, /Call map_town for the town you lead with/);
+  assert.deepEqual(await tool.run({ artist: 'Nobody' }), { error: 'Qloo has no artist named Nobody.' });
+  assert.ok(!withoutQloo(registry).some(t => t.name === 'artist_towns'));
+  assert.ok(!catalogOnly(registry).some(t => t.name === 'artist_towns'));
 });

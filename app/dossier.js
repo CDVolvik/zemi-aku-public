@@ -8,7 +8,7 @@
   const isEs = () => typeof document !== "undefined" && document.documentElement?.lang === "es";
   const tr = (en, es) => (isEs() ? es : en);
   const qlooSrc = () => (isEs() ? "Qloo · en inglés" : "Qloo");
-  const FACT_ES = { Address: "Dirección", Hours: "Horario", Phone: "Teléfono", Website: "Sitio web", Menu: "Menú",
+  const FACT_ES = { Address: "Dirección", Hours: "Horario", Phone: "Teléfono", "Other phone": "Otro teléfono", Website: "Sitio web", Menu: "Menú",
     "Google listing": "Ficha de Google", Rating: "Calificación", "Qloo place id": "id de lugar en Qloo" };
   const AUDIENCE_ES = { "24 and under": "24 o menos", "55 and over": "55 o más", Women: "Mujeres", Men: "Hombres" };
   function sourceText(line) {

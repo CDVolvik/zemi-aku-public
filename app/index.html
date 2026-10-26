@@ -120,6 +120,10 @@ try {
   }
   #hero h1 { margin: 0; font: 500 34px/1.1 var(--serif); letter-spacing: -.015em; text-wrap: balance; }
   #hero p { margin: 8px 0 0; font-size: 14px; color: #d3dde3; }
+  /* The language, in words, before anything else on the first screen (judge panel 10/25 round 8: "EN · Andromeda" read as a voice setting). */
+  #hero-lang { display: inline-flex; gap: 2px; margin-bottom: 12px; padding: 3px; border-radius: 999px; background: rgba(0, 0, 0, .35); pointer-events: auto; text-shadow: none; }
+  #hero-lang button { border: 0; border-radius: 999px; min-height: 36px; padding: 6px 14px; background: transparent; color: #f4f6f8; font-size: 13px; font-weight: 600; }
+  #hero-lang button[aria-pressed="true"] { background: var(--paper); color: var(--ink); }
   /* The decision first: six industry chips open the opportunity map. */
   #decide-start { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 16px; pointer-events: auto; }
   #decide-start button { border: 0; border-radius: 999px; min-height: 44px; padding: 9px 16px; background: var(--primary); color: var(--primary-ink); box-shadow: var(--shadow); font-size: 14px; font-weight: 600; }
@@ -682,6 +686,10 @@ try {
 </div>
 
 <div id="hero">
+  <div id="hero-lang" role="group" aria-label="Idioma · Language">
+    <button type="button" data-hero-lang="es" lang="es" aria-pressed="false">Español</button>
+    <button type="button" data-hero-lang="en" lang="en" aria-pressed="true">English</button>
+  </div>
   <h1 id="hero-title">Where should I open a business in Puerto Rico?</h1>
   <p id="hero-lede">Qloo's taste town by town, against the businesses the Census already counts. Pick an industry.</p>
   <div id="decide-start" role="group" aria-label="Where should I open…"></div>
@@ -1472,6 +1480,7 @@ function renderList() {
     const rows = openPlaces.map((place, index) => ({ ...place, index }));
     box.innerHTML = ZemiMarks.resultCards(rows, {
       from: distanceOrigin(),
+      fromTown: pickedId || "",
       lang: ZemiConverse.voice().lang,
       focusedIndex,
     });
@@ -1569,6 +1578,11 @@ $("picks-more").addEventListener("click", moreLikeThese);
 function openPlace(place, { fly: move = true, fromHistory = false } = {}) {
   if (!place) return;
   if (!fromHistory) mapHistory.beginUserNav();
+  // An answer about something else leaves when a place it did not name opens (judge panel 10/25 round 8: a Culebra
+  // bakery verdict and its Pan Café card stayed over La Placita's page).
+  const caption = $("caption");
+  if (!fromHistory && !caption.hidden && caption.dataset.who === "zemi" && caption.querySelector(".result-card, .control-pair, details.evidence")
+    && ![...caption.querySelectorAll(".result-card")].some((card) => (place.id && card.dataset.id === place.id) || card.dataset.name === place.name)) hideCaption();
   focusedIndex = openPlaces.indexOf(place);
   drawPlaces(openPlaces);
   const spot = $("spot");
@@ -2060,7 +2074,7 @@ function decisionCard(business, o, places, es) {
     `${esc(ZemiOpportunity.LABELS[l][o.group] || "")}${Number.isFinite(o.tasteRank) ? (es ? ` · gusto #${o.tasteRank} de ${o.ranked}` : ` · taste #${o.tasteRank} of ${o.ranked}`) : ""}.`,
     tags,
     [count, rate].filter(Boolean).join(", ") + (count || rate ? "." : ""),
-    es ? `Qloo registra ${business.total} lugares de este tipo; Overture, ${supply ? supply.count : "—"}.` : `Qloo lists ${business.total} places of this type; Overture, ${supply ? supply.count : "—"}.`,
+    es ? `Qloo registra ${business.total} ${business.total === 1 ? "lugar" : "lugares"} de este tipo; Overture, ${supply ? supply.count : "—"}.` : `Qloo lists ${business.total} ${business.total === 1 ? "place" : "places"} of this type; Overture, ${supply ? supply.count : "—"}.`,
     axis,
   ].filter(Boolean).join(" ");
   const cannot = es
@@ -2110,12 +2124,12 @@ function showBusinessResearch(business) {
   $("business-context-heading").textContent = es ? "Investigar un negocio aquí" : "Research a business here";
   const categoriesEs = { food: "Comida", drinks: "Barras y vida nocturna", stay: "Hospedaje", groceries: "Supermercados y farmacias", shopping: "Tiendas", fun: "Actividades", outdoors: "Playas y aire libre", culture: "Historia y cultura", health: "Salud y bienestar", other: "Servicios" };
   $("business-counts").textContent = business.available
-    ? `${business.total} ${es ? "lugares en el catálogo guardado de Qloo" : "places in Qloo’s saved catalog"}. ${business.counts.map(c => `${es ? categoriesEs[c.id] || c.label : c.label}: ${c.count}`).join(" · ")}`
+    ? `${business.total} ${es ? (business.total === 1 ? "lugar en el catálogo guardado de Qloo" : "lugares en el catálogo guardado de Qloo") : (business.total === 1 ? "place in Qloo’s saved catalog" : "places in Qloo’s saved catalog")}. ${business.counts.map(c => `${es ? categoriesEs[c.id] || c.label : c.label}: ${c.count}`).join(" · ")}`
     : es ? "El catálogo de Qloo no está disponible. Los otros datos se muestran por separado." : "Qloo’s catalog is unavailable. Other source data is shown separately.";
   const evidence = business.evidence || {}, parts = [];
   const supply = evidence.supply, census = evidence.demographics;
   parts.push(`<h4>Overture · ${es ? "oferta observada en el pueblo" : "observed supply in the town"}</h4><p>${supply
-    ? `${supply.count} ${es ? "lugares registrados de este tipo" : "listed places of this type"} · ${es ? "publicación" : "release"} ${esc(supply.release || "—")}. ${es ? "La cobertura puede ser incompleta o haber cambiado." : "Coverage may be incomplete or have changed."}`
+    ? `${supply.count} ${es ? (supply.count === 1 ? "lugar registrado de este tipo" : "lugares registrados de este tipo") : (supply.count === 1 ? "listed place of this type" : "listed places of this type")} ·${es ? "publicación" : "release"} ${esc(supply.release || "—")}. ${es ? "La cobertura puede ser incompleta o haber cambiado." : "Coverage may be incomplete or have changed."}`
     : es ? "Datos no disponibles." : "Data unavailable."}</p>`);
   if (supply?.places?.length) parts.push(`<details><summary>${es ? 'Ver ejemplos de Overture' : 'View Overture examples'}</summary><ul>${supply.places.map(p => `<li>${esc(p.name)}</li>`).join('')}</ul></details>`);
   const number = metric => Number.isFinite(metric?.estimate) ? metric.estimate.toLocaleString('en-US') : '—';
@@ -2796,7 +2810,7 @@ function showCaption(who, text, evidence, places) {
   // Answer places render as rich cards above the folded evidence line.
   const rows = answerPlacesForCaption(places);
   const cards = rows.length
-    ? ZemiMarks.resultCards(rows, { from: distanceOrigin(), lang, focusedIndex })
+    ? ZemiMarks.resultCards(rows, { from: distanceOrigin(), fromTown: pickedId || "", lang, focusedIndex })
     : "";
   caption.innerHTML = `<span class="who">${who === "you" ? (lang === "es" ? "Usted" : "You") : "Zemi-Aku"}</span>${esc(text)}<button type="button" class="x" aria-label="${lang === "es" ? "Cerrar" : "Dismiss"}">×</button>${ZemiEvidence.answerBody(lang, evidence, cards)}`;
   wireResultLogos(caption);
@@ -2875,10 +2889,12 @@ $("caption").addEventListener("click", (event) => {
 let lastAgentAnswer = null;
 const CONTROL = { en: { with: "With Qloo", without: "Without Qloo", waiting: "Asking again without Qloo…", failed: "The control run could not answer.",
     changed: (names) => `Qloo changed: ${names.join(", ")}`, nothing: "Qloo added nothing here (no catalog place is named only with Qloo)",
-    cleared: "The places the with-Qloo answer put on the map and in the list were removed." },
+    cleared: "The places the with-Qloo answer put on the map and in the list were removed.",
+    emptyList: "Without Qloo: this answer put no places in the list.", restore: (town) => `Show ${town}'s Qloo catalog again` },
   es: { with: "Con Qloo", without: "Sin Qloo", waiting: "Preguntando otra vez sin Qloo…", failed: "La corrida de control no pudo responder.",
     changed: (names) => `Qloo cambió: ${names.join(", ")}`, nothing: "Qloo no añadió nada aquí (ningún lugar del catálogo se nombra solo con Qloo)",
-    cleared: "Los lugares que la respuesta con Qloo puso en el mapa y en la lista se quitaron." } };
+    cleared: "Los lugares que la respuesta con Qloo puso en el mapa y en la lista se quitaron.",
+    emptyList: "Sin Qloo: esta respuesta no puso lugares en la lista.", restore: (town) => `Ver otra vez el catálogo de Qloo de ${town}` } };
 let lastAgentPlaces = []; // the catalog place names the with-Qloo answer put on the map, for the control's diff line
 // The same name test as /compare (server/compare.mjs): a multi-word catalog name, accent- and case-insensitive.
 const foldName = (v) => String(v || "").normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
@@ -2934,14 +2950,23 @@ async function showControl(withText, data) {
   clearAnswerPlaces(); // the picks row and the "fans in San Juan" heading go too (judge panel 10/24 round 4)
   if (pickedId && byName.has(pickedId)) {
     // The town's own heading and lede, not the with-Qloo question's "Bad Bunny fans in San Juan · Qloo places"
-    // (judge panel 10/25), then the town's own catalog, listed and drawn.
+    // (judge panel 10/25). The panel holds no Qloo list under a control answer: the town's catalog comes back only on
+    // request (judge panel 10/25 round 8: a Qloo catalog under the old heading read as part of the Qloo-free run).
     const record = byName.get(pickedId).record;
     listTitle = record.town;
     $("town-title").textContent = record.town;
     $("town-lede").textContent = townLede(record);
-    await loadPlaces(record).catch(() => {});
+    $("directory").hidden = true;
+    $("places").innerHTML = `<p class="small">${esc(t.emptyList)}</p><button type="button" class="ghost" data-control-restore>${esc(t.restore(record.town))}</button>`;
+    renderCrumbs();
   }
 }
+$("places").addEventListener("click", async (event) => {
+  if (!event.target.closest("[data-control-restore]") || !pickedId || !byName.has(pickedId)) return;
+  const record = byName.get(pickedId).record;
+  openTownView(record); // the town's own view, as a town opened from the map
+  await Promise.all([loadPlaces(record).catch(() => {}), loadDirectory(record.town)]);
+});
 
 // converse.js writes its status to #talk-status; show it as the caption while a conversation runs.
 new MutationObserver(() => {
@@ -2965,9 +2990,11 @@ function voiceLabel() {
   const voice = ZemiConverse.voice();
   const name = (voice.name || "").replace(/Microsoft |Google /g, "").split(" - ")[0];
   const code = (voice.lang || "en").toUpperCase();
-  // A phone keeps the field wide: the code alone on the button, the voice name in its title (judge panel 10/25).
+  // A phone keeps the field wide: the code alone on the button, the voice name in its title (judge panel 10/25). A wider
+  // screen names the language in words, so the button reads as the language switch (judge panel 10/25 round 8).
   const narrow = window.matchMedia("(max-width: 480px)").matches;
-  $("voice-btn").textContent = name && !narrow ? `${code} · ${name}` : code;
+  const language = { en: "English", es: "Español", fr: "Français", it: "Italiano", de: "Deutsch" }[voice.lang] || code;
+  $("voice-btn").textContent = narrow ? code : name ? `${language} · ${name}` : language;
   $("voice-btn").title = name ? `${code} · ${name}` : (ZemiConverse.voice().lang === "es" ? "Idioma y voz" : "Language and voice");
 }
 window.matchMedia("(max-width: 480px)").addEventListener("change", voiceLabel);
@@ -3226,7 +3253,10 @@ async function runQuestion(question) {
     showListTitle("");
   }
   if (data.chat) {
-    if (step !== "island") renderList();
+    // A rules answer may move the map too: an island ranking flies to its first town, so the old town's cards and
+    // breadcrumb do not sit under it (round-nine review).
+    if (Array.isArray(data.actions) && data.actions.length) await applyMapActions(data.actions, data.speech);
+    else if (step !== "island") renderList();
     showCaption("zemi", data.speech, data.evidence, data.places);
     return data;
   }
@@ -3272,7 +3302,7 @@ function syncAnswerCards(actions = []) {
   const rows = answerPlacesForCaption(places);
   if (!rows.length) return;
   const lang = ZemiConverse.voice().lang;
-  const html = ZemiMarks.resultCards(rows, { from: distanceOrigin(), lang, focusedIndex });
+  const html = ZemiMarks.resultCards(rows, { from: distanceOrigin(), fromTown: pickedId || "", lang, focusedIndex });
   const existing = caption.querySelector(".answer-cards");
   if (existing) existing.outerHTML = html;
   else {
@@ -3634,6 +3664,7 @@ function renderHero(next) {
   const t = CHROME[lang];
   document.documentElement.lang = lang;
   applyStatic(lang);
+  for (const button of document.querySelectorAll("[data-hero-lang]")) button.setAttribute("aria-pressed", String(button.dataset.heroLang === lang));
   $("hero-title").textContent = HERO[lang].title;
   $("hero-lede").textContent = HERO[lang].lede;
   $("hero-or").textContent = HERO[lang].or;
@@ -3648,6 +3679,9 @@ function renderHero(next) {
   if (!pickedId) $("q").placeholder = t.placeholder;
   if (typeof showMotion === "function" && typeof ZemiFlight !== "undefined") showMotion(); // the camera pill follows too
 }
+// A link that names the language (the front page's "En español") is a pick, kept like a menu pick.
+const linkLang = new URLSearchParams(location.search).get("lang");
+if (["en", "es"].includes(linkLang) && linkLang !== ZemiConverse.voice().lang) ZemiConverse.choose(linkLang, ZemiConverse.voice().gender, { persist: "lang" });
 renderHero();
 // A language switch redraws what is open, not only the first screen (GPT 10/25: after Español the open town, its
 // list and its buttons stayed English). Answers already shown keep the language they were asked in.
@@ -3678,6 +3712,13 @@ function relabel() {
 }
 // The voice menu's language pick is handled inside the voice module; the hero follows the picked value.
 $("talk-lang").addEventListener("change", (event) => { renderHero(event.target.value); relabel(); toggleMenu($("voice-menu"), $("voice-btn"), false); });
+// The first screen's own switch is a menu pick: it is remembered, like the voice menu's.
+$("hero-lang").addEventListener("click", (event) => {
+  const lang = event.target.closest("[data-hero-lang]")?.dataset.heroLang;
+  if (!lang || lang === ZemiConverse.voice().lang) return;
+  ZemiConverse.choose(lang, ZemiConverse.voice().gender, { persist: "lang" });
+  voiceLabel(); renderHero(lang); relabel();
+});
 $("decide-start").addEventListener("click", (event) => {
   const button = event.target.closest("[data-opportunity]");
   if (!button) return;

@@ -367,6 +367,44 @@ the dock at 769, the island's west and east tips project to x 41 and 383 at y 17
 the ion token's origin restriction, not a live condition), the five nav links are 12 px tall each; `check-demo --journeys`
 0 failed. 341 tests.
 
+## Round-nine release (2026-10-26)
+
+Live as `zemi-aku:round9-20261026`, source `f0c9830` (five commits on `2dea252`), layered on `round8-20261025` with
+`app/`, `server/` and `scripts/serve-eagle.mjs` (`tmp/deploy-round9-20261026.sh`, local only). Rollback set
+`/opt/zemi-aku/round9-20261026-rollback` (previous image `round8-20261025`). The eighth blind panel's seven findings
+([JUDGE-PANEL-2026-10-25d.md](JUDGE-PANEL-2026-10-25d.md)), then four Codex review passes on them (13, 9, 8 and 2 findings;
+every one fixed, the last pass regressions only). No key, cap, cache, Caddy, env or connector change.
+
+At deploy time the model provider returned HTTP 402 to live model turns, so the rules router answered every question
+(checked on live: `mode: rules, reason: http-402`); this round's rules-router work is what a visitor sees until model
+turns return.
+
+What changed on the site:
+
+- **Island questions.** "Which town…", "¿En qué pueblo…?", "where in Puerto Rico", "besides San Juan" hide the open town
+  from the model and keep it off the map unless the answer names it; a town after "besides/except/fuera de" is ruled out.
+  New tool `artist_towns` (18 read-only tools; not in the MCP allowlist) ranks towns by an artist's taste from Qloo's
+  heatmap (artist search + one heatmap call, cached). Measured: Björk → Vieques, Río Grande, Loíza.
+- **The rules router answers honestly** when the model cannot: it reads an artist out of fans questions (both word
+  orders, names with "the"/"of", longest span Qloo knows), ranks island artist questions from the heatmap and flies
+  the map there, reads an artist-and-business island question against the opportunity gap group (with both sources in
+  the evidence), gives "is this a good town for a café" the siting verdict, and says plainly what it can do for money,
+  ROI, follow-up and sentence-as-name questions. The scripted Bad Bunny question leads with restaurants.
+- **Without Qloo** leaves no Qloo list in the panel, the breadcrumb returns to the town, one button brings the catalog back.
+- **Spanish on the first screen**: an Español / English switch (remembered), `?lang=es`, "El mapa en español" on the
+  front page, the voice button names the language in words.
+- **Fans eat**: a deeper list with meals before bars; saved-catalog hours carry the day they were measured ("Oct 7:
+  5:00 pm–3:00 am", every loader); a second phone from another source is "Other phone".
+- **Town-level advice**: a sentence that recommends a spot inside a town or asserts foot traffic is dropped from model
+  answers and closing notes; facts, opening-hours tips, advice against and data limits stay.
+- **Smaller**: the spoken verdict places the rate against the median (no second unit); no size judgment from catalog
+  counts; no distance without a proven origin; an old answer clears when a place it did not name opens; the affinity
+  percentage is defined under the cards; Spanish drawers read every tool error in Spanish; "1 lugar".
+
+Checks: container healthy; eleven changed-file SHA-256 hashes in the container equal the commit's; on the live site
+`scripts/check-answer-states.mjs` (new, 16 checks) and `scripts/check-ui-states.mjs` (27) 0 failed; `check-demo
+--journeys` 0 failed; 508 tests. Real phones, a microphone turn and a screen reader not tested.
+
 ## Round-eight release (2026-10-25, overnight)
 
 Live as `zemi-aku:round8-20261025`, source `c78a6d1` (five commits on `128fa83`), layered on `round7-20261025` with
@@ -397,6 +435,11 @@ Checks: container healthy; ten changed-file SHA-256 hashes in the container equa
 `scripts/check-ui-states.mjs` (new, Playwright) 27 checks 0 failed, `check-demo --journeys` 0 failed, the Spanish
 session sweep flags only names and attributed source text, the reload stays Spanish after an English question;
 469 tests. Real phones, a microphone turn and a screen reader not tested.
+
+Public snapshot re-exported from `206821d` as `3625e73`, now with `scripts/check-ui-states.mjs`. The export also rewrites
+a panel report that quoted the brief's local directory (it had gone out in an earlier snapshot; older public commits
+still hold it). Scanned for the VM address, local paths, key prefixes and attribution; the README count and the report
+read logged out.
 
 ## Round-seven release (2026-10-25, late night)
 

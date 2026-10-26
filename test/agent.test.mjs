@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { createAgent, createSpendLedger, checkChat, plainSpeech, spokenExcerpt, PROMPT, validArgs, industryIn, namesTown, townFlight, createNote, wholeSentences, echoes, checkNote, noteLanguage, kindPlaces, dropUnaskedConditions } from "../server/agent.mjs";
+import { createAgent, createSpendLedger, checkChat, plainSpeech, spokenExcerpt, PROMPT, validArgs, industryIn, namesTown, townFlight, createNote, wholeSentences, echoes, checkNote, noteLanguage, kindPlaces, dropUnaskedConditions, dropUnsupportedSpots, islandScope, groupWords } from "../server/agent.mjs";
 
 test('a question about one kind of place keeps cards of that kind (judge panel 10/25 round 6)', () => {
   const list = { type: 'show_places', town: 'Culebra', places: [{ name: 'Pan Café', genre: 'Bakery' }, { name: "Zaco's Tacos", genre: 'Mexican restaurant' }, { name: 'Dinghy Dock', genre: 'Seafood' }] };
@@ -702,4 +702,105 @@ test("a disclaimer for a condition the question never named is dropped; a named 
   // The siting caveat about rents and sales is not a budget disclaimer and stays under any question.
   const caveat = "Río Grande está en el grupo brecha. Alquileres, tráfico y ventas no están en estos datos.";
   assert.equal(dropUnaskedConditions("¿Dónde abro una panadería?", caveat), caveat);
+});
+
+test('a sentence that sites a business inside a town, or asserts foot traffic, is dropped (judge panel 10/25 round 8)', () => {
+  const maricao = "Maricao tiene afinidad alta por café. Abriría cerca del centro, junto a la plaza, donde ya hay movimiento. Visite Café Hacienda.";
+  assert.equal(dropUnsupportedSpots(maricao), "Maricao tiene afinidad alta por café. Visite Café Hacienda.");
+  assert.equal(dropUnsupportedSpots("I would open near the town center. Visit two cafés."), "Visit two cafés.");
+  assert.equal(dropUnsupportedSpots("Ponce has busy streets downtown. Visit two cafés."), "Visit two cafés.", "movement alone is a claim");
+  // Saying the data is missing stays, and a place on a plaza is a place, not advice.
+  const caveat = "Rentas y tránsito peatonal no están en los datos. Visite La Placita de Santurce, en la plaza del mercado.";
+  assert.equal(dropUnsupportedSpots(caveat), caveat);
+  assert.equal(dropUnsupportedSpots("Visit Plaza Las Américas for the food court."), "Visit Plaza Las Américas for the food court.");
+  assert.equal(dropUnsupportedSpots("Abriría junto a la plaza."), "", "an answer that was only the spot comes back empty");
+});
+
+test('"which town" questions are island-wide unless they name a town (judge panel 10/25 round 8)', () => {
+  const towns = ['Culebra', 'Maricao', 'San Juan'];
+  assert.equal(islandScope('¿En qué pueblo abro una cafetería para fans de Marc Anthony?', towns), true);
+  assert.equal(islandScope('I like Björk. Which town in Puerto Rico fits my taste?', towns), true);
+  assert.equal(islandScope('¿Cuál pueblo me recomienda?', towns), true);
+  assert.equal(islandScope('Which town is better for a bakery, Maricao or Culebra?', towns), false, 'named towns are a comparison');
+  assert.equal(islandScope('Where do Bad Bunny fans eat in San Juan?', towns), false);
+  assert.equal(islandScope('¿Qué hay en Culebra?', towns), false);
+});
+
+test('an island-wide question hides the open town from the model and keeps it off the stage (judge panel 10/25 round 8)', async (t) => {
+  const bodies = [];
+  const mapped = [{ name: 'map_town', description: 'Move the map', parameters: { type: 'object', properties: { town: { type: 'string', enum: ['Culebra', 'Vieques'] } }, required: ['town'], additionalProperties: false },
+    run: async ({ town }) => ({ data: { town }, action: { type: 'fly_town', town } }) }];
+  let turn = 0;
+  const agent = createAgent({ key: 'k', tools: mapped, ledger: ledger(t), towns: ['Culebra', 'Vieques'], fetchImpl: async (_, options) => {
+    bodies.push(JSON.parse(options.body));
+    turn += 1;
+    if (turn === 1) return reply({ content: null, tool_calls: [call('map_town', { town: 'Culebra' })] });
+    return reply({ content: 'Qloo could not rank towns for this artist this run.' });
+  } });
+  const out = await agent({ question: 'Which town fits my Björk taste?', town: 'Culebra', lang: 'en' });
+  assert.match(bodies[0].messages.at(-1).content, /Open town: none \(the question asks about the whole island\)/);
+  assert.deepEqual(out.actions, [], 'the open town is not flown to under an answer that does not name it');
+  const named = createAgent({ key: 'k', tools: mapped, ledger: ledger(t), towns: ['Culebra', 'Vieques'], fetchImpl: async () => {
+    turn += 1;
+    return turn % 2 ? reply({ content: null, tool_calls: [call('map_town', { town: 'Culebra' })] }) : reply({ content: 'Culebra leans toward this taste most.' });
+  } });
+  turn = 0;
+  const kept = await named({ question: 'Which town fits my Björk taste?', town: 'Culebra', lang: 'en' });
+  assert.deepEqual(kept.actions, [{ type: 'fly_town', town: 'Culebra' }], 'an answer that names the open town keeps it');
+  assert.match(PROMPT, /artist_towns/);
+  assert.match(PROMPT, /never answer for the town on screen instead/);
+});
+
+test('group words follow the answer language without renaming places (judge panel 10/25 round 8)', () => {
+  assert.equal(groupWords('Maricao is a brecha for cafés.', 'en'), 'Maricao is a gap for cafés.');
+  assert.equal(groupWords('San Juan is competido; Visit El Tranquilo Bar.', 'en'), 'San Juan is competitive; Visit El Tranquilo Bar.');
+  assert.equal(groupWords('Maricao lands in the sin datos suficientes group, and Luquillo in brecha.', 'en'), 'Maricao lands in the not enough data group, and Luquillo in gap.');
+  assert.equal(groupWords('Maricao es una gap para cafeterías.', 'es'), 'Maricao es una brecha para cafeterías.');
+  assert.equal(groupWords('Maricao es una brecha.', 'es'), 'Maricao es una brecha.');
+});
+
+test('the town-line rule reads each clause, covers "open near", and keeps negated movement (round-nine review)', () => {
+  assert.equal(dropUnsupportedSpots('Open near La Placita. Visit two cafés.'), 'Visit two cafés.');
+  assert.equal(dropUnsupportedSpots('No foot-traffic data, but I would open near the plaza. Visit two cafés.'), 'Visit two cafés.');
+  assert.equal(dropUnsupportedSpots("Don't open on Main Street; I would open near the plaza. Visit two cafés."), 'Visit two cafés.');
+  assert.equal(dropUnsupportedSpots('Abriría, por ejemplo, junto a la plaza. Visite dos cafés.'), 'Visite dos cafés.');
+  assert.equal(dropUnsupportedSpots('Visite el centro, aunque no hay mucho movimiento.'), 'Visite el centro, aunque no hay mucho movimiento.');
+  assert.equal(dropUnsupportedSpots('Visit El Tranquilo and La Placita for lunch.'), 'Visit El Tranquilo and La Placita for lunch.');
+});
+
+test('group words keep proper names, and island scope reads the forms an evaluator types (round-nine review)', () => {
+  assert.equal(groupWords('Visit La Brecha. Luquillo is a brecha.', 'en'), 'Visit La Brecha. Luquillo is a gap.');
+  const towns = ['Culebra'];
+  for (const q of ['Which municipality should I open a bakery in?', 'Which city should I open a bakery in?', 'Where in Puerto Rico are Bjork fans strongest?', '¿En qué municipio abro una panadería?', 'Best town for a café?'])
+    assert.equal(islandScope(q, towns), true, q);
+  assert.equal(islandScope('What is in Culebra?', towns), false);
+});
+
+test('second pass: negation counts only right before the claim it negates (round-nine review)', () => {
+  for (const claim of ['I would open near La Placita without relying on foot-traffic data.', 'There is no foot-traffic data and I would open near La Placita.',
+    "I would open beside La Placita where there isn't much traffic.", 'I would open my coffee shop right near La Placita.', 'Open by La Placita.'])
+    assert.equal(dropUnsupportedSpots(`${claim} Visit two cafés.`), 'Visit two cafés.', claim);
+  for (const advice of ["I wouldn't open near La Placita.", 'I would never open beside La Placita.', 'No abriría junto a la plaza.'])
+    assert.equal(dropUnsupportedSpots(advice), advice, advice);
+});
+
+test('third pass: only a recommending frame sites a business; facts, time words, advice against and data limits stay (round-nine review)', () => {
+  for (const fact of ['Bili is open late by the malecón.', 'The plaza is open near sunset.', 'No le recomiendo abrir junto a La Placita.', 'No creo que deba abrir junto a La Placita.',
+    'Foot traffic is not measured by Qloo.', 'I do not know whether there is much traffic.', 'Qloo has no data on how much traffic the plaza gets.'])
+    assert.equal(dropUnsupportedSpots(fact), fact, fact);
+  for (const claim of ['Opening near La Placita would put you near nightlife.', 'I recommend opening near La Placita.', 'Consider opening beside the plaza.', 'Le recomiendo abrir junto a la plaza.'])
+    assert.equal(dropUnsupportedSpots(`${claim} Visit two cafés.`), 'Visit two cafés.', claim);
+});
+
+test('fourth pass: opening hours are a visit tip, and light traffic or "they should open" are still claims (round-nine review)', () => {
+  for (const tip of ['You should check opening hours for cafes near the plaza before visiting.', 'Opening hours near Plaza Las Delicias vary by day.',
+    'Qloo has no data on how much traffic the plaza gets.', 'Foot traffic is not measured by Qloo.'])
+    assert.equal(dropUnsupportedSpots(tip), tip, tip);
+  for (const claim of ['There is light foot traffic near the plaza.', 'They should open near the plaza.', 'We will open beside the plaza.'])
+    assert.equal(dropUnsupportedSpots(`${claim} Visit two cafés.`), 'Visit two cafés.', claim);
+});
+
+test('second pass: only the lowercase group word changes, so names keep theirs (round-nine review)', () => {
+  for (const name of ['Visit Café Brecha.', 'Visit Brecha Café.', 'Visit La Gran Brecha.']) assert.equal(groupWords(name, 'en'), name);
+  assert.equal(groupWords('Luquillo is in brecha.', 'en'), 'Luquillo is in gap.');
 });

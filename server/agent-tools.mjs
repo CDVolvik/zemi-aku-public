@@ -12,6 +12,10 @@ export function withoutQloo(tools) { return tools.filter((tool) => NON_QLOO_TOOL
 // whether Qloo's taste signal changes which places are named, not just whether names exist.
 export const CATALOG_ONLY_TOOLS = [...NON_QLOO_TOOLS, "town_catalog", "find_places", "place_details"];
 export function catalogOnly(tools) { return tools.filter((tool) => CATALOG_ONLY_TOOLS.includes(tool.name)); }
+// The same test as the cards' bar note (app/marks.js): any bar, pub or lounge, except the ones that serve no drinks.
+const BAR_GENRE = /\b(bar|bars|pub|gastropub|brewpub|lounge|beer hall|beer garden|night ?club|tavern|cantina)\b/i;
+const NOT_A_BAR = /\b(espresso|snack|juice|salad|oyster|raw|sushi|coffee|smoothie|candy|dessert|ice cream)\s+bar\b/i;
+export const isBar = (place) => BAR_GENRE.test(String(place?.genre || "")) && !NOT_A_BAR.test(String(place?.genre || ""));
 const GROUP_WORDS = { gap: "a gap", competitive: "competitive", quiet: "quiet", crowded: "crowded", unknown: "not enough data" };
 const GROUP_ES = { gap: "brecha", competitive: "competido", quiet: "tranquilo", crowded: "saturado", unknown: "sin datos suficientes" };
 function townReading(file, industry, town) {
@@ -94,9 +98,11 @@ export function agentTools(api) {
     website: place.website || "", domain: place.domain || "",
     affinity: Number.isFinite(place.affinity) ? place.affinity : null,
     why: place.why || affinityWhy(place.affinity, place.affinitySignal || "", place.whyLang || "en") || "",
-    address: place.address, description: place.description,
+    // A short description and three facts: two towns' lists in one round ran past the round budget and the second
+    // town's list was dropped (judge panel 10/25 round 8: a Mayagüez-against-Caguas answer carried Caguas cards only).
+    address: place.address, description: typeof place.description === "string" && place.description.length > 240 ? `${place.description.slice(0, 239)}…` : place.description,
     price: place.price, rating: place.rating ?? null, hours: place.hours || "",
-    facts: place.facts?.slice(0, 6),
+    facts: place.facts?.slice(0, 3),
   });
   // The cards on screen are the places in the evidence line: the same eight (judge panel 10/23 saw
   // "8 places" beside fourteen cards).
@@ -171,9 +177,26 @@ export function agentTools(api) {
       }),
     tool("artist_places", "Places an artist's fans like in a town, using Qloo cross-domain taste data. Pass category food when the question is where fans eat, drinks for where they go out; leave it out for a general question.",
       { town, artist: text, category }, ["town", "artist"], async ({ town, artist, category: only }) => {
-        const answer = await api.artistAnswer({ town, query: artist }, artist, "en");
-        const places = (answer?.places || []).filter((place) => !only || inCategory(place, only));
-        return list(town, places, `${artist} fans in ${town}`, { note: answer?.note || "No verified artist affinities found.", ...(only ? { category: only } : {}) });
+        // Qloo files many bars under its restaurant genres, so "where do fans eat" read mostly bars (judge panels 10/25
+        // rounds 7-8). For food, a deeper list is read and places that serve meals come before the bars, which stay last.
+        const answer = await api.artistAnswer({ town, query: artist }, artist, "en", [], only === "food" ? { take: 30 } : {});
+        let places = (answer?.places || []).filter((place) => !only || inCategory(place, only));
+        const bars = only === "food" ? places.filter(isBar) : [];
+        if (bars.length) places = [...places.filter((place) => !isBar(place)), ...bars];
+        const shown = Math.min(places.length, 8), barsShown = Math.max(0, shown - (places.length - bars.length));
+        const barNote = barsShown ? ` Qloo files ${barsShown} of these ${shown} as bars or lounges under restaurants; name places that serve meals first and call the bars bars.` : "";
+        return list(town, places, `${artist} fans in ${town}`, { note: `${answer?.note || "No verified artist affinities found."}${barNote}`, ...(only ? { category: only } : {}) });
+      }),
+    // Island-wide, for "which town fits my Björk taste" (judge panel 10/25 round 8: with no tool to rank towns by an
+    // artist, the answer fell back to the open town).
+    tool("artist_towns", "Which Puerto Rico towns lean most toward an artist's fans' taste, island-wide, from Qloo's heatmap. Use it for which town fits an artist or where on the island their fans lean; then artist_places for places in one of those towns.",
+      { artist: text }, ["artist"], async ({ artist }) => {
+        const result = await api.artistTowns(artist);
+        if (!result?.towns?.length) return { error: result?.error || "Qloo could not answer this request. Do not guess." };
+        // No map action: the answer may lead with another town than the first row (a thin reading, or a business gap
+        // town), so the model moves the map with map_town to the town it names.
+        return { data: { source: "Qloo heatmap", ...result,
+          note: "Towns ranked by the artist's taste signal averaged over each town's map cells; a town with under 10 cells is a thin reading. Affinity, not visits, sales or demand. Call map_town for the town you lead with." } };
       }),
     tool("town_profile", "Town cultural tastes, observed supply and Census PRCS demographics with survey period and margins of error. Qloo affinity is not business demand.", { town }, ["town"], async ({ town }) => ({
       source: "Qloo locality · Overture · Wikidata · Census PRCS", town, profile: await api.townProfile(town), ...api.townStats(town),

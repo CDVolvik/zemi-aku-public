@@ -4,6 +4,17 @@ export function fold(value) {
   return String(value ?? "").normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 }
 
+// A question about the whole island rather than the open town, on folded text: "which town", "¿en qué pueblo?", "which
+// municipality", "where in Puerto Rico" (judge panel 10/25 round 8: two routers with two lists answered for the open town).
+// "Besides San Juan", "fuera de Ponce": a town named only to rule it out, which keeps a question island-wide (round-nine
+// review: "Where in Puerto Rico besides San Juan should I open a cafe?" was answered for San Juan). On folded text.
+const EXCLUDING = "(?:besides|other than|except(?: for)?|excluding|outside(?: of)?|apart from|aparte de|fuera de|excepto|salvo|menos|que no sea)";
+export const excludedTowns = (folded, towns) => towns.filter((town) => new RegExp(`\\b${EXCLUDING}\\s+${fold(town)}\\b`).test(folded));
+export const withoutExcluded = (folded, towns) => towns.reduce((text, town) => text.replace(new RegExp(`\\b${EXCLUDING}\\s+${fold(town)}\\b`, "g"), " "), folded);
+// islandText adds the plain island phrases ("in Puerto Rico", "toda la isla"); both routers and the model boundary use it.
+export const islandText = (folded) => ISLAND_ASK.test(folded) || /\b(?:puerto rico|toda la isla|en la isla|the island|island ?wide)\b/.test(folded);
+export const ISLAND_ASK = /\b(?:(?:which|what|best) (?:towns?|municipios?|municipalit(?:y|ies)|cit(?:y|ies)|part of (?:the island|puerto rico))|(?:en )?(?:que|cual|cuales|mejor(?:es)?) (?:pueblos?|municipios?|ciudad(?:es)?|parte de (?:la isla|puerto rico))|where (?:in|on) (?:puerto rico|the island)|donde en (?:puerto rico|la isla)|anywhere (?:in|on) (?:puerto rico|the island)|(?:en|por) toda la isla|across the island|island ?wide)\b/;
+
 export function oneEdit(a, b) {
   if (a === b) return true;
   if (Math.abs(a.length - b.length) > 1) return false;

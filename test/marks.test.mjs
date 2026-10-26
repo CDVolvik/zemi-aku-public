@@ -245,3 +245,44 @@ test('the match line and the weather line follow the page language (probe 10/25,
   assert.equal(weatherContext.window.ZemiWeather.line(data, 'es'), 'Aviso vigente: Rip Current Statement (weather.gov, en inglés). Pronóstico de weather.gov: 90°F / 32°C, 20% de probabilidad de lluvia.');
   assert.equal(weatherContext.window.ZemiWeather.line(data), 'Rip Current Statement in effect (weather.gov). This Afternoon: 90°F / 32°C, 20% chance of rain, isolated rain showers.');
 });
+
+test('hours from a saved catalog carry their date in both languages, and live hours keep "Today" (judge panel 10/25 round 8)', () => {
+  assert.equal(marks.hoursText('Oct 7: 5:00 pm–3:00 am', 'en'), 'Oct 7: 5:00 pm–3:00 am');
+  assert.equal(marks.hoursText('Oct 7: 5:00 pm–3:00 am', 'es'), '7 oct: 5:00 pm–3:00 am');
+  assert.equal(marks.hoursText('Closed on Oct 7', 'es'), 'Cerrado el 7 oct');
+  assert.equal(marks.hoursText('Open 24 hours on Oct 7', 'es'), 'Abierto 24 horas el 7 oct');
+  assert.equal(marks.hoursText('Today 12:00 am–12:00 am', 'es'), 'Abierto 24 horas');
+  assert.equal(marks.hoursText('Today 8:00 am–4:00 pm', 'es'), 'Hoy 8:00 am–4:00 pm');
+});
+
+test('a card in another town shows no distance, and an affinity percentage is defined under the cards (judge panel 10/25 round 8)', () => {
+  const caguas = { name: 'Panadería Caguas', municipality: 'Caguas', lat: 18.23, lon: -66.03, category: 'food', genre: 'Bakery', why: 'Strong match for Vico C fans (96%)' };
+  const home = { name: 'Panadería Mayagüez', municipality: 'Mayagüez', lat: 18.2, lon: -67.14, category: 'food', genre: 'Bakery' };
+  const from = { lat: 18.2, lon: -67.13 };
+  const html = marks.resultCards([caguas, home], { from, fromTown: 'Mayagüez', lang: 'en' });
+  const metas = [...html.matchAll(/<p class="result-meta"[^>]*>([^<]*)<\/p>/g)].map((m) => m[1]);
+  assert.doesNotMatch(metas[0], /km/, 'the Caguas card has no distance from Mayagüez');
+  assert.match(metas[1], /km/, 'the Mayagüez card keeps its distance');
+  assert.match(html, /not the share of fans who go/);
+  assert.match(marks.resultCards([caguas], { lang: 'es' }), /no qué parte de los fans va/);
+  assert.doesNotMatch(marks.resultCards([home], { lang: 'en' }), /affinity score/, 'no percentage, no definition');
+});
+
+test('a distance with no origin of its own is hidden for a card in another town; a port distance stays (round-nine review)', () => {
+  const far = { name: 'Caguas Bakery', municipality: 'Caguas', distanceKm: 111, lat: 18.23, lon: -66.03, category: 'food' };
+  assert.doesNotMatch(marks.resultCards([far], { fromTown: 'Mayagüez', lang: 'en' }), /111\.0 km/);
+  const port = { ...far, distanceFrom: 'Puerto de Mayagüez' };
+  assert.match(marks.resultCards([port], { fromTown: 'Mayagüez', lang: 'en' }), /111\.0 km/);
+});
+
+test('second pass: an explicit distance on a card with no town is not shown against an open town (round-nine review)', () => {
+  assert.doesNotMatch(marks.resultCards([{ name: 'Unknown Bakery', distanceKm: 111, category: 'food' }], { fromTown: 'Mayagüez', lang: 'en' }), /111\.0 km/);
+  assert.match(marks.resultCards([{ name: 'Home Bakery', municipality: 'Mayagüez', distanceKm: 2, category: 'food' }], { fromTown: 'Mayagüez', lang: 'en' }), /2\.0 km/);
+});
+
+test('third pass: no distance without a proven origin (round-nine review)', () => {
+  assert.doesNotMatch(marks.resultCards([{ name: 'Unknown', distanceKm: 111, category: 'food' }], {}), /111\.0 km/);
+  const orphan = { name: 'Orphan', lat: 18.2, lon: -66.1, category: 'food' };
+  assert.doesNotMatch(marks.resultCards([orphan], { from: { lat: 18.2, lon: -67.14 }, fromTown: 'Mayagüez' }), / km/);
+  assert.match(marks.resultCards([{ ...orphan, municipality: 'Mayagüez', lon: -67.13 }], { from: { lat: 18.2, lon: -67.14 }, fromTown: 'Mayagüez' }), /\d\.\d km/);
+});

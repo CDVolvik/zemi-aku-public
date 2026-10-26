@@ -26,7 +26,8 @@ test('roughCount and roughThousands round the way a person talks', () => {
 
 test('the Maunabo readout matches the spec target line', () => {
   assert.equal(spoken('business', { town: 'Maunabo', mode: 'research', available: true, count: 6, supplyCount: 24, category: 'food', label: 'restaurants', topic: null, metric: null, taste: null, proximity: null }, 'en'),
-    'Maunabo’s a small one. 6 restaurants show up in Qloo, and other map data counts 24 across town. Want to see who’s nearby?');
+    'In Maunabo, 6 restaurants show up in Qloo, and other map data counts 24 across town. Want to see who’s nearby?',
+    'no size judgment from catalog size: it measures no crowd (round-nine review)');
 });
 
 test('every kind in both languages passes the rules on sample data', () => {
@@ -63,9 +64,9 @@ test('counts of zero, one, two and many read as grammatical sentences in both la
   const base = { mode: 'research', available: true, supplyCount: null, category: 'retail', topic: null, metric: null, taste: null, proximity: null };
   const en = (count) => spoken('business', { ...base, town: 'Lajas', count, label: 'shops' }, 'en');
   const es = (count) => spoken('business', { ...base, town: 'Lajas', count, label: 'tiendas' }, 'es');
-  assert.match(en(0), /^Lajas’s a small one\. No shops show up in Qloo\./);
-  assert.match(en(1), /Just one entry under shops shows up in Qloo\./);
-  assert.match(en(2), /A couple of shops show up in Qloo\./);
+  assert.match(en(0), /^In Lajas, no shops show up in Qloo\./);
+  assert.match(en(1), /In Lajas, just one entry under shops shows up in Qloo\./);
+  assert.match(en(2), /In Lajas, a couple of shops show up in Qloo\./);
   assert.match(en(24), /24 shops show up in Qloo\./);
   assert.match(es(0), /En Qloo no aparecen tiendas\./);
   assert.match(es(1), /En Qloo aparece una sola entrada de tiendas\./);
@@ -82,7 +83,7 @@ test('a nearby slice is not judged as the town’s size, and zero in Qloo still 
   assert.doesNotMatch(near, /small one/);
   assert.match(near, /within 3 kilometers of Coffee from 2/);
   const none = spoken('business', { town: 'Culebra', mode: 'research', available: true, count: 0, supplyCount: 3, category: 'food', label: 'bakeries', topic: null, metric: null, taste: null, proximity: null }, 'en');
-  assert.match(none, /No bakeries show up in Qloo, but other map data counts 3 across town\./);
+  assert.match(none, /In Culebra, no bakeries show up in Qloo, but other map data counts 3 across town\./);
   assert.match(spoken('business', { town: 'Bayamón', mode: 'research', available: true, count: 15, category: 'food', label: 'cafés', topic: 'population', metric: { kind: 'population', estimate: 185996 } }, 'es'), /unas 186 mil personas/);
 });
 
@@ -92,27 +93,28 @@ const sanJuan = { town: 'San Juan', mode: 'research', available: true, count: 35
   opportunity: { group: 'gap', tasteRank: 5, ranked: 78, establishments: 16, establishmentsMax: 16, suppressed: false, perTenThousand: 0.476, perTenThousandMax: 0.476, islandPerTenThousand: 0.8 } };
 test('a town with an opportunity verdict is spoken as that verdict with exact counts, in both languages', () => {
   const en = spoken('business', sanJuan, 'en');
-  assert.equal(en, 'San Juan is a gap for bakeries: taste above the median, rank 5 of 78, and few businesses, 16 establishments with employees, about 5 per hundred thousand residents against 8 island-wide. Qloo lists 35 and other map data 64. A lead, not proof: visit and check rents.');
-  assert.doesNotMatch(en, /busy|some options|small one|about fifty|couple dozen/);
+  assert.equal(en, 'San Juan is a gap for bakeries: taste above the median, rank 5 of 78, and few businesses, 16 establishments with employees, fewer per resident than the island average. Qloo lists 35 and other map data 64. A lead, not proof: visit and check rents.');
+  assert.doesNotMatch(en, /busy|some options|small one|about fifty|couple dozen|hundred thousand/);
   assert.deepEqual(spokenIssues(en, 'en'), []);
   const es = spoken('business', { ...sanJuan, label: 'panaderías' }, 'es');
-  assert.equal(es, 'San Juan es una brecha para panaderías: afinidad sobre la mediana, puesto 5 de 78, y pocos negocios, 16 establecimientos con empleados, unos 5 por cada cien mil residentes frente a 8 en la isla. Qloo registra 35 y otros datos del mapa 64. Pista, no prueba: visite y revise rentas.');
+  assert.equal(es, 'San Juan es una brecha para panaderías: afinidad sobre la mediana, puesto 5 de 78, y pocos negocios, 16 establecimientos con empleados, menos por residente que el promedio de la isla. Qloo registra 35 y otros datos del mapa 64. Pista, no prueba: visite y revise rentas.');
   assert.deepEqual(spokenIssues(es, 'es'), []);
 });
 
 test('when the file carries the median the groups split on, the verdict quotes that median, not the island average', () => {
   const ponce = { ...sanJuan, town: 'Ponce', opportunity: { ...sanJuan.opportunity, establishments: 15, perTenThousand: 1.13, medianPerTenThousand: 1.3, islandPerTenThousand: 0.76 } };
   const en = spoken('business', ponce, 'en');
-  assert.match(en, /few businesses, 15 establishments with employees, about 11 per hundred thousand residents against a median of 13\./);
-  assert.doesNotMatch(en, /island-wide/);
+  // Judge panel 10/25 round 8: the rate stays on the panel in its unit; speech places it against the median, so the two never disagree.
+  assert.match(en, /few businesses, 15 establishments with employees, fewer per resident than the median town\./);
+  assert.doesNotMatch(en, /island|hundred thousand|per 10,000/);
   const es = spoken('business', { ...ponce, label: 'panaderías' }, 'es');
-  assert.match(es, /frente a una mediana de 13\./);
+  assert.match(es, /menos por residente que el pueblo mediano\./);
   for (const [l, lang] of [[en, 'en'], [es, 'es']]) assert.deepEqual(spokenIssues(l, lang), []);
 });
 
 test('the four other verdicts and a suppressed count each read as their own sentence', () => {
   const line = (patch, lang = 'en') => spoken('business', { ...sanJuan, town: 'Adjuntas', opportunity: { ...sanJuan.opportunity, ...patch } }, lang);
-  assert.match(line({ group: 'competitive', tasteRank: 32, establishments: 5, perTenThousand: 2.8 }), /^Adjuntas is competitive for bakeries: taste above the median, rank 32 of 78, but many businesses, 5 establishments with employees, about 28 per hundred thousand residents against 8 island-wide\./);
+  assert.match(line({ group: 'competitive', tasteRank: 32, establishments: 5, perTenThousand: 2.8 }), /^Adjuntas is competitive for bakeries: taste above the median, rank 32 of 78, but many businesses, 5 establishments with employees, at or above the island average per resident\./);
   assert.match(line({ group: 'competitive', tasteRank: 32, establishments: 5, perTenThousand: 2.8 }), /Compare what two local competitors sell\.$/);
   // The next step survives a long town and label: the catalog counts go before it does (Codex 10/24).
   const closings = { gap: /revise rentas\.$/, competitive: /competidores locales\.$/, quiet: /antes de apostar\.$/, crowded: /nadie atiende\.$/ };

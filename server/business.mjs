@@ -1,7 +1,7 @@
 // Acquisition research is distinct from a place-name search. Saved Qloo records describe
 // the area; only external listing directories can advertise an actual sale.
 import { spoken } from './spoken.mjs';
-import { fold } from './lib.mjs';
+import { fold, islandText, withoutExcluded } from './lib.mjs';
 import { categoryOf, genreRoot, summarize } from './catalog.mjs';
 import { distanceKm } from './coastal.mjs';
 import { industryOf } from './opportunity.mjs';
@@ -10,6 +10,12 @@ const purchase = /\b(?:buy|buying|purchase|acquire|acquisition|comprar|compra|ad
 // "abro / pongo / monto" count only when an article follows ("¿Dónde abro una panadería?"), so "monto del
 // depósito", "Monte's Bakery" or "pongo el carro" stay out of the business flow.
 const opening = /\b(?:open|opening|start|starting|launch|abrir|montar|iniciar)\b[^.?!]{0,90}\b(?:business|restaurant|cafe|coffee shop|bakery|bar|barra|hotel|store|salon|negocio|restaurante|cafeteria|panaderia|tienda)\b|\b(?:abro|abra|pongo|ponga|monto|monte) (?:un|una|mi)\b[^.?!]{0,60}\b(?:negocio|restaurante|cafeteria|panaderia|barra|bar|hotel|salon|tienda)\b|\b(?:business opportunities|oportunidades de negocio)\b/;
+// A question that asks to open or buy a business, the intent an artist-and-business island answer needs ("a coffee
+// fan" names a drink, not a café to open).
+// A business noun with a siting word in either order also counts ("where should a cafe for X fans open", "set up a cafe").
+const BUSINESS_NOUN = /\b(?:business|negocio|restaurants?|restaurantes?|cafes?|coffee shop|cafeterias?|bakery|bakeries|panaderias?|bars?|barras?|hotels?|hoteles|salons?|salones|stores?|tiendas?)\b/;
+const SITING = /\b(?:open|opening|start|starting|launch|set up|setting up|locate|locating|abrir|abro|abra|montar|monto|poner|pongo|ubicar|conviene|best town for|ideal town for|best place for|mejor pueblo para|mejor lugar para)\b/;
+export const asksBusiness = (text) => { const f = fold(text); return opening.test(f) || purchase.test(f) || (BUSINESS_NOUN.test(f) && SITING.test(f)); };
 const topics = [
   ['competition', /\b(?:competitors?|competition|competencia|competidores?)\b/],
   ['demand', /\b(?:demand|demanda|profitable|profitability|rentable|rentabilidad)\b/],
@@ -55,8 +61,10 @@ export function businessRequest(body, towns) {
   const selection = typeOf(text) || [...segment].reverse().map(row => typeOf(fold(row.content))).find(Boolean);
   // "In Puerto Rico" or "the whole island" asked from an open town is the island question, not that town's
   // (Codex review 10/25: a Caguas bar verdict for "¿Dónde debería abrir una barra en Puerto Rico?").
-  const islandWide = /\b(puerto rico|toda la isla|en la isla|the island|island wide|islandwide)\b/.test(text);
-  const town = named(text) || (islandWide ? '' : named(body.town || '') || [...segment].reverse().map(row => named(row.content)).find(Boolean) || '');
+  // "¿En qué pueblo…?" and "which municipality…" ask the island too, by the same list the model boundary uses (judge panel
+  // 10/25 round 8: a Culebra verdict for "¿En qué pueblo abro una cafetería?" with Culebra open).
+  const islandWide = islandText(text);
+  const town = named(withoutExcluded(text, towns)) || (islandWide ? '' : named(body.town || '') || [...segment].reverse().map(row => named(row.content)).find(Boolean) || '');
   const mode = purchase.test(text) || (!opening.test(text) && segment.some(row => purchase.test(fold(row.content)))) ? 'buy' : 'research';
   return { town, category: selection?.category || 'all', type: selection?.type || 'all', mode,
     topic: topic || 'overview', nearby: /\b(?:near|nearby|cerca|cercanos|alrededor)\b/.test(text) };
@@ -73,7 +81,9 @@ const namedTowns = (text, towns) => towns.filter(town => new RegExp(`\\b${fold(t
 // to open in Ponce") is one-town research and stays on the template.
 const comparing = /\b(?:compare|comparing|comparison|comparar|compara|comparacion|versus|vs|which town|what town|better town|best town|cual pueblo|que pueblo|mejor pueblo|cual municipio|que municipio|o en|or in)\b/;
 // Money questions leave the template: the verdict never says what a business would earn (judge panel 10/25 round 7).
-const MONEY_ASK = /\b(?:ganar(?:ia|e|ias|an|ian)?|ganancias?|facturar(?:ia)?|facturacion|rentabilidad|rentable|cuanto (?:gana|vende|factura|deja|produce)|profits?|profitable|revenue|earn(?:s|ings)?|make (?:per|a|each) (?:month|year|week)|roi|payback)\b/;
+const MONEY_ASK = /\b(?:ganar(?:ia|e|ias|an|ian)?|ganancias?|facturar(?:ia)?|facturacion|rentabilidad|rentable|cuanto (?:gana|vende|factura|deja|produce)|profits?|profitable|revenue|earn(?:s|ings)?|make (?:per|a|each) (?:month|year|week)|roi|payback|margins?|margen(?:es)?|return on investment|retorno)\b/;
+// The rules router reads the same list, so a money question never becomes a place list there either.
+export const MONEY_QUESTION = MONEY_ASK;
 const choosing = /\b(?:which|better|best|cual|cuales|mejor|conviene mas)\b/;
 export function comparesTowns(text, towns, history = []) {
   const folded = fold(text);

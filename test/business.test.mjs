@@ -259,3 +259,9 @@ test('a business question about a place outside Puerto Rico says so instead of a
     assert.notEqual((await withMap({ question, lang: 'es' }))?.kind, 'outside', question);
   }
 });
+
+test('"which municipality" and "which city" ask the island, not the open town (round-nine review)', () => {
+  for (const question of ['Which municipality should I open a bakery in?', 'Which city should I open a bakery in?', '¿En qué municipio abro una panadería?'])
+    assert.equal(businessRequest({ question, town: 'Culebra' }, ['Culebra', 'Ponce']).town, '', question);
+  assert.equal(businessRequest({ question: 'Should I open a bakery here?', town: 'Culebra' }, ['Culebra', 'Ponce']).town, 'Culebra');
+});

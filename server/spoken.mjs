@@ -229,8 +229,15 @@ function catalogLine(brief, lang) {
 
 // ---------- business research ----------
 
-// Businesses per hundred thousand residents, as a whole number a person can say ("about 5").
-const perLakh = (perTenThousand) => Math.round((Number(perTenThousand) || 0) * 10);
+// The rate itself stays on the panel, in its unit; speech says where it sits against the line the groups split on (judge
+// panel 10/25 round 8: the spoken "about 5 per hundred thousand" beside the panel's "0.5 per 10,000" read as two numbers,
+// and no decimal is spoken).
+function againstLine(o, many, es) {
+  const median = Number.isFinite(o.medianPerTenThousand);
+  const above = median ? many : o.perTenThousand >= o.islandPerTenThousand;
+  if (es) return above ? `igual o por encima ${median ? "del pueblo mediano" : "del promedio de la isla"} por residente` : `menos por residente que ${median ? "el pueblo mediano" : "el promedio de la isla"}`;
+  return above ? `at or above ${median ? "the median town" : "the island average"} per resident` : `fewer per resident than ${median ? "the median town" : "the island average"}`;
+}
 
 function verdictBits(d, lang) {
   const es = lang === "es";
@@ -262,8 +269,8 @@ function verdictBits(d, lang) {
   const density = o.suppressed
     ? (es ? `sin cifra publicada, de 0 a ${max} establecimientos` : `no published count, 0 to ${max} establishments`)
     : es
-      ? `${o.establishments} establecimientos con empleados, unos ${perLakh(o.perTenThousand)} por cada cien mil residentes frente a ${whole(o.medianPerTenThousand) ? `una mediana de ${perLakh(baseline)}` : `${perLakh(baseline)} en la isla`}`
-      : `${o.establishments} establishments with employees, about ${perLakh(o.perTenThousand)} per hundred thousand residents against ${whole(o.medianPerTenThousand) ? `a median of ${perLakh(baseline)}` : `${perLakh(baseline)} island-wide`}`;
+      ? `${o.establishments} establecimientos con empleados, ${againstLine(o, many, true)}`
+      : `${o.establishments} establishments with employees, ${againstLine(o, many, false)}`;
   const names = es
     ? { gap: "una brecha", competitive: "competido", quiet: "tranquilo", crowded: "saturado" }
     : { gap: "a gap", competitive: "competitive", quiet: "quiet", crowded: "crowded" };
@@ -305,16 +312,16 @@ function businessLine(d, lang) {
     bits.push(...verdictBits(d, lang));
   } else {
     const n = Number(d.count) || 0;
-    // The town's size is judged by the whole type, not by a 3 km slice around one place.
-    const size = !d.available || d.proximity ? "" : n <= 6 ? (es ? `${town} es pequeño.` : `${town}’s a small one.`)
-      : n <= 30 ? (es ? `${town} tiene opciones.` : `${town} has some options.`) : (es ? `${town} está movido.` : `${town}’s busy.`);
-    bits.push(size);
+    // No size judgment ahead of the counts: "San Juan's busy" and "a small one" came from catalog size alone, which
+    // measures no movement or traffic (round-nine review); the counts that follow say what the records hold.
     // supplyCount is a town-wide count from other map data, shown as text on screen, not pins.
     const other = d.supplyCount > 0 ? exactCount(d.supplyCount, lang) : "";
     if (d.available) {
       const joiner = n === 0 ? (es ? ", pero" : ", but") : (es ? ", y" : ", and");
       const more = other ? (es ? `${joiner} otros datos del mapa cuentan ${other} en todo el pueblo.` : `${joiner} other map data counts ${other} across town.`) : ".";
-      bits.push(`${qlooClause(n, label, lang)}${more}`);
+      const clause = qlooClause(n, label, lang);
+      // The town leads in English; the Spanish clause already opens with "En Qloo".
+      bits.push(`${es ? clause : `In ${town}, ${clause.charAt(0).toLowerCase()}${clause.slice(1)}`}${more}`);
     } else {
       bits.push(es ? `El catálogo de ${town} no está disponible ahora.` : `${town}’s catalog isn’t available right now.`);
       if (other) bits.push(es ? `Otros datos del mapa sí cuentan ${other} ${label}.` : `Other map data still counts ${other} ${label}.`);

@@ -50,7 +50,22 @@ test('a rules-router answer says there was no model turn and why', () => {
   assert.match(Z.html('en', { mode: 'rules', reason: 'http-429' }), /\(the model did not answer: http-429\)/);
   assert.match(Z.html('es', { mode: 'rules', reason: 'budget' }), /Evidencia · reglas · sin turno del modelo \(presupuesto diario del modelo agotado\)/);
   const open = Z.html('en', { mode: 'rules', reason: 'budget', at: '2026-10-14T03:12:40.000Z' });
-  assert.match(open, /Answered by the rule-based router from the saved Qloo catalog · 2026-10-14 03:12 UTC/);
+  assert.match(open, /Answered by the rule-based router from Qloo's records, without a model turn · 2026-10-14 03:12 UTC/);
+});
+
+test('a Spanish drawer reads tool errors and source notes in Spanish, and never shows "Do not guess" (judge panel 10/25 round 8)', () => {
+  const Z = load();
+  const calls = [{ tool: 'artist_places', args: { town: 'Culebra', artist: 'Marc Anthony' }, ok: false, ms: 300, error: 'Qloo could not answer this request. Do not guess.' },
+    { tool: 'opportunity_map', args: { industry: 'bakery' }, ok: true, ms: 0, source: 'Qloo heatmap', note: '78 towns · not enough data' },
+    { tool: 'overture', ok: true, ms: 0, source: 'Overture', note: 'release 2026-09-23.1' }];
+  const es = Z.html('es', { mode: 'model', model: 'm', rounds: 2, ms: 900, calls });
+  assert.match(es, /rechazada: Qloo no pudo responder esta consulta</);
+  assert.match(es, /78 pueblos · sin datos suficientes/);
+  assert.match(es, /publicación 2026-09-23\.1/);
+  assert.doesNotMatch(es, /Do not guess|not enough data|could not answer/);
+  const en = Z.html('en', { mode: 'model', model: 'm', rounds: 2, ms: 900, calls });
+  assert.match(en, /refused: Qloo could not answer this request\.</);
+  assert.doesNotMatch(en, /Do not guess/);
 });
 
 test('a replay run is labeled as one, with its retrieval time', () => {
@@ -158,7 +173,13 @@ test('a model answer offers the control run and a control run is labeled instead
   // The control replaces the with-Qloo places on the map and in the list (judge panel 10/24 round 3: the cards stayed).
   assert.match(show, /clearJourney\(\);/);
   assert.match(show, /if \(actions\.length\) await applyMapActions\(actions, data\.speech\)/, 'every control action applies, not only a place list');
-  assert.match(show, /clearAnswerPlaces\(\);[^]*?const record = byName\.get\(pickedId\)\.record;\s*listTitle = record\.town;\s*\$\("town-title"\)\.textContent = record\.town;\s*\$\("town-lede"\)\.textContent = townLede\(record\);\s*await loadPlaces\(record\)/, "the answer places, picks and heading clear, the town's own title and lede return, then its catalog (judge panel 10/25)");
+  assert.match(show, /clearAnswerPlaces\(\);[^]*?const record = byName\.get\(pickedId\)\.record;\s*listTitle = record\.town;\s*\$\("town-title"\)\.textContent = record\.town;\s*\$\("town-lede"\)\.textContent = townLede\(record\);/, "the answer places, picks and heading clear, the town's own title and lede return (judge panel 10/25)");
+  // Judge panel 10/25 round 8: no Qloo list under a control answer; the breadcrumb follows; the catalog returns on request.
+  assert.doesNotMatch(show, /await loadPlaces\(record\)/);
+  assert.match(show, /\$\("directory"\)\.hidden = true;\s*\$\("places"\)\.innerHTML = `<p class="small">\$\{esc\(t\.emptyList\)\}<\/p><button type="button" class="ghost" data-control-restore>/);
+  assert.match(show, /renderCrumbs\(\);/);
+  assert.match(html, /closest\("\[data-control-restore\]"\)[^]*?openTownView\(record\);[^]*?await Promise\.all\(\[loadPlaces\(record\)\.catch\(\(\) => \{\}\), loadDirectory\(record\.town\)\]\);/);
+  assert.match(html, /emptyList: "Sin Qloo: esta respuesta no puso lugares en la lista\."/);
   assert.match(html.match(/async function runControl\([^]*?\n}\n/)[0], /try \{ await showControl\(asked\.speech, data\); \}/);
   // The clearing helper runs: an island-wide answer's places leave the list and the map.
   const clear = html.match(/function clearAnswerPlaces\(\) \{[^]*?\n}\n/)[0];
@@ -194,4 +215,37 @@ test("the control run is offered only when a Qloo tool answered (judge panel 10/
   assert.match(Z.answerBody("en", { ...base, calls: [{ tool: "artist_places", ok: true, args: {}, source: "Qloo", count: 5 }] }, ""), /control-run/);
   assert.match(Z.answerBody("en", { ...base, calls: [{ tool: "opportunity_map", ok: true, args: {}, source: "Qloo heatmap · Census" }] }, ""), /control-run/);
   assert.doesNotMatch(Z.answerBody("en", { ...base, calls: [{ tool: "artist_places", ok: false, args: {}, error: "refused" }] }, ""), /control-run/, "a Qloo call that failed answered nothing");
+});
+
+test('every error a tool or the weather client emits reads in Spanish on a Spanish page (round-nine review)', () => {
+  const Z = load();
+  const errors = ['Invalid date range.', 'Weather is unavailable right now.', 'Storm data is unavailable right now.', 'Alert data is unavailable right now.',
+    'Rain radar is unavailable right now.', 'Unknown town.', 'Unknown place ID.', 'Opportunity data is unavailable for this industry.', 'This data is unavailable. Do not guess.'];
+  const html = Z.html('es', { mode: 'model', model: 'm', rounds: 1, ms: 500, calls: errors.map((error, i) => ({ tool: `t${i}`, ok: false, ms: 0, error })) });
+  assert.doesNotMatch(html, /unavailable|Invalid|Unknown|Do not guess/, html);
+  assert.match(html, /el rango de fechas no es válido/);
+  assert.match(html, /el pronóstico no está disponible ahora/);
+});
+
+test('second pass: composed errors are replaced whole in Spanish, and a sourced rules answer says why there was no model turn', () => {
+  const Z = load();
+  const errors = ['Result too large; narrow your question.', 'Too many tool calls in one round; ask for this one next.',
+    'Result dropped to fit the request. Answer from the other results, or ask for this one again more narrowly.', 'no saved catalog'];
+  const html = Z.html('es', { mode: 'model', model: 'm', rounds: 1, ms: 500, calls: errors.map((error, i) => ({ tool: `t${i}`, ok: false, ms: 0, error })) });
+  assert.doesNotMatch(html, /narrow|ask for|Answer from|saved catalog/, html);
+  assert.match(html, /no hay catálogo guardado/);
+  const sourced = Z.html('es', { mode: 'sources', kind: 'artist', reason: 'budget', calls: [{ tool: 'artist_towns', ok: true, ms: 0, source: 'Qloo heatmap', count: 35 }] });
+  assert.match(sourced, /Evidencia · mapa de gusto del artista · sin turno del modelo \(presupuesto diario del modelo agotado\) · 1 fuente/);
+});
+
+test('third pass: town counts read as towns, and Spanish errors keep their next step (round-nine review)', () => {
+  const Z = load();
+  const en = Z.html('en', { mode: 'sources', kind: 'opportunity', calls: [{ tool: 'artist_towns', ok: true, ms: 0, source: 'Qloo heatmap', count: 77, unit: 'town' }] });
+  assert.match(en, /Qloo heatmap · 77 towns/);
+  assert.doesNotMatch(en, /77 places/);
+  assert.match(Z.html('es', { mode: 'sources', kind: 'opportunity', calls: [{ tool: 'artist_towns', ok: true, ms: 0, source: 'Qloo heatmap', count: 1, unit: 'town' }] }), /1 pueblo</);
+  const es = Z.html('es', { mode: 'model', model: 'm', rounds: 1, ms: 500, calls: [{ tool: 'a', ok: false, ms: 0, error: 'Result too large; narrow your question.' },
+    { tool: 'b', ok: false, ms: 0, error: 'Too many tool calls in one round; ask for this one next.' }] });
+  assert.match(es, /el resultado era demasiado grande; pida algo más específico/);
+  assert.match(es, /demasiadas llamadas en una ronda; esa consulta quedó para la siguiente/);
 });

@@ -6,7 +6,7 @@ import os from "node:os";
 import path from "node:path";
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { fold, inTown, priceLabel, splitTown, audienceLines, pickTasteTag, tasteLabel, musicAsk, qlooImageOf, domainOf, affinityOf, affinityWhy } from "../server/lib.mjs";
+import { fold, inTown, priceLabel, splitTown, audienceLines, pickTasteTag, tasteLabel, musicAsk, qlooImageOf, domainOf, affinityOf, affinityWhy, excludedTowns, withoutExcluded } from "../server/lib.mjs";
 import { qlooTools } from "../server/qloo-mcp.mjs";
 import { attachListenRelay } from "../server/listen-relay.mjs";
 import { createLimiter, dailyCap, rateGate, ROUTE_LIMITS } from "../server/limits.mjs";
@@ -14,17 +14,17 @@ import { VOICES, DEFAULT_VOICE, voiceFor } from "../server/voices.mjs";
 import { speechFor, firstSentence } from "../server/brain.mjs";
 import { CATEGORIES, categoryOf, summarize } from "../server/catalog.mjs";
 import { smallTalkKind, guideKind, vagueKind, chatReply } from "../server/chat.mjs";
-import { createBusinessDiscovery } from "../server/business.mjs";
+import { createBusinessDiscovery, MONEY_QUESTION, asksBusiness } from "../server/business.mjs";
 import { checkTester, testersCsv } from "../server/testers.mjs";
 import { createTesterDelivery } from "../server/tester-delivery.mjs";
 import { handleConfig } from "../server/beta.mjs";
 import crypto from "node:crypto";
-import { createAgent, createSpendLedger, checkChat, MODEL, createNote, spokenExcerpt } from "../server/agent.mjs";
-import { agentTools, withoutQloo, catalogOnly } from "../server/agent-tools.mjs";
+import { createAgent, createSpendLedger, checkChat, MODEL, createNote, spokenExcerpt, islandScope, industryIn, isEating } from "../server/agent.mjs";
+import { agentTools, withoutQloo, catalogOnly, isBar } from "../server/agent-tools.mjs";
 import { createSamples } from "../server/samples.mjs";
 import { createWeather } from "../server/weather.mjs";
 import { createMcpHandler, mcpBudget, mcpTools } from "../server/mcp.mjs";
-import { createOpportunity } from "../server/opportunity.mjs";
+import { createOpportunity, tasteByTown } from "../server/opportunity.mjs";
 import { attachVoiceAgent } from "../server/voice-agent.mjs";
 import { createDiscovery } from "../server/discovery.mjs";
 import { PORT_DATA, createCoastalDiscovery } from "../server/coastal.mjs";
@@ -142,6 +142,21 @@ function todayHours(hours) {
   const publishesHours = days.some((name) => (hours[name] || []).some((span) => span && !span.closed && span.opens && span.closes));
   return publishesHours && spans.some((span) => span?.closed) ? "Closed today" : "";
 }
+
+// "Today 5:00 pm–3:00 am" read from a catalog measured on 2026-10-07 → "Oct 7: 5:00 pm–3:00 am".
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+function datedHours(hours, measured) {
+  const day = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(measured || ""));
+  const text = String(hours || "");
+  if (!day || !text) return text;
+  const on = `${MONTHS[Number(day[2]) - 1]} ${Number(day[3])}`;
+  if (/^Today 12:00 am\s*[–-]\s*12:00 am$/i.test(text)) return `Open 24 hours on ${on}`;
+  if (/^Closed today$/i.test(text)) return `Closed on ${on}`;
+  return text.replace(/^Today /, `${on}: `);
+}
+// Every read of a saved catalog goes through here, so no loader shows the measuring day's hours as today's (the town
+// catalog, the business research and the coast each read the file). Dating twice changes nothing.
+const savedPlaces = (data) => (data?.places || []).map((place) => ({ ...place, hours: datedHours(place.hours, data.measured) }));
 
 function fact(facts, label, text, href, source) {
   if (!text) return;
@@ -316,8 +331,11 @@ function publishPlace(place) {
   fact(facts, "Hours", place.osmHours, "", "OpenStreetMap");
   fact(facts, "Phone", place.phone, telHref(place.phone), "Qloo");
   const digits = (value) => String(value ?? "").replace(/\D/g, "");
+  // A second number from another source is labeled as another number, not a second "Phone" (judge panel 10/25 round 8:
+  // two numbers under one label read as one place's contact with no sign they disagree).
+  const phoneLabel = () => (facts.some((item) => item.label === "Phone") ? "Other phone" : "Phone");
   if (place.osmPhone && digits(place.osmPhone) !== digits(place.phone)) {
-    fact(facts, "Phone", place.osmPhone, telHref(place.osmPhone), "OpenStreetMap");
+    fact(facts, phoneLabel(), place.osmPhone, telHref(place.osmPhone), "OpenStreetMap");
   } else if (place.osmPhone && place.phone) {
     const row = facts.find((item) => item.label === "Phone");
     if (row) row.source += " · OpenStreetMap";
@@ -336,8 +354,8 @@ function publishPlace(place) {
   let groundWebsite = "";
   if (ground) {
     const via = `Overture${ground.sources?.length ? ` · ${ground.sources.join(", ")}` : ""}`;
-    if (ground.phone && !facts.some((item) => item.label === "Phone" && digits(item.text).endsWith(digits(ground.phone).slice(-7)))) {
-      fact(facts, "Phone", ground.phone, telHref(ground.phone), via);
+    if (ground.phone && !facts.some((item) => /phone$/i.test(item.label) && digits(item.text).endsWith(digits(ground.phone).slice(-7)))) {
+      fact(facts, phoneLabel(), ground.phone, telHref(ground.phone), via);
     }
     if (ground.website && !facts.some((item) => item.label === "Website" && item.text === hostOf(ground.website))) {
       groundWebsite = safeHttp(ground.website);
@@ -816,8 +834,10 @@ function catalogFor(town) {
         fs.mkdirSync(catalogDir, { recursive: true });
         fs.writeFileSync(file, JSON.stringify(data));
       }
-      // Categories are assigned on load, so a rule change needs no new harvest.
-      data.places = data.places.map((place) => ({ ...place, category: categoryOf(place.genreId, place.genre) }));
+      // Categories are assigned on load, so a rule change needs no new harvest. A saved "Today …" was the day the catalog
+      // was measured, so it carries that date (judge panel 10/25 round 8: La Placita read "Hoy 5:00 pm–3:00 am" from the
+      // October 7 catalog beside today's "Open 24 hours" on a live card).
+      data.places = savedPlaces(data).map((place) => ({ ...place, category: categoryOf(place.genreId, place.genre) }));
       catalogs.set(town, data);
       return data;
     })().finally(() => catalogJobs.delete(town));
@@ -1107,10 +1127,10 @@ function labelQuery(query) {
 
 // The center of each municipality, from the same outlines the page draws. A search for one town
 // looks around that town; otherwise its places fall outside the top 50 for the whole island.
+const municipios = JSON.parse(fs.readFileSync(path.join(root, "app/data/municipios.geojson"), "utf8")).features;
 const townCenters = (() => {
   const centers = new Map();
-  const geo = JSON.parse(fs.readFileSync(path.join(root, "app/data/municipios.geojson"), "utf8"));
-  for (const feature of geo.features) {
+  for (const feature of municipios) {
     const g = feature.geometry;
     const rings = g.type === "Polygon" ? [g.coordinates[0]] : g.coordinates.map((poly) => poly[0]);
     const ring = rings.sort((a, b) => b.length - a.length)[0];
@@ -1192,7 +1212,7 @@ async function catalogKindAnswer(catalog, question, lang) {
 
 // A list answer the page shows like a catalog: up to 50 places, three lead cards, the spoken line.
 function listAnswer({ rows, town, label, query, question, lang, note, qloo }) {
-  const focus = `${label} in ${town}`;
+  const focus = `${label} ${lang === "es" ? "en" : "in"} ${town}`;
   const cards = rows.slice(0, 3).map((place) => toCard(place, town === "Puerto Rico" ? "" : town));
   const brief = { catalog: true, query: label, town, count: rows.length, lead: rows.slice(0, 3).map((place) => ({ name: place.name, kind: place.genre || "" })) };
   return {
@@ -1223,31 +1243,76 @@ function listAnswer({ rows, town, label, query, question, lang, note, qloo }) {
 
 // "Bad Bunny", "I love Bad Bunny": an artist Qloo knows → the places their fans like, in the town
 // asked about or across the island. Qloo's cross-domain taste, not places tied to the artist.
-async function artistAnswer(catalog, question, lang, named = [], { exploreOnly = false } = {}) {
-  const q = catalog.query.trim();
-  if (q.length < 3) return null;
+// An artist Qloo knows by this exact name, or null; throws when the search itself fails.
+async function qlooArtist(q) {
   const base = process.env.QLOO_API_BASE || "https://hackathon.api.qloo.com";
   const params = new URLSearchParams({ query: q, types: "urn:entity:artist", take: "3" });
   const res = await qlooFetch(`${base}/search?${params}`, process.env.QLOO_API_KEY);
-  if (!res.ok) {
-    if (exploreOnly) throw new Error("Qloo artist search is unavailable");
-    return null;
+  if (!res.ok) throw new Error("Qloo artist search is unavailable");
+  return ((await res.json()).results || []).find((entity) => fold(entity.name) === fold(q)) || null;
+}
+
+// The towns where an artist's taste runs strongest, island-wide: Qloo's heatmap with the artist as the signal, averaged
+// per municipio with the opportunity map's rule (at least five map cells). Two Qloo calls, then cached for the process:
+// the lookup itself is cached while in flight, so simultaneous asks share it, and a confirmed miss is cached too; only a
+// failed call is forgotten, so the next ask tries again.
+const artistTownCache = new Map();
+let townOfCounty = null;
+function artistTowns(name) {
+  const q = String(name || "").trim().slice(0, 80);
+  if (q.length < 2) return Promise.resolve({ error: "Name an artist." });
+  const key = fold(q);
+  if (!artistTownCache.has(key)) {
+    const lookup = rankArtistTowns(q);
+    artistTownCache.set(key, lookup);
+    lookup.catch(() => artistTownCache.delete(key));
   }
-  const artist = ((await res.json()).results || []).find((entity) => fold(entity.name) === fold(q));
+  return artistTownCache.get(key);
+}
+async function rankArtistTowns(q) {
+  const artist = await qlooArtist(q);
+  if (!artist) return { error: `Qloo has no artist named ${q}.` };
+  const base = process.env.QLOO_API_BASE || "https://hackathon.api.qloo.com";
+  const params = new URLSearchParams({ "filter.type": "urn:heatmap", "filter.location.query": "Puerto Rico",
+    "signal.interests.entities": artist.entity_id, take: "40" });
+  const res = await qlooFetch(`${base}/v2/insights?${params}`, process.env.QLOO_API_KEY);
+  if (!res.ok) throw new Error(`Qloo heatmap returned ${res.status}`);
+  const cells = (await res.json().catch(() => ({}))).results?.heatmap || [];
+  if (!townOfCounty) townOfCounty = new Map(municipios.map((feature) => [feature.properties.COUNTY,
+    townNames.find((town) => fold(town) === fold(String(feature.properties.NAME).replace(/ municipio$/i, ""))) || null]));
+  const rows = [...tasteByTown(cells, municipios)]
+    .map(([county, { taste, cells: count }]) => ({ town: townOfCounty.get(county), taste, cells: count }))
+    .filter((row) => row.town && row.cells >= 5)
+    .sort((a, b) => b.taste - a.taste || a.town.localeCompare(b.town));
+  if (!rows.length) return { error: `Qloo's heatmap has no town signal for ${artist.name}.` };
+  // Ten rows, so an artist-and-business question can find the artist's towns that are also in the business gap group.
+  return { artist: artist.name, ranked: rows.length, retrievedAt: new Date().toISOString(),
+    towns: rows.slice(0, 10).map((row, index) => ({ town: row.town, rank: index + 1, cells: row.cells, ...(row.cells < 10 ? { thin: true } : {}) })) };
+}
+
+// kinds: the categories to keep ("where do fans eat" keeps food; judge panel 10/23 saw a school and a hotel first).
+async function artistAnswer(catalog, question, lang, named = [], { exploreOnly = false, take = 15, kinds = null } = {}) {
+  const q = catalog.query.trim();
+  if (q.length < 3) return null;
+  let artist;
+  try { artist = await qlooArtist(q); }
+  catch (error) { if (exploreOnly) throw error; return null; }
   if (!artist) return null;
   const town = catalog.town || "Puerto Rico";
   const location = town === "Puerto Rico" ? "Puerto Rico" : `${town}, Puerto Rico`;
   const seen = new Set(named.map((place) => place.id || place.name));
-  const fans = (await qlooAlsoLike(artist.entity_id, "place", { take: 15, location }))
+  const fans = (await qlooAlsoLike(artist.entity_id, "place", { take, location }))
     .filter((place) => inIsland(place.lat, place.lon) && (town === "Puerto Rico" || inTown(place, town)) && !seen.has(place.id || place.name))
     .filter((place) => !exploreOnly || ["food", "drinks", "fun", "outdoors", "culture"].includes(categoryOf(place.genreId, place.genre)))
+    .filter((place) => !kinds || kinds.includes(categoryOf(place.genreId, place.genre)))
     .map((place) => ({
       ...place,
       affinitySignal: artist.name,
       whyLang: lang,
       why: affinityWhy(place.affinity, artist.name, lang) || place.why || "",
     }))
-    .sort((a, b) => (Number(b.affinity) || 0) - (Number(a.affinity) || 0)); // the order the cards display
+    // The order the cards display; a food-only list puts places that serve meals before the bars Qloo files as food.
+    .sort((a, b) => (kinds?.length === 1 && kinds[0] === "food" ? isBar(a) - isBar(b) : 0) || (Number(b.affinity) || 0) - (Number(a.affinity) || 0));
   if (!fans.length) return null;
   const rows = [...named, ...fans];
   const fansLine = `places that people who like ${artist.name} also like, in ${town}, from Qloo's cross-domain taste data. They are not places connected to ${artist.name}.`;
@@ -1258,7 +1323,7 @@ async function artistAnswer(catalog, question, lang, named = [], { exploreOnly =
     : named.length
     ? `${named.map((place) => place.name).join(" and ")} carries the name. The rest are ${fansLine}`
     : `These are ${fansLine}`;
-  return { ...listAnswer({ rows, town, label: `${artist.name} fans`, query: q, question, lang, note, qloo: `GET /search · artist "${artist.name}" → GET /v2/insights · place · signal.interests.entities` }),
+  return { ...listAnswer({ rows, town, label: lang === "es" ? `los fans de ${artist.name}` : `${artist.name} fans`, query: q, question, lang, note, qloo: `GET /search · artist "${artist.name}" → GET /v2/insights · place · signal.interests.entities` }),
     ...(exploreOnly ? { journey: { artist: artist.name, source: "Qloo", relationship: "affinity" } } : {}) };
 }
 const discover = createDiscovery(artistAnswer);
@@ -1268,7 +1333,7 @@ const discoverCoast = createCoastalDiscovery({
     if (!fs.existsSync(file)) throw new Error("This town's saved Qloo catalog is unavailable. Try another port.");
     const saved = catalogs.get(town) || JSON.parse(fs.readFileSync(file, "utf8"));
     if (!Array.isArray(saved?.places)) throw new Error("This town's saved Qloo catalog is unavailable. Try another port.");
-    return saved.places;
+    return savedPlaces(saved);
   },
   artist: artistAnswer, publish: publishPlace,
 });
@@ -1637,6 +1702,173 @@ async function patternAnswer(body) {
   });
 }
 
+// When the model cannot answer (turns or budget spent, provider down), the rules router reads a narrow set of questions.
+// An artist's fans it still answers; a follow-up, a money question, or words it would search as a business name get a
+// plain limit instead (judge panel 10/25 round 8: "¿Dónde comen los fans de Vico C en Mayagüez?" became a search for
+// "Comen Vico C", "¿Y allí se vende bien?" one for "Alli Se Vende Bien", a profit question a list of popular places).
+const FANS_ES = /\b(?:fans|fanaticos|fanaticas|seguidores|seguidoras|admiradores|admiradoras)\s+(?:de|del)\s+(.+?)(?=\s+(?:en|por|cerca|alrededor|comen|van|salen|abrir|abran|abro|para|que)\b|$)/;
+// Every word for fans the router reads, for the guard that keeps a fans question without an artist from a name search.
+const FAN_WORD = /\b(?:fans?|fanatic[oa]s?|seguidor(?:es|as?)?|admirador(?:es|as?)?)\b/;
+// Sales words on top of the business router's money list (ROI, payback, margin); "household income" stays a research topic.
+const SALES_ASK = /\b(ganancias?|ganar|gana|ventas|vende|venden|se vende|profits?|profitable|revenue|sales|earn|earns|earning|make money)\b/;
+const FOLLOW_UP = /^(?:y|and|what about|how about)\b|\b(?:alli|ahi|alla|over there|that town|ese pueblo)\b/;
+// Syntax words that end a name read back from "fans". "The", "of" and "and" can sit inside a name (Tyler, the Creator;
+// The Rolling Stones), so they are not stops; a name may not start with "of" or "and".
+const FANS_STOP = new Set(("where do does did would can could should are is in on for to which what puerto rico town towns most so or "
+  + "ok places spots a an my i m am with by at near los las el la best all our their local locals many some these those his her "
+  + "fit fits suit suits like likes love loves were").split(" "));
+// Words that name a taste, not an artist, in preference grammar only: "I am a coffee fan" is about coffee, though Qloo
+// lists an artist called Coffee. "Fans of Bread" names the band.
+const GENERIC_TASTES = new Set(("coffee cafe pizza food beer wine rum drinks music beach beaches mofongo surf surfing salsa reggaeton jazz bakery bread "
+  + "tacos sushi burgers seafood nature hiking art history dessert desserts brunch nightlife sports baseball basketball").split(" "));
+const nameOk = (words) => { const name = String(words || "").trim(); return name.length >= 2 && name.split(" ").length <= 5 ? name : ""; };
+// The artist names a fans question may mean, longest first; the caller keeps the first one Qloo knows by that exact name.
+function fanCandidates(question) {
+  const q = fold(question).replace(/[¿?¡!.,]/g, " ").replace(/\s+/g, " ").trim();
+  const out = [];
+  const es = nameOk(q.match(FANS_ES)?.[1]);
+  if (es) out.push(es);
+  const before = q.match(/^(.*?)\s*\bfans\b/)?.[1]?.split(" ").filter(Boolean) || [];
+  const words = [];
+  for (let i = before.length - 1; i >= 0 && words.length < 5 && !FANS_STOP.has(before[i]); i--) words.unshift(before[i]);
+  for (let i = 0; i < words.length; i++) if (!["of", "and", "y"].includes(words[i])) out.push(nameOk(words.slice(i).join(" ")));
+  const forward = nameOk(q.match(/\bfans of (.+?)(?=\s+(?:eat|go|hang|like|in|at|around|near|do|would|want|strongest|best|most|fit|fits|are|live|open|start|set|buy|launch)\b|$)/)?.[1]);
+  if (forward) out.push(forward);
+  return [...new Set(out.filter(Boolean))].slice(0, 3);
+}
+const fansAsk = (question) => fanCandidates(question)[0] || "";
+// "I like Björk.", "I'm a Björk fan", "Me gusta Bad Bunny", "Soy fan de Vico C": the taste an island question is about.
+// On folded text, so "I'm" reads "i m" and no punctuation is left to stop on.
+const LIKED_STOP = "(?=\\s+(?:and|so|which|what|where|in|for|y|asi|cual|que|donde|en|para)\\b|$)";
+const LIKED = [
+  new RegExp(`\\bi (?:really )?(?:like|love|listen to|am into|m into)\\s+(.+?)${LIKED_STOP}`),
+  new RegExp(`\\bi (?:am|m) (?:a |an )?(?:big |huge )?(.+?) fan\\b`),
+  new RegExp(`^(.+?) (?:is|are) my favou?rite\\b`),
+  new RegExp(`\\bme (?:gusta|gustan|encanta|encantan)\\s+(?:mucho\\s+)?(?:(?:el|la|los|las)\\s+)?(.+?)${LIKED_STOP}`),
+  new RegExp(`\\bsoy (?:fan|fanatic[oa]|admirador[a]?|seguidor[a]?) de(?:l)? (.+?)${LIKED_STOP}`),
+];
+function likedArtist(question) {
+  const q = fold(question);
+  const name = nameOk(LIKED.map((re) => q.match(re)).find(Boolean)?.[1]);
+  return GENERIC_TASTES.has(name) ? "" : name;
+}
+const artistCandidates = (question, island) => { const fans = fanCandidates(question); return fans.length ? fans : island && likedArtist(question) ? [likedArtist(question)] : []; };
+// The first candidate Qloo ranks; a miss costs one cached lookup each.
+async function rankedArtist(candidates, excluded) {
+  for (const name of candidates) {
+    const ranked = await artistTowns(name).catch(() => null);
+    const towns = (ranked?.towns || []).filter((row) => !excluded.includes(row.town));
+    if (towns.length) return { ...ranked, towns };
+  }
+  return null;
+}
+// Which towns lean toward an artist, said from Qloo's heatmap without a model turn. A town the question rules out
+// ("besides San Juan") is left out of the ranking.
+async function islandArtistAnswer(question, lang, candidates, excluded = []) {
+  const ranked = await rankedArtist(candidates, excluded);
+  const towns = (ranked?.towns || []).slice(0, 3).map((row) => row.town);
+  if (!towns.length) return null;
+  const list = (es) => towns.length === 1 ? towns[0] : `${towns.slice(0, -1).join(", ")} ${es ? "y" : "and"} ${towns.at(-1)}`;
+  const thin = ranked.towns[0].thin ? (lang === "es" ? ` ${towns[0]} se lee con pocas celdas del mapa.` : ` ${towns[0]} rests on few map cells.`) : "";
+  const speech = lang === "es"
+    ? `El mapa de calor de Qloo ubica el gusto por ${ranked.artist} con más fuerza en ${list(true)}. Es afinidad, no visitas ni demanda.${thin}`
+    : `Qloo's heatmap puts ${ranked.artist}${/s$/i.test(ranked.artist) ? "'" : "'s"} taste strongest in ${list(false)}. That is taste, not visits or demand.${thin}`;
+  const lead = ranked.towns.slice(0, 3).find((row) => !row.thin)?.town || towns[0];
+  return { chat: true, kind: "artist-towns", question: question.slice(0, 240), speech, actions: [{ type: "fly_town", town: lead }],
+    evidence: { mode: "sources", kind: "artist", at: new Date().toISOString(), calls: [artistTownsCall(ranked)] } };
+}
+// "Which town should I open a café in for Marc Anthony fans?": the artist's ten strongest towns read against the business
+// gap group, so the answer carries both the taste and the supply (round-nine review: the generic island café list
+// answered half of it).
+async function islandArtistBusinessAnswer(question, lang, candidates, industry, excluded = []) {
+  const ranked = await rankedArtist(candidates, excluded);
+  const file = opportunity.get(industry);
+  if (!ranked?.towns?.length || !file) return null;
+  const es = lang === "es";
+  const groups = new Map(file.towns.map((row) => [row.town, row.group]));
+  const top = ranked.towns.slice(0, 3).map((row) => row.town);
+  const gaps = ranked.towns.filter((row) => groups.get(row.town) === "gap").slice(0, 3).map((row) => row.town);
+  const list = (towns) => towns.length === 1 ? towns[0] : `${towns.slice(0, -1).join(", ")} ${es ? "y" : "and"} ${towns.at(-1)}`;
+  const label = file.label?.[es ? "es" : "en"] || industry;
+  const n = ranked.towns.length; // ten, fewer when the question rules a town out
+  const nEs = n === 10 ? "diez" : String(n), nEn = n === 10 ? "ten" : String(n);
+  const speech = es
+    ? `Para fans de ${ranked.artist}, el mapa de calor de Qloo pone arriba a ${list(top)}. `
+      + (gaps.length ? `De sus ${nEs} primeros, ${list(gaps)} ${gaps.length === 1 ? "está" : "están"} en el grupo brecha para ${label}: gusto sobre la mediana y pocos negocios.` : `Ninguno de sus ${nEs} primeros está en el grupo brecha para ${label}.`)
+      + " Es afinidad, no demanda."
+    : `For ${ranked.artist} fans, Qloo's heatmap puts ${list(top)} on top. `
+      + (gaps.length ? `Of their top ${nEn}, ${list(gaps)} ${gaps.length === 1 ? "is" : "are"} in the ${label} gap group: taste above the median, few businesses.` : `None of their top ${nEn} is in the ${label} gap group.`)
+      + " That is taste, not demand.";
+  return { chat: true, kind: "artist-business", question: question.slice(0, 240), opportunity: { industry }, speech,
+    evidence: { mode: "sources", kind: "opportunity", at: new Date().toISOString(), calls: [artistTownsCall(ranked),
+      { tool: "opportunity_map", args: { industry }, ok: true, ms: 0, source: "Qloo heatmap · Census County Business Patterns 2023", count: file.towns.length, unit: "town",
+        ...(file.sources?.qloo?.retrievedAt ? { retrievedAt: file.sources.qloo.retrievedAt } : {}) }] } };
+}
+const artistTownsCall = (ranked) => ({ tool: "artist_towns", args: { artist: ranked.artist }, ok: true, ms: 0, source: "Qloo heatmap",
+  count: ranked.ranked, unit: "town", retrievedAt: ranked.retrievedAt });
+// The island question that names both an artist and a business, for the route to keep from the one-sided business list.
+function islandArtistBusiness(question) {
+  if (!islandScope(question, townNames)) return null;
+  const industry = industryIn(question.normalize("NFD").replace(/[̀-ͯ]/g, ""));
+  const candidates = industry && asksBusiness(question) ? artistCandidates(question, true) : [];
+  return candidates.length ? { candidates, industry } : null;
+}
+// "¿Qué les gusta a los fans en San Juan?": fans with no artist to read, and no business asked. Kept from the business
+// shortcut, so the model asks which artist or the rules router says what it can do.
+const fansWithoutArtist = (question) => FAN_WORD.test(fold(question)) && !fanCandidates(question).length && !likedArtist(question) && !asksBusiness(question);
+const LIMIT = {
+  en: { "visitor-cap": "This connection has used today's model turns", budget: "Today's model budget is spent", other: "The model did not answer this one",
+    rest: "so I only answer fixed questions right now: a town, a kind of place in a town, an artist's fans in a town, or where to open a business. I won't guess this one.",
+    money: "No source here carries sales or profit either." },
+  es: { "visitor-cap": "Los turnos del modelo de hoy en esta conexión se usaron", budget: "El presupuesto del modelo de hoy se agotó", other: "El modelo no contestó esta",
+    rest: "así que ahora solo contesto preguntas fijas: un pueblo, un tipo de lugar en un pueblo, los fans de un artista en un pueblo, o dónde abrir un negocio. Esta no la adivino.",
+    money: "Y ninguna fuente aquí trae ventas ni ganancias." },
+};
+function limitAnswer(question, lang, reason, money = false) {
+  const t = LIMIT[lang] || LIMIT.en;
+  return { chat: true, kind: "limit", question: question.slice(0, 240), speech: `${t[reason] || t.other}, ${t.rest}${money ? ` ${t.money}` : ""}` };
+}
+async function ruleAnswer(body, reason) {
+  const question = String(body.question || "").slice(0, 240);
+  const lang = body.lang === "es" ? "es" : "en";
+  const folded = fold(question);
+  const excluded = excludedTowns(folded, townNames);
+  const named = splitTown(withoutExcluded(folded, townNames), townNames).town;
+  // An island question is never answered for the open town (judge panel 10/25 round 8); a business in it goes to the
+  // island opportunity list below, an artist alone to Qloo's heatmap ranking.
+  const island = islandScope(question, townNames);
+  const mix = islandArtistBusiness(question);
+  if (mix) return (await islandArtistBusinessAnswer(question, lang, mix.candidates, mix.industry, excluded)) || limitAnswer(question, lang, reason);
+  const candidates = artistCandidates(question, island);
+  if (candidates.length && island) return (await islandArtistAnswer(question, lang, candidates, excluded)) || limitAnswer(question, lang, reason);
+  if (!candidates.length && FAN_WORD.test(folded)) return limitAnswer(question, lang, reason);
+  if (candidates.length) {
+    const where = named || knownTown(String(body.town || "")) || "";
+    const options = isEating(question) ? { take: 30, kinds: ["food"] } : {};
+    for (const name of candidates) {
+      const fans = await artistAnswer({ query: name, town: where }, question, lang, [], options).catch(() => null);
+      if (fans) return fans;
+    }
+    return limitAnswer(question, lang, reason);
+  }
+  const q = folded;
+  if (SALES_ASK.test(q) || MONEY_QUESTION.test(q)) return limitAnswer(question, lang, reason, true);
+  if (!named && FOLLOW_UP.test(q.replace(/^[¿¡\s]+/, ""))) return limitAnswer(question, lang, reason);
+  // "Is Maricao a good town for a café?" is the siting verdict, not the town's food list ("Hungry in Maricao?").
+  const industry = industryIn(question.normalize("NFD").replace(/[̀-ͯ]/g, ""));
+  const town = named || (island ? "" : knownTown(String(body.town || "")) || "");
+  if (industry && town && !island && /\b(good|bueno|buena|conviene|vale la pena|should|deberia|worth|recomienda|recommend|oportunidad|opportunity)\b/.test(q)) {
+    const word = { cafe: "cafeteria", bakery: "panaderia", restaurant: "restaurante", hotel: "hotel", salon: "salon de belleza", bar: "barra" }[industry];
+    const verdict = await businessAnswer({ ...body, question: lang === "es" ? `abrir una ${word} en ${town}` : `open a ${industry} in ${town}` }, { force: true }).catch(() => null);
+    if (verdict) return verdict;
+  }
+  // An island question searches the island, never the open town, and never with a town it rules out.
+  const answer = await patternAnswer(island ? { ...body, question: excluded.length ? withoutExcluded(folded, townNames) : question, town: "" } : body);
+  // A three-word name search that found nothing read a sentence as a business name ("KFC" alone is a real search).
+  const sentence = String(answer?.query || "").split(" ").filter(Boolean).length >= 3;
+  return answer?.catalog && !answer.places?.length && sentence ? limitAnswer(question, lang, reason) : answer;
+}
+
 const routerKey = fs.existsSync(path.join(root, ".env")) ? projectEnv.OPENROUTER_API_KEY : process.env.OPENROUTER_API_KEY;
 const modelLedger = createSpendLedger({ file: path.join(root, "cache", "agent", "spend.json"),
   cap: process.env.ZEMI_CHAT_USD_PER_DAY === undefined ? 1 : Number(process.env.ZEMI_CHAT_USD_PER_DAY) });
@@ -1649,14 +1881,14 @@ const businessAnswer = createBusinessDiscovery({ towns: townNames, publish: publ
   catalog: async town => {
     const saved = JSON.parse(fs.readFileSync(path.join(catalogDir, `${fold(town).replace(/ /g, "-")}.json`), "utf8"));
     if (!Array.isArray(saved?.places)) throw new Error("Saved catalog unavailable");
-    return saved.places;
+    return savedPlaces(saved);
   },
 });
 // Free NWS/NHC/RainViewer feeds, cached in memory; no key, no daily cap needed.
 const weather = createWeather({ centers: townCenters });
 const registry = agentTools({ towns: townNames, weather,
     categories: CATEGORIES.map((row) => row.id), catalogFor, byPopularity, publishPlace,
-    tasteAnswer, placeMatches, qlooSearchRaw, inTown, qlooAlsoLike, artistAnswer,
+    tasteAnswer, placeMatches, qlooSearchRaw, inTown, qlooAlsoLike, artistAnswer, artistTowns,
     townProfile, landmarksOf, townHistory, callQloo, opportunityFor: (industry) => opportunity.get(industry),
     townStats: (town) => ({ population: wikidataTowns.get(fold(town))?.population ?? null,
       supply: overtureCounts.get(fold(town)) ?? null, qlooPlaces: countsByTown.get(fold(town))?.total ?? null,
@@ -1946,7 +2178,8 @@ window.ZEMI_PHOTOREAL_ENABLED = ${process.env.ZEMI_PHOTOREAL_ENABLED === "1"};
         if (bare.fallback) return sendJson(res, 503, { error: "The control run could not answer.", reason: bare.reason });
         return sendJson(res, 200, { ...bare, control: "no-qloo", evidence: { ...bare.evidence, control: "no-qloo" } });
       }
-      const business = await businessAnswer(checked.value);
+      // An island question naming an artist and a business needs both: the model, or the rules router's two rankings.
+      const business = islandArtistBusiness(checked.value.question) || fansWithoutArtist(checked.value.question) ? null : await businessAnswer(checked.value);
       if (business) return sendJson(res, 200, await withVerdictNote(business, checked.value, ip));
       if (vagueKind(checked.value.question)) return sendJson(res, 200, clarification(checked.value));
       let answer;
@@ -1956,10 +2189,11 @@ window.ZEMI_PHOTOREAL_ENABLED = ${process.env.ZEMI_PHOTOREAL_ENABLED === "1"};
       // A saved run for this exact question: the page gets the real answer and map, labeled replay.
       const sample = samples.match(checked.value);
       if (sample) { console.warn(`agent replay: ${answer.reason || "unknown"}`); return sendJson(res, 200, { ...sample, fallback: true }); }
-      const fallback = await patternAnswer(checked.value);
+      const fallback = await ruleAnswer(checked.value, answer.reason);
       // The page labels this answer as the rules router; the reason is a fixed code, never provider text.
-      const evidence = { mode: "rules", reason: answer.reason || "unknown", at: new Date().toISOString(),
-        ...(answer.rounds ? { rounds: answer.rounds, calls: answer.calls, model: answer.model } : {}) };
+      const evidence = fallback.evidence?.mode === "sources" ? { ...fallback.evidence, reason: answer.reason || "unknown" }
+        : { mode: "rules", reason: answer.reason || "unknown", at: new Date().toISOString(),
+          ...(answer.rounds ? { rounds: answer.rounds, calls: answer.calls, model: answer.model } : {}) };
       return sendJson(res, fallback.error ? 400 : 200, { ...fallback, fallback: true, evidence });
     }
     if (url.pathname === "/api/ask" && req.method === "POST") {

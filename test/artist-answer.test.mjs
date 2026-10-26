@@ -5,8 +5,8 @@ import vm from 'node:vm';
 import { categoryOf } from '../server/catalog.mjs';
 import { fold, affinityWhy } from '../server/lib.mjs';
 
-const source = fs.readFileSync(new URL('../scripts/serve-eagle.mjs', import.meta.url), 'utf8')
-  .match(/async function artistAnswer\([^]*?\n}\n/)[0];
+const serve = fs.readFileSync(new URL('../scripts/serve-eagle.mjs', import.meta.url), 'utf8');
+const source = serve.match(/async function qlooArtist\([^]*?\n}\n/)[0] + serve.match(/async function artistAnswer\([^]*?\n}\n/)[0];
 function artistAnswer({ ok = true } = {}) {
   const context = { process: { env: {} }, URLSearchParams, fold, categoryOf, affinityWhy,
     qlooFetch: async () => ({ ok, status: 502, json: async () => ({ results: [{ name: 'Bad Bunny', entity_id: 'artist-id' }] }) }),

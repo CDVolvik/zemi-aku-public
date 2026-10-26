@@ -63,7 +63,7 @@ test('the chat route serves a sample only after the model agent fell back, befor
   const server = fs.readFileSync(new URL('../scripts/serve-eagle.mjs', import.meta.url), 'utf8');
   const route = server.slice(server.indexOf('if (url.pathname === "/api/chat"'), server.indexOf('if (url.pathname === "/api/ask"'));
   assert.ok(route.indexOf('if (!answer.fallback) return sendJson(res, 200, answer);') < route.indexOf('samples.match(checked.value)'));
-  assert.ok(route.indexOf('samples.match(checked.value)') < route.indexOf('await patternAnswer(checked.value)'));
+  assert.ok(route.indexOf('samples.match(checked.value)') < route.indexOf('await ruleAnswer(checked.value, answer.reason)'));
   assert.match(route, /sendJson\(res, 200, \{ \.\.\.sample, fallback: true \}\)/);
   assert.match(server, /createSamples\(\{ dir: path\.join\(root, "data", "samples"\) \}\)/);
 });

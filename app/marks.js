@@ -95,12 +95,18 @@
     return kindOf(place) === "food" && BAR_GENRE.test(genre) && !NOT_A_BAR.test(genre);
   }).length;
 
-  // Qloo's hours line is English ("Today 5:00 pm–12:00 am", "Closed today", "Open 24 hours").
+  // Qloo's hours line is English ("Today 5:00 pm–12:00 am", "Closed today", "Open 24 hours"); a saved catalog's line
+  // carries the day it was measured ("Oct 7: 5:00 pm–3:00 am", "Closed on Oct 7").
+  const MESES = { Jan: "ene", Feb: "feb", Mar: "mar", Apr: "abr", May: "may", Jun: "jun", Jul: "jul", Aug: "ago", Sep: "sep", Oct: "oct", Nov: "nov", Dec: "dic" };
   function hoursText(hours, lang = pageLang()) {
     // A midnight-to-midnight window is a day-long one (judge panel 10/25: "Today 12:00 am–12:00 am" read as a bug).
     const text = String(hours || "").replace(/^Today 12:00 am\s*[–-]\s*12:00 am$/i, "Open 24 hours");
     if (lang !== "es" || !text) return text;
+    const fecha = (m, d) => `${d} ${MESES[m] || m}`;
     return text.replace(/^Closed today$/i, "Cerrado hoy").replace(/^Open 24 hours$/i, "Abierto 24 horas").replace(/^Today\b/, "Hoy")
+      .replace(/^Open 24 hours on ([A-Z][a-z]{2}) (\d{1,2})$/, (_, m, d) => `Abierto 24 horas el ${fecha(m, d)}`)
+      .replace(/^Closed on ([A-Z][a-z]{2}) (\d{1,2})$/, (_, m, d) => `Cerrado el ${fecha(m, d)}`)
+      .replace(/^([A-Z][a-z]{2}) (\d{1,2}): /, (_, m, d) => `${fecha(m, d)}: `)
       .replace(/\bClosed\b/, "Cerrado");
   }
 
@@ -204,7 +210,9 @@
   let resultCardRender = 0;
 
   // Chat / answer result cards: logo, name button (card-wide hit via ::after), why, meta, sibling actions.
-  function resultCards(places, { from = null, lang = "en", focusedIndex = -1 } = {}) {
+  // fromTown: the town the distance is measured from; a card in another town shows no distance (judge panel 10/25
+  // round 8: Caguas bakeries read "111 km" under a Mayagüez-against-Caguas comparison).
+  function resultCards(places, { from = null, fromTown = "", lang = "en", focusedIndex = -1 } = {}) {
     const es = lang === "es";
     const labels = {
       why: es ? "Por qué le conviene" : "Why it fits you",
@@ -215,7 +223,11 @@
       noHours: es ? "sin horario publicado" : "hours not listed", // judge panel 10/24 round 3: an unchecked place looked like a checked one
       bars: (n) => (es ? (n === 1 ? "Qloo clasifica este bar como restaurante; por eso aparece aquí." : "Qloo clasifica estos bares como restaurantes; por eso aparecen aquí.")
         : (n === 1 ? "Qloo lists this bar under restaurants, which is why it appears here." : "Qloo lists these bars under restaurants, which is why they appear here.")),
+      // Judge panel 10/25 round 8: "Strong match … (96%)" read as 96% of fans eating there.
+      score: es ? "El porcentaje es la afinidad de Qloo: cuánto se inclina el gusto de esos fans hacia el lugar, no qué parte de los fans va."
+        : "The percentage is Qloo's affinity score: how strongly those fans' taste leans toward the place, not the share of fans who go.",
     };
+    const scored = (places || []).some((place) => /\(\d+%\)$/.test(String(place.why || "")));
     const renderId = ++resultCardRender;
     return `<ul class="answer-cards">${(places || []).map((place, index) => {
       const kind = KINDS[kindOf(place)];
@@ -231,9 +243,14 @@
       const why = whyText
         ? `<p class="result-why" id="${whyId}"><span class="why-label">${labels.why}</span> ${esc(whyText)}</p>`
         : "";
-      const km = place.distanceKm != null && Number.isFinite(Number(place.distanceKm))
+      // A distance with its own origin (a port) stands; any other is shown only for a card in the town it is measured from.
+      const home = place.municipality || place.city || place.town || "";
+      // A distance shows only with a proven origin: its own (a port), or a town origin and a card in that same town. With
+      // no town origin (the island view, measured from the camera) a computed distance stands as before.
+      const knownHere = Boolean(fromTown) && Boolean(home) && fold(home) === fold(fromTown);
+      const km = place.distanceKm != null && Number.isFinite(Number(place.distanceKm)) && (place.distanceFrom || knownHere)
         ? Number(place.distanceKm)
-        : haversineKm(from, { lat: place.lat, lon: place.lon });
+        : !fromTown || knownHere ? haversineKm(from, { lat: place.lat, lon: place.lon }) : null;
       const metaBits = [
         Number.isFinite(km) ? `${km.toFixed(1)} km` : "",
         place.rating != null ? `★ ${place.rating}` : "",
@@ -257,7 +274,7 @@
         + directions
         + `<button type="button" class="result-act" data-ask-more aria-label="${esc(labels.ask)}: ${esc(place.name)}">${labels.ask}</button>`
         + `</div></div></div>${location}</article></li>`;
-    }).join("")}</ul>${barsAsFood(places) ? `<p class="cards-note">${labels.bars(barsAsFood(places))}</p>` : ""}`;
+    }).join("")}</ul>${barsAsFood(places) ? `<p class="cards-note">${labels.bars(barsAsFood(places))}</p>` : ""}${scored ? `<p class="cards-note">${labels.score}</p>` : ""}`;
   }
 
   window.ZemiMarks = { KINDS, kindOf, kindLabel, genreName, whyLine, hoursText, legend, card, picks, pickCards, resultCards, haversineKm, shotOf };

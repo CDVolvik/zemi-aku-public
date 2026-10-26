@@ -57,8 +57,18 @@ test("on a short laptop window the suggestion row waits while the first screen i
 });
 
 test("on a phone the voice button shows the language code alone, so the ask field keeps its width (judge panel 10/25)", () => {
-  assert.match(app, /const narrow = window\.matchMedia\("\(max-width: 480px\)"\)\.matches;\s*\$\("voice-btn"\)\.textContent = name && !narrow \? `\$\{code\} · \$\{name\}` : code;/);
+  assert.match(app, /const narrow = window\.matchMedia\("\(max-width: 480px\)"\)\.matches;[^]*?\$\("voice-btn"\)\.textContent = narrow \? code : name \? `\$\{language\} · \$\{name\}` : language;/);
   assert.match(app, /window\.matchMedia\("\(max-width: 480px\)"\)\.addEventListener\("change", voiceLabel\);/);
+});
+
+test("the first screen names its two languages in words, and a pick there or a ?lang= link is remembered (judge panel 10/25 round 8)", () => {
+  assert.match(app, /<div id="hero-lang" role="group" aria-label="Idioma · Language">\s*<button type="button" data-hero-lang="es" lang="es" aria-pressed="false">Español<\/button>\s*<button type="button" data-hero-lang="en" lang="en" aria-pressed="true">English<\/button>/);
+  assert.match(app, /\$\("hero-lang"\)\.addEventListener\("click"[^]*?ZemiConverse\.choose\(lang, ZemiConverse\.voice\(\)\.gender, \{ persist: "lang" \}\);\s*voiceLabel\(\); renderHero\(lang\); relabel\(\);/);
+  assert.match(app, /for \(const button of document\.querySelectorAll\("\[data-hero-lang\]"\)\) button\.setAttribute\("aria-pressed", String\(button\.dataset\.heroLang === lang\)\);/);
+  assert.match(app, /const linkLang = new URLSearchParams\(location\.search\)\.get\("lang"\);\s*if \(\["en", "es"\]\.includes\(linkLang\) && linkLang !== ZemiConverse\.voice\(\)\.lang\) ZemiConverse\.choose\(linkLang, ZemiConverse\.voice\(\)\.gender, \{ persist: "lang" \}\);\s*renderHero\(\);/);
+  assert.match(app, /const language = \{ en: "English", es: "Español"/);
+  const home = fs.readFileSync(new URL("../app/home.html", import.meta.url), "utf8");
+  assert.match(home, /<a href="\/app\?lang=es" lang="es">El mapa en español<\/a>/);
 });
 
 test("between a phone and a wide desktop the panel ends above the dock, and the hero claims taste town by town, not for all 78 (judge panel 10/25 round 7)", () => {
