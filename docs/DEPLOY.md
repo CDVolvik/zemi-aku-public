@@ -367,6 +367,31 @@ the dock at 769, the island's west and east tips project to x 41 and 383 at y 17
 the ion token's origin restriction, not a live condition), the five nav links are 12 px tall each; `check-demo --journeys`
 0 failed. 341 tests.
 
+## Round-eleven release (2026-10-26)
+
+Live as `zemi-aku:round11-20261026`, source `6932095`, layered on `round10-20261026` with `app/`, `server/` and
+`scripts/serve-eagle.mjs` (`tmp/deploy-round11-20261026.sh`, local only). Rollback set
+`/opt/zemi-aku/round11-20261026-rollback` (previous image `round10-20261026`). Three Codex review passes (5, 1 and 1
+findings, no High; every one fixed). No key, cap, cache, Caddy, env or connector change.
+
+What changed on the site:
+
+- **The opening plan** (`/plan?industry=&town=&lang=`, linked as "Opening plan to print" under every town verdict): the
+  verdict on one Letter page with the town the verdict note compares against (next gap-group town by taste rank, with its
+  straight-line distance), up to seven places to visit with dated hours and phones and a line for notes, a field
+  checklist, what the data cannot say, the sources and a QR code back to the live verdict. Same rule-based verdict as the
+  map; no model turn and no visitor turn; 20 requests a minute per visitor. A town whose saved catalog cannot be read gets
+  no plan rather than a printed zero. The map card's first three places ride in the link, so the plan visits the same ones.
+- The card's sentences moved to `app/decision.js`, read by the map and the plan alike.
+- `app/vendor/qrcode.js`: qrcode-generator 2.0.4 (MIT, Kazuhiko Arase), unmodified, pinned by SHA-256 in a test.
+- **First screen**: a soft dark field behind the hero's words, which sat on the bright island; on a phone the map
+  controls wait for a pick (a tour chip ran under the compass at 390 px).
+
+Checks: container healthy; eight changed-file SHA-256 hashes in the container equal the commit's; on the live site
+`check-answer-states` (16) and `check-ui-states` (27) 0 failed; `check-demo --journeys` 0 failed; 144 plans printed from the live site (12 towns, six industries, both languages), each on one Letter page; the map card's
+link opens the plan with its visits; the printed QR decodes to the live verdict's address; 525 tests. A physical printer
+and a phone camera scan not tested.
+
 ## Round-ten release (2026-10-26)
 
 Live as `zemi-aku:round10-20261026`, source `7be1d88`, layered on `round9-20261026` with `app/`, `server/` and

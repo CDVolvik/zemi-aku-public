@@ -56,6 +56,12 @@ test("on a short laptop window the suggestion row waits while the first screen i
   assert.match(app, /@media \(min-width: 721px\) and \(max-height: 720px\) \{\s*body:has\(#hero:not\(\[hidden\]\)\) #suggest \{ display: none; \}/);
 });
 
+test("the first screen's words sit on a dark field, and a phone hides the map controls until a pick (10/26)", () => {
+  assert.match(app, /#hero::before \{ content: ""; position: absolute; inset: -36px -64px; z-index: -1; pointer-events: none;/);
+  const phone = app.slice(app.indexOf("@media (max-width: 720px) {"));
+  assert.match(phone, /body:has\(#hero:not\(\[hidden\]\)\) #map-chrome \{ display: none; \}/);
+});
+
 test("on a phone the voice button shows the language code alone, so the ask field keeps its width (judge panel 10/25)", () => {
   assert.match(app, /const narrow = window\.matchMedia\("\(max-width: 480px\)"\)\.matches;[^]*?\$\("voice-btn"\)\.textContent = narrow \? code : name \? `\$\{language\} · \$\{name\}` : language;/);
   assert.match(app, /window\.matchMedia\("\(max-width: 480px\)"\)\.addEventListener\("change", voiceLabel\);/);

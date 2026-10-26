@@ -25,6 +25,7 @@ import { createSamples } from "../server/samples.mjs";
 import { createWeather } from "../server/weather.mjs";
 import { createMcpHandler, mcpBudget, mcpTools } from "../server/mcp.mjs";
 import { createOpportunity, tasteByTown } from "../server/opportunity.mjs";
+import { createPlan } from "../server/plan.mjs";
 import { attachVoiceAgent } from "../server/voice-agent.mjs";
 import { createDiscovery } from "../server/discovery.mjs";
 import { PORT_DATA, createCoastalDiscovery } from "../server/coastal.mjs";
@@ -1920,6 +1921,8 @@ const businessAnswer = createBusinessDiscovery({ towns: townNames, publish: publ
     return savedPlaces(saved);
   },
 });
+// The printable opening plan (/plan): the same verdict, no model turn, with the nearest gap town to compare.
+const openingPlan = createPlan({ businessAnswer, opportunity, centers: townCenters, knownTown });
 // Free NWS/NHC/RainViewer feeds, cached in memory; no key, no daily cap needed.
 const weather = createWeather({ centers: townCenters });
 const registry = agentTools({ towns: townNames, weather,
@@ -1963,6 +1966,11 @@ const server = http.createServer(async (req, res) => {
       if (!opportunity.industries.includes(industry)) return sendJson(res, 400, { error: "Unknown industry" });
       const file = opportunity.get(industry);
       return file ? sendJson(res, 200, file) : sendJson(res, 503, { error: "Opportunity data is not built yet" });
+    }
+    if (url.pathname === "/api/plan" && req.method === "GET") {
+      const plan = await openingPlan({ industry: url.searchParams.get("industry") || "", town: url.searchParams.get("town") || "",
+        lang: url.searchParams.get("lang") || "" });
+      return sendJson(res, plan.status, plan.body);
     }
     if (url.pathname === "/api/coastal/ports" && req.method === "GET") return sendJson(res, 200, PORT_DATA);
     if (url.pathname === "/api/coastal/ships" && req.method === "GET") return sendJson(res, 200, shipFeed.snapshot());
@@ -2242,7 +2250,7 @@ window.ZEMI_PHOTOREAL_ENABLED = ${process.env.ZEMI_PHOTOREAL_ENABLED === "1"};
       return sendJson(res, answer.error ? 400 : 200, answer);
     }
   } catch (err) {
-    const privateRoute = ["/api/chat", "/api/ask", "/api/testers", "/mcp"].includes(url.pathname) || url.pathname.startsWith("/api/voice/");
+    const privateRoute = ["/api/chat", "/api/ask", "/api/testers", "/api/plan", "/mcp"].includes(url.pathname) || url.pathname.startsWith("/api/voice/");
     sendJson(res, 502, { error: privateRoute ? "Zemi-Aku could not complete this request. Please try again." : err.message });
     return;
   }
@@ -2250,7 +2258,7 @@ window.ZEMI_PHOTOREAL_ENABLED = ${process.env.ZEMI_PHOTOREAL_ENABLED === "1"};
   let rel;
   try {
     // / is the front page, /app the live map.
-    const pretty = { "/": "/app/home.html", "/app": "/app/index.html", "/app/": "/app/index.html", "/compare": "/app/compare.html", "/notes-for-qloo": "/app/qloo-notes.html" };
+    const pretty = { "/": "/app/home.html", "/app": "/app/index.html", "/app/": "/app/index.html", "/compare": "/app/compare.html", "/plan": "/app/plan.html", "/notes-for-qloo": "/app/qloo-notes.html" };
     rel = decodeURIComponent(pretty[url.pathname] || url.pathname);
   } catch {
     res.writeHead(400).end("bad path");

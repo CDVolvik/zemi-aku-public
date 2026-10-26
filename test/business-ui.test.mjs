@@ -72,7 +72,11 @@ test('a town with an opportunity verdict gets a decision card first: what the da
     ZemiConverse: { voice: () => ({ lang: 'es' }) }, esc: text => String(text), document: { querySelectorAll: () => [] },
     ZemiOpportunity: { LABELS: { es: { gap: 'Brecha: afinidad sobre la mediana, pocos negocios por residente', competitive: 'Competido' }, en: { gap: 'Gap' } }, supplyText: () => ({ businesses: '16 establecimientos', per: '0.5 por cada 10,000' }),
       definitionsHtml: () => '', industryChips: () => '', censusScope: (lang, sources) => sources?.cbp?.naics?.length ? `panaderías al detal, con empleados (NAICS ${sources.cbp.naics.join(' + ')})` : '' } };
-  vm.createContext(context); vm.runInContext(source, context);
+  context.window = context; context.URLSearchParams = URLSearchParams;
+  vm.createContext(context);
+  // The card's sentences live in app/decision.js, shared with the printable opening plan.
+  vm.runInContext(fs.readFileSync(new URL('../app/decision.js', import.meta.url), 'utf8'), context);
+  vm.runInContext(source, context);
   vm.runInContext("researchPlaces = [{ name: 'Panadería Alturas' }, { name: 'La Familia Bakery 2' }, { name: 'Ekelekua' }, { name: 'Cuarta' }];", context);
   context.showBusinessResearch({ town: 'San Juan', mode: 'research', available: true, total: 37, counts: [],
     evidence: { supply: { count: 64, release: '2026-09' }, opportunity: { industry: 'bakery', group: 'gap', tasteRank: 5, ranked: 76, establishments: 16, suppressed: false, perTenThousand: 0.476, medianPerTenThousand: 1.3, notes: [] } } });
@@ -83,6 +87,8 @@ test('a town with an opportunity verdict gets a decision card first: what the da
   assert.match(out, /Tres pasos siguientes<\/h4><ol><li>Visite Panadería Alturas, La Familia Bakery 2, Ekelekua a la hora de apertura/);
   assert.match(out, /<li>Pregunte rentas en la calle principal/);
   assert.match(out, /<li>Compare con el siguiente pueblo del grupo brecha/);
+  // The card links the same verdict as a printable page, in the session's language.
+  assert.match(out, /<p class="plan-link"><a href="\/plan\?industry=bakery&town=San\+Juan&lang=es" target="_blank" rel="noopener">Plan de apertura para imprimir/);
   assert.doesNotMatch(out, /Overture, [^<]*mapa de Overture/);
   assert.doesNotMatch(out, /El Censo cuenta solo/, 'no NAICS codes in the record: no scope sentence');
   assert.doesNotMatch(out, /Qloo etiqueta/, 'no taste profile: no tags sentence');

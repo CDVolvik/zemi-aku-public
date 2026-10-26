@@ -4,7 +4,7 @@
 export const ROUTE_LIMITS = {
   "/api/chat": 12, "/api/ask": 20, "/api/taste": 30, "/api/search": 60, "/api/places": 40, "/api/places/like": 20,
   "/api/place": 40, "/api/heat": 30, "/api/catalog": 60, "/api/config": 60, "/api/testers": 6, "/api/speak": 12, "/api/voices": 30,
-  "/api/opportunity": 30, "/api/weather": 30, "/api/weather/radar": 30, "/api/weather/storms": 30,
+  "/api/opportunity": 30, "/api/plan": 20, "/api/weather": 30, "/api/weather/radar": 30, "/api/weather/storms": 30,
   // Claude and ChatGPT reach /mcp from shared cloud addresses, and a client session spends about four
   // requests before its first tool call. The daily allowance, not this burst limit, bounds spending.
   "/mcp": 60,

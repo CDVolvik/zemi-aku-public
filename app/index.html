@@ -118,6 +118,10 @@ try {
     width: min(560px, calc(100% - 32px)); text-align: center; pointer-events: none;
     color: #f4f6f8; text-shadow: 0 2px 14px rgba(0, 0, 0, .55);
   }
+  /* A soft dark field behind the first screen's words: the lede and the small labels sat on the bright island with
+     little contrast. Behind the hero's own content (the transform makes #hero its stacking context). */
+  #hero::before { content: ""; position: absolute; inset: -36px -64px; z-index: -1; pointer-events: none;
+    background: radial-gradient(ellipse closest-side, rgba(6, 18, 28, .62), rgba(6, 18, 28, .38) 60%, rgba(6, 18, 28, 0)); }
   #hero h1 { margin: 0; font: 500 34px/1.1 var(--serif); letter-spacing: -.015em; text-wrap: balance; }
   #hero p { margin: 8px 0 0; font-size: 14px; color: #d3dde3; }
   /* The language, in words, before anything else on the first screen (judge panel 10/25 round 8: "EN · Andromeda" read as a voice setting). */
@@ -240,6 +244,7 @@ try {
   .decision { border-left: 3px solid var(--line); padding: 2px 0 2px 12px; margin: 10px 0 14px; }
   .decision h4 { margin: 6px 0 2px; }
   .decision ol { margin: 4px 0; padding-left: 18px; }
+  .decision .plan-link { margin: 8px 0 2px; }
   .legend-chip.note { opacity: .75; }
   .control-verdict { margin: 6px 0 0; font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; opacity: .85; }
   .why-line { margin: 6px 0 0; font-size: 13px; color: var(--soft); }
@@ -584,6 +589,8 @@ try {
     body:has(#panel:not([hidden]):not([data-collapsed="true"])) #map-chrome,
     body:has(#opportunity-panel:not([hidden])) #map-chrome,
     body:has(#coastal-panel:not([hidden])) #map-chrome { display: none; }
+    /* The first screen's tour chips ran under the compass on a phone; there is nothing to steer before a pick. */
+    body:has(#hero:not([hidden])) #map-chrome { display: none; }
     #decide-start, #journey-start, #missions { max-width: 100%; }
     #decide-start button, #journey-start button, #missions button { max-width: 100%; white-space: normal; }
     .chips, .dir, .badges, .tools { max-width: 100%; }
@@ -839,6 +846,7 @@ try {
 <script src="/app/dictate.js"></script>
 <script src="/app/coastal.js"></script>
 <script src="/app/opportunity.js"></script>
+<script src="/app/decision.js"></script>
 <script src="/app/evidence.js"></script>
 <script>
 const THEMES = ["night", "sea", "paper"];
@@ -2052,60 +2060,12 @@ function showCatalog(data, opts = {}) {
 }
 
 function decisionCard(business, o, places, es) {
-  const l = es ? "es" : "en";
-  const fix = (n) => Number(n).toFixed(1);
-  const count = o.suppressed
-    ? (es ? `de 0 a ${o.establishmentsMax ?? 2} establecimientos con empleados (el Censo no publica cifras menores de 3)` : `0 to ${o.establishmentsMax ?? 2} establishments with employees (Census does not publish counts below 3)`)
-    : Number.isFinite(o.establishments) ? (es ? `${o.establishments} establecimientos con empleados` : `${o.establishments} establishments with employees`) : "";
-  const median = Number.isFinite(o.medianPerTenThousand) ? (es ? ` frente a la mediana de ${fix(o.medianPerTenThousand)} con la que se dividen los grupos` : ` against the median of ${fix(o.medianPerTenThousand)} the groups split on`) : "";
-  const rate = o.suppressed
-    ? (Number.isFinite(o.perTenThousandMax) ? (es ? `hasta ${fix(o.perTenThousandMax)} por cada 10,000 residentes${median}` : `up to ${fix(o.perTenThousandMax)} per 10,000 residents${median}`) : "")
-    : Number.isFinite(o.perTenThousand) ? (es ? `${fix(o.perTenThousand)} por cada 10,000 residentes${median}` : `${fix(o.perTenThousand)} per 10,000 residents${median}`) : "";
-  const supply = business.evidence?.supply;
-  // Why Qloo and Overture list more than the Census counts: the group reads on the Census axis alone.
-  const scope = typeof ZemiOpportunity.censusScope === "function" ? ZemiOpportunity.censusScope(l, o.sources) : "";
-  // Only a catalog longer than the published count, or a withheld count's upper bound, is named (Codex review 10/25).
-  const bound = o.suppressed ? Number(o.establishmentsMax ?? 2) : (Number(o.establishments) || 0);
-  const longer = [[Number(business.total) || 0, es ? "la lista de Qloo" : "Qloo's list"], [Number(supply?.count) || 0, es ? "la lista de Overture" : "Overture's list"]]
-    .filter(([n]) => n > bound).map(([, name]) => name);
-  const two = longer.length === 2;
-  const subject = two ? (es ? "las listas de Qloo y Overture" : "Qloo's and Overture's lists") : longer[0] || "";
-  const axis = scope && subject
-    ? (es ? `El Censo cuenta solo ${esc(scope)}; ${subject} ${two ? "incluyen" : "incluye"} lugares sin empleados y con otras etiquetas, por eso ${two ? "son más largas" : "es más larga"}, y el grupo se lee en el eje del Censo.`
-      : `The Census counts only ${esc(scope)}; ${subject} ${two ? "include" : "includes"} places without employees and under other tags, so ${two ? "they run" : "it runs"} longer, and the group reads on the Census axis.`)
-    : "";
-  // What Qloo's taste rank rests on, in words an owner can read (judge panel 10/25, Opus: "in the business path Qloo is
-  // one opaque number"): the town's own taste tags from the same record.
-  const vibe = (business.evidence?.taste?.status === "ready" ? business.evidence.taste.profile?.vibe || [] : []).slice(0, 3)
-    .map((row) => String(row?.name || "").trim()).filter(Boolean).map((name) => (name.length > 40 ? `${name.slice(0, 39)}…` : name));
-  const tags = vibe.length ? (es ? `Qloo etiqueta el gusto del pueblo como ${vibe.map(esc).join(", ")}.` : `Qloo tags the town's taste as ${vibe.map(esc).join(", ")}.`) : "";
-  const says = [
-    `${esc(ZemiOpportunity.LABELS[l][o.group] || "")}${Number.isFinite(o.tasteRank) ? (es ? ` · gusto #${o.tasteRank} de ${o.ranked}` : ` · taste #${o.tasteRank} of ${o.ranked}`) : ""}.`,
-    tags,
-    [count, rate].filter(Boolean).join(", ") + (count || rate ? "." : ""),
-    es ? `Qloo registra ${business.total} ${business.total === 1 ? "lugar" : "lugares"} de este tipo; Overture, ${supply ? supply.count : "—"}.` : `Qloo lists ${business.total} ${business.total === 1 ? "place" : "places"} of this type; Overture, ${supply ? supply.count : "—"}.`,
-    axis,
-  ].filter(Boolean).join(" ");
-  const cannot = es
-    ? "Demanda, ventas, rentas, tráfico peatonal, permisos ni ganancias. Los horarios son una foto del catálogo en su fecha."
-    : "Demand, sales, rents, foot traffic, permits or profit. Hours are a snapshot of the catalog on its date.";
-  const names = (places || []).slice(0, 3).map((p) => p.name).filter(Boolean);
-  // Overture's map may list businesses Qloo's catalog lacks (judge panel 10/24 round 3: two Adjuntas bakeries were
-  // on the card but not in the visit line); they join the list, marked by source.
-  const seen = new Set(names.map((n) => String(n).toLowerCase()));
-  const overture = (supply?.places || []).map((p) => p?.name).filter((n) => n && !seen.has(String(n).toLowerCase())).slice(0, 2);
-  const where = (names.length ? names.map(esc).join(", ") : (es ? "los lugares de la lista" : "the listed places"))
-    + (overture.length ? (es ? ` y, del mapa de Overture, ${overture.map(esc).join(" y ")}` : ` and, from Overture's map, ${overture.map(esc).join(" and ")}`) : "");
-  // The third check follows the group (judge panel 10/24 round 3: "compare with the gap-group towns" on a competitive town).
-  const third = es
-    ? { gap: "Compare con el siguiente pueblo del grupo brecha en el mapa antes de decidir.", competitive: "Visite dos competidores y anote qué venden y a qué precio.", quiet: "Pregunte dónde compra la gente esto hoy antes de apostar a la demanda.", crowded: "Mire el pueblo vecino o un nicho que nadie atiende aquí.", unknown: "Pida al municipio su propio conteo de negocios; el Censo no publica el de aquí." }
-    : { gap: "Compare with the next gap-group town on the map before you decide.", competitive: "Visit two competitors and note what they sell and charge.", quiet: "Ask where people buy this today before you bet on demand.", crowded: "Look at the next town over, or a niche nobody here serves.", unknown: "Ask the municipio for its own business count; the Census does not publish one here." };
-  const checks = es
-    ? [`Visite ${where} a la hora de apertura y mire fila, precios y horario real.`, "Pregunte rentas en la calle principal y los permisos en el municipio antes de firmar.", third[o.group] || third.gap]
-    : [`Visit ${where} at opening time and watch the queue, prices and actual hours.`, "Ask rents on the main street and permits at the municipio before you sign.", third[o.group] || third.gap];
+  const { says, cannot, checks } = ZemiDecision.parts(business, o, places, es ? "es" : "en");
+  // The same verdict as a page to print and take on the visit.
+  const plan = o.industry && business.town ? `<p class="plan-link"><a href="${esc(ZemiDecision.planHref(o.industry, business.town, es ? "es" : "en", places))}" target="_blank" rel="noopener">${es ? "Plan de apertura para imprimir ↗" : "Opening plan to print ↗"}</a></p>` : "";
   return `<div class="decision"><h4>${es ? "Lo que dicen los datos" : "What the data says"}</h4><p>${says}</p>`
     + `<h4>${es ? "Lo que no puede decir" : "What it cannot tell you"}</h4><p>${cannot}</p>`
-    + `<h4>${es ? "Tres pasos siguientes" : "Next three checks"}</h4><ol>${checks.map((c) => `<li>${c}</li>`).join("")}</ol></div>`;
+    + `<h4>${es ? "Tres pasos siguientes" : "Next three checks"}</h4><ol>${checks.map((c) => `<li>${c}</li>`).join("")}</ol>${plan}</div>`;
 }
 let researchPlaces = []; // the answer's listed places, for the decision card's first check
 // A tool title such as "food in Caguas" or "all in Adjuntas" reads in the picked language (judge panels 10/24).

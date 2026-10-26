@@ -15,7 +15,7 @@
 <p align="center">
   <a href="https://zemi.r21digital.com/app"><img alt="Live demo" src="https://img.shields.io/badge/live%20demo-zemi.r21digital.com-5a5aa8"></a>
   <a href="https://zemi.r21digital.com/compare"><img alt="With and without Qloo" src="https://img.shields.io/badge/control-with%20%2F%20without%20Qloo-d4a24c"></a>
-  <img alt="519 tests" src="https://img.shields.io/badge/tests-519-2b8a3e">
+  <img alt="525 tests" src="https://img.shields.io/badge/tests-525-2b8a3e">
   <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-555"></a>
   <img alt="Qloo Agentic Hackathon" src="https://img.shields.io/badge/Qloo-Agentic%20Hackathon-262f3a">
 </p>
@@ -38,7 +38,8 @@ An affinity is not evidence of an artist visit or a forecast of business demand,
 1. Open **[/app](https://zemi.r21digital.com/app)** and choose **Bakeries**. The island colours into four groups:
    gap, competitive, quiet and crowded.
 2. Tap **Río Grande**. The verdict gives its taste rank, the Census count against the median, Qloo's list of places,
-   what the data cannot tell you and the next three checks.
+   what the data cannot tell you and the next three checks. **Opening plan to print** under the verdict turns it into
+   one page to carry on the visit ([example](https://zemi.r21digital.com/plan?industry=bakery&town=R%C3%ADo%20Grande&lang=es)).
 3. Ask **"Where do Bad Bunny fans eat in San Juan?"** and open **Evidence** under the answer: every tool call,
    source, count, timing and the engine that answered. **Ask again without Qloo** reruns it with the Qloo tools removed.
 4. Open **[/compare](https://zemi.r21digital.com/compare)**: seven frozen questions asked of the same model twice,
@@ -58,6 +59,10 @@ session, including answers and errors, stays in Spanish.
 
 <p align="center"><img src="docs/media/phone-es.png" alt="The first screen and the bakery map on a phone, in Spanish" width="520"><br>
 <sub>A phone, in Spanish.</sub></p>
+
+<p align="center"><img src="docs/media/opening-plan.png" alt="The printed opening plan for a bakery in Río Grande, in Spanish" width="520"><br>
+<sub>The opening plan, printed: the verdict, the town the verdict compares with, places to visit with their hours, a field
+checklist, the limits and a QR code back to the live map, on one Letter page.</sub></p>
 
 ## How it works
 
@@ -105,7 +110,7 @@ flowchart LR
 
 ## How it was checked
 
-- **519 automated tests** (`pnpm test`), plus browser acceptance checks run against the live site
+- **525 automated tests** (`pnpm test`), plus browser acceptance checks run against the live site
   (`scripts/check-ui-states.mjs`, 27 checks; `scripts/check-answer-states.mjs`, 16; `scripts/check-demo.mjs --journeys`).
 - **A preregistered backtest of the gap signal** on Census counts, 2019 to 2023
   ([BACKTEST-GAP-2026-10-26.md](docs/BACKTEST-GAP-2026-10-26.md)): towns the rule would have called a gap gained more
@@ -162,7 +167,7 @@ node scripts/check-demo.mjs http://127.0.0.1:4174
 node scripts/check-demo.mjs http://127.0.0.1:4174 --journeys
 ```
 
-There are 519 local automated tests. A fresh clone of the public repository skips four: the one
+There are 525 local automated tests. A fresh clone of the public repository skips four: the one
 that needs the Census cache and the three that read the saved Qloo results.
 Public HTTPS, Chrome journey/3D, private-path protection and capped WebSocket probes pass.
 Live speech and a real iPhone still require separate verification.
@@ -198,6 +203,9 @@ connector never calls a model or a speech provider; its Qloo use counts against 
 | app/index.html, app/dossier.js | Island → town → place, artist journey and source cards |
 | app/home.html | Field-atlas landing page |
 | app/opportunity.js, server/opportunity.mjs | Opportunity map: taste against businesses, four groups |
+| app/plan.html, app/plan.js, server/plan.mjs | Printable opening plan for one town and industry |
+| app/decision.js | The verdict's sentences, shared by the map's card and the plan |
+| app/vendor/qrcode.js | qrcode-generator 2.0.4 (MIT, Kazuhiko Arase), unmodified |
 | server/discovery.mjs, server/catalog.mjs | Validated artist entry and municipality catalogs |
 | app/coastal.js, server/coastal.mjs, server/ships.mjs | Port discovery and optional bounded AIS feed |
 | server/agent.mjs, server/agent-tools.mjs | Conversation and 18 read-only tools |
