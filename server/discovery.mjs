@@ -2,6 +2,7 @@
 export function createDiscovery(artistAnswer) {
   return async function discover(body) {
     const artist = typeof body.artist === "string" ? body.artist.trim() : "";
+    // oxlint-disable-next-line no-control-regex -- rejects control characters in user input on purpose
     if (artist.length < 3 || artist.length > 80 || /[\u0000-\u001f\u007f]/.test(artist)) {
       return { error: "Enter an artist name between 3 and 80 characters." };
     }

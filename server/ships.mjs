@@ -2,6 +2,7 @@ import WebSocket from "ws";
 
 export const COAST_BOUNDS = [[17.5, -67.5], [18.8, -65]];
 const TTL = 10 * 60 * 1000;
+// oxlint-disable-next-line no-control-regex -- rejects control characters in user input on purpose
 const clean = value => typeof value === "string" ? value.replace(/[@\u0000-\u001f\u007f]/g, "").trim().slice(0, 80) : "";
 const numberIn = (value, min, max) => Number.isFinite(value) && value >= min && value < max ? value : null;
 

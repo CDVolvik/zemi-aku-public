@@ -14,7 +14,9 @@
     "eagle": "node scripts/serve-eagle.mjs",
     "qloo": "node scripts/qloo.mjs",
     "q": "node scripts/q.mjs",
-    "test": "node --test test/*.test.mjs"
+    "test": "node --test test/*.test.mjs",
+    "lint": "oxlint",
+    "hooks:install": "git config core.hooksPath .githooks"
   },
   "pnpm": {
     "overrides": {
@@ -27,5 +29,8 @@
     "@modelcontextprotocol/sdk": "^1.32.1",
     "@qloo/qloo-harness": "^0.1.26",
     "ws": "^8.22.0"
+  },
+  "devDependencies": {
+    "oxlint": "^1.90.0"
   }
 }

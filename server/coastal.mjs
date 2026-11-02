@@ -28,6 +28,7 @@ export function createCoastalDiscovery({ catalog, artist, publish = p => p }) {
     const port = PORTS.find(p => p.id === id);
     if (!port) return { error: es ? "Escoja un puerto de Puerto Rico de la lista." : "Choose a listed Puerto Rico port." };
     if (category !== "all" && !leisure.has(category)) return { error: es ? "Escoja una categoría disponible." : "Choose a supported category." };
+    // oxlint-disable-next-line no-control-regex -- rejects control characters in user input on purpose
     if (typeof query !== "string" || (query && (query.trim().length < 3 || query.length > 80 || /[\u0000-\u001f\u007f]/.test(query)))) {
       return { error: es ? "Escriba el nombre de un artista de 3 a 80 caracteres." : "Enter an artist name between 3 and 80 characters." };
     }
