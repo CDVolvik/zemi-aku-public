@@ -149,6 +149,9 @@ Optional TESTFLIGHT_PUBLIC_URL is a public TestFlight link from App Store Connec
 Use pnpm, not npm install: pnpm overrides patch vulnerable transitive versions pinned in
 the harness's npm shrinkwrap. The committed pnpm lock and Dockerfile use the same install.
 
+`pnpm hooks:install` (once per clone) runs `pnpm lint` (Oxlint) and `pnpm test` before every
+`git push`. CI runs the same two on every pull request.
+
 Or populate .env and run `docker compose up --build`; open http://localhost:8080/app.
 A clean checkout builds with empty optional ground caches. Town catalogs populate at
 runtime; the 7,717-place count is an October 7 snapshot, not guaranteed live coverage.
